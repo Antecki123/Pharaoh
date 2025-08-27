@@ -1,5 +1,7 @@
 using App.Signals;
+using Controllers.Construction;
 using Controllers.Settler;
+using Models.Ai;
 using Zenject;
 
 namespace App.Registrators
@@ -12,10 +14,11 @@ namespace App.Registrators
             new SignalInstaller(Container);
 
             // MODELS
+            Container.Bind<NavigationGraph>().To<NavigationGraph>().AsSingle();
 
             // CONTROLLERS
-            Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable))
-                .To<SettlersController>().AsSingle().NonLazy();
+            Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable)).To<SettlersController>().AsSingle().NonLazy();
+            Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
 
 
             new ApplicationInitializer();

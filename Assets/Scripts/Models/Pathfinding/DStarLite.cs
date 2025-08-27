@@ -6,36 +6,34 @@ namespace Models.Ai.Pathfinding
 {
     public interface IPathfindingBrain<T>
     {
-        public void Initialize(List<Node<T>> allNodes);
+        public void Initialize(List<Node<T>> allNodes, Node<T> startNode, Node<T> goalNode);
 
-        public List<Node<T>> GetPath(Node<T> start, Node<T> goal);
+        public List<Node<T>> GetPath();
     }
 
     public class DStarLite<T> : IPathfindingBrain<T>
     {
-        private Node<T> startNode;
-        private Node<T> goalNode;
-        private List<Node<T>> allNodes;
-        private float keyModifier;
-
         public class KeyNodeComparer : IComparer<(Key, Node<T>)>
         {
             public int Compare((Key, Node<T>) x, (Key, Node<T>) y)
             {
-                return x.Item1 < y.Item1
-                    ? -1
-                    : x.Item1 > y.Item1 ? 1 : 0;
+                return x.Item1 < y.Item1 ? -1 : x.Item1 > y.Item1 ? 1 : 0;
             }
         }
+
+        private Node<T> startNode;
+        private Node<T> goalNode;
+        private float keyModifier;
 
         private readonly SortedSet<(Key, Node<T>)> openSet = new SortedSet<(Key, Node<T>)>(new KeyNodeComparer());
         private readonly Dictionary<Node<T>, Key> lookups = new Dictionary<Node<T>, Key>();
 
         private const int MAX_CYCLES = 1000;
 
-        public void Initialize(List<Node<T>> allNodes)
+        public void Initialize(List<Node<T>> allNodes, Node<T> startNode, Node<T> goalNode)
         {
-            this.allNodes = allNodes;
+            this.startNode = startNode;
+            this.goalNode = goalNode;
 
             openSet.Clear();
             lookups.Clear();
@@ -53,11 +51,8 @@ namespace Models.Ai.Pathfinding
             lookups[goalNode] = key;
         }
 
-        public List<Node<T>> GetPath(Node<T> startNode, Node<T> goalNode)
+        public List<Node<T>> GetPath()
         {
-            this.startNode = startNode;
-            this.goalNode = goalNode;
-
             ComputeShortestPath();
 
             var path = new List<Node<T>> { startNode };
@@ -74,6 +69,7 @@ namespace Models.Ai.Pathfinding
                 path.Add(next);
                 current = next;
             }
+
             return path;
         }
 

@@ -1,119 +1,111 @@
-using App.Signals;
+using Models.Ai;
+using UnityEditor;
 using UnityEngine;
-using Zenject;
 
 namespace Views.Road
 {
+    [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class RoadView : MonoBehaviour
     {
-        [SerializeField] LineRenderer lineRenderer;
-        [SerializeField] private GameObject roadNodePrefab;
-        [SerializeField] private float nodeSpacing = 2f;
+        [SerializeField] private float nodeSpacing = 1f;
+        /*[Inject]*/ public NavigationGraph navigationGraph;
 
-        [Inject] private SignalBus signalBus;
+        private float roadWidth = .25f;
 
-        bool buildingModeOn;
-        readonly float resolution = .2f;
+        private Vector3 startPos;
+        private Vector3 endPos;
 
-        Vector3? startPosition;
-        Vector3? endPosition;
+        public Material lineMat;
 
-        private void Start()
+        public void Init(Vector3 startPos, Vector3 endPos)
         {
-            lineRenderer.positionCount = 0;
+            this.startPos = startPos;
+            this.endPos = endPos;
+
+            var line = gameObject.AddComponent<LineRenderer>();
+            line.positionCount = 2;
+            line.SetPosition(0, new Vector3(startPos.x, .01f, startPos.z));
+            line.SetPosition(1, new Vector3(endPos.x, .01f, endPos.z));
+            line.startWidth = .2f;
+            line.endWidth = .2f;
+
+            lineMat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            lineMat.color = Color.gray;
+
+            line.material = lineMat;
+
+            //GenerateMesh(startPos, endPos);
         }
 
-        void Update()
+        private void OnDrawGizmos()
         {
-            if (Input.GetKeyDown(KeyCode.Q))
+            Handles.matrix = transform.localToWorldMatrix;
+            Handles.SphereHandleCap(0, startPos, Quaternion.identity, .25f, EventType.Repaint);
+            Handles.SphereHandleCap(1, endPos, Quaternion.identity, .25f, EventType.Repaint);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            lineMat.color = Color.magenta;
+
+            var startNode = navigationGraph.GetNode(startPos);
+            foreach (var nb in startNode.Neighbors)
             {
-                buildingModeOn = !buildingModeOn;
-                signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingModeOn));
+                Handles.DrawLine(startNode.Position, nb.Position);
             }
 
-            if (Input.GetMouseButtonDown(0) && buildingModeOn)
+            var endNode = navigationGraph.GetNode(endPos);
+            foreach (var nb in endNode.Neighbors)
             {
-                if (TryGetMouseWorldPosition(out Vector3 worldPos))
-                {
-                    if (startPosition == null)
-                    {
-                        startPosition = worldPos;
-                        lineRenderer.positionCount = 2;
-                        lineRenderer.SetPosition(0, worldPos);
-                        lineRenderer.SetPosition(1, worldPos);
-                    }
-                    else if (endPosition == null)
-                    {
-                        endPosition = worldPos;
-                        lineRenderer.SetPosition(1, worldPos);
-
-                        GenerateNodes((Vector3)startPosition, (Vector3)endPosition);
-                    }
-                    else
-                    {
-                        startPosition = worldPos;
-                        endPosition = null;
-                        lineRenderer.positionCount = 2;
-                        lineRenderer.SetPosition(0, worldPos);
-                        lineRenderer.SetPosition(1, worldPos);
-                    }
-                }
-            }
-
-            if (startPosition != null && endPosition == null)
-            {
-                if (TryGetMouseWorldPosition(out Vector3 previewPos))
-                {
-                    lineRenderer.SetPosition(1, previewPos);
-                }
+                Handles.DrawLine(endNode.Position, nb.Position);
             }
         }
 
-        private bool TryGetMouseWorldPosition(out Vector3 worldPos)
+        private void GenerateMesh(Vector3 startPos, Vector3 endPos)
         {
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            var mesh = new Mesh();
+            var direction = (endPos - startPos).normalized;
+            var flatDirection = new Vector3(direction.x, 0f, direction.z).normalized;
+            var right = Vector3.Cross(Vector3.up, flatDirection).normalized * (roadWidth / 2f);
+
+            var v0 = startPos - right;
+            var v1 = startPos + right;
+            var v2 = endPos - right;
+            var v3 = endPos + right;
+
+            v0 = transform.InverseTransformPoint(v0);
+            v1 = transform.InverseTransformPoint(v1);
+            v2 = transform.InverseTransformPoint(v2);
+            v3 = transform.InverseTransformPoint(v3);
+
+            mesh.vertices = new Vector3[] { v0, v1, v2, v3 };
+
+            mesh.triangles = new int[]
             {
-                var posX = Mathf.Round(hit.point.x / resolution) * resolution;
-                var posY = .1f;
-                var posZ = Mathf.Round(hit.point.z / resolution) * resolution;
-                worldPos = new Vector3(posX, posY, posZ);
+                0, 2, 1,
+                2, 3, 1
+            };
 
-                return true;
-            }
+            mesh.uv = new Vector2[]
+            {
+                new Vector2(0, 0),
+                new Vector2(1, 0),
+                new Vector2(0, 1),
+                new Vector2(1, 1)
+            };
 
-            worldPos = Vector3.zero;
-            return false;
+            mesh.RecalculateNormals();
+
+            GetComponent<MeshFilter>().mesh = mesh;
         }
+    }
 
-        private void GenerateNodes(Vector3 start, Vector3 end)
+    public class MyObjectGizmoDrawer
+    {
+        [DrawGizmo(GizmoType.NotInSelectionHierarchy)]
+        private static void DrawGizmo(RoadView source, GizmoType type)
         {
-            Vector3 direction = (end - start).normalized;
-            float distance = Vector3.Distance(start, end);
-            int nodeCount = Mathf.FloorToInt(distance / nodeSpacing);
-
-            Vector3 previousPos = start;
-            GameObject previousNode = null;
-
-            for (int i = 0; i <= nodeCount; i++)
-            {
-                Vector3 nodePos = start + direction * (i * nodeSpacing);
-                if (i == nodeCount) nodePos = end;
-
-                var nodeObj = Instantiate(roadNodePrefab, nodePos, Quaternion.identity);
-                nodeObj.transform.SetParent(transform, false);
-                nodeObj.SetActive(true);
-                var node = nodeObj.GetComponent<RoadNode>();
-
-                if (previousNode != null)
-                {
-                    var prevNode = previousNode.GetComponent<RoadNode>();
-                    prevNode.Neighbors.Add(node);
-                    node.Neighbors.Add(prevNode);
-                }
-
-                previousNode = nodeObj;
-            }
+            source.lineMat.color = Color.gray;
         }
     }
 }

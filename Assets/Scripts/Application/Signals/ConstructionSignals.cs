@@ -1,3 +1,4 @@
+using Controllers.Construction;
 using Zenject;
 
 namespace App.Signals
@@ -11,11 +12,11 @@ namespace App.Signals
 
         public class ConstructionMode
         {
-            public bool State {  get; private set; }
+            public BuildingDefinition Building {  get; private set; }
 
-            public ConstructionMode(bool state)
+            public ConstructionMode(BuildingDefinition building)
             {
-                State = state;
+                Building = building;
             }
         }
     }
