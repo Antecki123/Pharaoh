@@ -1,52 +1,39 @@
 using Models.Ai;
 using UnityEditor;
 using UnityEngine;
+using Zenject;
 
 namespace Views.Road
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class RoadView : MonoBehaviour
     {
-        [SerializeField] private float nodeSpacing = 1f;
-        /*[Inject]*/ public NavigationGraph navigationGraph;
+        [Inject] private NavigationGraph navigationGraph;
 
-        private float roadWidth = .25f;
+        private float roadWidth = .5f;
 
         private Vector3 startPos;
         private Vector3 endPos;
-
-        public Material lineMat;
 
         public void Init(Vector3 startPos, Vector3 endPos)
         {
             this.startPos = startPos;
             this.endPos = endPos;
 
-            var line = gameObject.AddComponent<LineRenderer>();
-            line.positionCount = 2;
-            line.SetPosition(0, new Vector3(startPos.x, .01f, startPos.z));
-            line.SetPosition(1, new Vector3(endPos.x, .01f, endPos.z));
-            line.startWidth = .2f;
-            line.endWidth = .2f;
-
-            lineMat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            lineMat.color = Color.gray;
-
-            line.material = lineMat;
-
-            //GenerateMesh(startPos, endPos);
+            GenerateMesh(startPos, endPos);
         }
 
         private void OnDrawGizmos()
         {
             Handles.matrix = transform.localToWorldMatrix;
-            Handles.SphereHandleCap(0, startPos, Quaternion.identity, .25f, EventType.Repaint);
-            Handles.SphereHandleCap(1, endPos, Quaternion.identity, .25f, EventType.Repaint);
+            Handles.SphereHandleCap(0, startPos, Quaternion.identity, .1f, EventType.Repaint);
+            Handles.SphereHandleCap(1, endPos, Quaternion.identity, .1f, EventType.Repaint);
         }
 
         private void OnDrawGizmosSelected()
         {
-            lineMat.color = Color.magenta;
+            if (!Application.IsPlaying(gameObject))
+                return;
 
             var startNode = navigationGraph.GetNode(startPos);
             foreach (var nb in startNode.Neighbors)
@@ -95,17 +82,10 @@ namespace Views.Road
             };
 
             mesh.RecalculateNormals();
-
             GetComponent<MeshFilter>().mesh = mesh;
-        }
-    }
 
-    public class MyObjectGizmoDrawer
-    {
-        [DrawGizmo(GizmoType.NotInSelectionHierarchy)]
-        private static void DrawGizmo(RoadView source, GizmoType type)
-        {
-            source.lineMat.color = Color.gray;
+            //var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            //GetComponent<MeshRenderer>().material = material;
         }
     }
 }

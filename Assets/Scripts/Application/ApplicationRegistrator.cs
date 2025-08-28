@@ -1,3 +1,4 @@
+using App.Helpers;
 using App.Signals;
 using Controllers.Construction;
 using Controllers.Settler;
@@ -15,11 +16,11 @@ namespace App.Registrators
 
             // MODELS
             Container.Bind<NavigationGraph>().To<NavigationGraph>().AsSingle();
+            Container.Bind<PrefabManager>().AsSingle();
 
             // CONTROLLERS
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable)).To<SettlersController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
-
 
             new ApplicationInitializer();
         }

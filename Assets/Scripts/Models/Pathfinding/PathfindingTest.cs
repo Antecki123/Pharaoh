@@ -71,13 +71,17 @@ public class PathfindingTest : MonoBehaviour
 
             var path = dStar.GetPath();
 
-            if (path.Count == 0)
+            if (path.Count > 0)
+            {
+                line.positionCount = path.Count;
+                line.SetPositions(path
+                    .ConvertAll(p => new Vector3(p.Data.Position.x, 0.1f, p.Data.Position.z))
+                    .ToArray());
+            }
+            else
+            {
                 Debug.LogWarning($"[D*Lite] Cannot find a path between {startNode.Data} and {goalNode.Data}.");
-
-            line.positionCount = path.Count;
-            line.SetPositions(path
-                .ConvertAll(p => new Vector3(p.Data.Position.x, 0.1f, p.Data.Position.z))
-                .ToArray());
+            }
 
             await UniTask.WaitForSeconds(delayTimeSec);
         }

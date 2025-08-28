@@ -1,6 +1,6 @@
+using App.Helpers;
 using App.Signals;
 using Models.Ai;
-using UnityEngine;
 using Zenject;
 
 namespace Controllers.Construction
@@ -10,11 +10,13 @@ namespace Controllers.Construction
         private IConstruction currentConstruction;
 
         private SignalBus signalBus;
+        private PrefabManager prefabManager;
         private NavigationGraph navigationGraph;
 
-        public ConstructionController(SignalBus signalBus, NavigationGraph navigationGraph)
+        public ConstructionController(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph)
         {
             this.signalBus = signalBus;
+            this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
         }
 
@@ -36,7 +38,7 @@ namespace Controllers.Construction
                     currentConstruction = null;
                     break;
                 case BuildingDefinition.Route:
-                    currentConstruction = new RoadBuilder(signalBus, navigationGraph);
+                    currentConstruction = new RoadBuilder(signalBus, prefabManager, navigationGraph);
                     break;
                 case BuildingDefinition.Cottage:
                     currentConstruction = new CottageBuilder();

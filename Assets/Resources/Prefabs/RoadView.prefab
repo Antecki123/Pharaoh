@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 74117f645ca87544896e430b75e9a316, type: 2}
+  - {fileID: 2100000, guid: fa91118138befc649a06beb2c295e732, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -99,6 +99,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58b94fa7237403741a6f277210f07600, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roadNodePrefab: {fileID: 0}
-  nodeSpacing: 2
-  roadWidth: 2
