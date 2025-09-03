@@ -54,7 +54,19 @@ namespace Controllers.Construction
 
             if (Input.GetMouseButtonDown(1))
             {
-                CancelConstruction();
+                if (startPosition != null)
+                {
+                    startPosition = null;
+                    endPosition = null;
+                    segmentsPositions.Clear();
+
+                    var lineRenderer = roadPreview.GetComponent<LineRenderer>();
+                    lineRenderer.positionCount = 0;
+                }
+                else
+                {
+                    CancelConstruction();
+                }
             }
 
             if (Input.GetMouseButtonDown(0))
@@ -65,8 +77,8 @@ namespace Controllers.Construction
                     {
                         SelectFirstPoint(worldPos);
                     }
-                    else if (endPosition == null && CanAddRoad(startPosition.Value, worldPos, navigationGraph.GetNeighborsPosition(startPosition.Value),
-                        navigationGraph.MinimumRoadAngle))
+                    else if (endPosition == null && !IntersectsExistingRoad(startPosition.Value, worldPos) &&
+                        IsValidRoadAngle(startPosition.Value, worldPos, navigationGraph.GetNeighborsPosition(startPosition.Value), navigationGraph.MinimumRoadAngle))
                     {
                         SelectEndPoint(worldPos);
                     }
@@ -81,11 +93,11 @@ namespace Controllers.Construction
                     lineRenderer.positionCount = 2;
                     lineRenderer.SetPosition(0, startPosition.Value);
                     lineRenderer.SetPosition(1, previewPos);
-                    
+
                     if (navigationGraph.Contains(startPosition.Value))
                     {
-                        if (CanAddRoad(startPosition.Value, previewPos, navigationGraph.GetNeighborsPosition(startPosition.Value),
-                            navigationGraph.MinimumRoadAngle))
+                        if (IsValidRoadAngle(startPosition.Value, previewPos, navigationGraph.GetNeighborsPosition(startPosition.Value),
+                            navigationGraph.MinimumRoadAngle) && !IntersectsExistingRoad(startPosition.Value, previewPos))
                             previewRoadMaterial.color = Color.green;
                         else
                             previewRoadMaterial.color = Color.red;
@@ -213,7 +225,7 @@ namespace Controllers.Construction
             return false;
         }
 
-        private bool CanAddRoad(Vector3 nodePos, Vector3 newPos, IEnumerable<Vector3> neighbors, float minAngle)
+        private bool IsValidRoadAngle(Vector3 nodePos, Vector3 newPos, IEnumerable<Vector3> neighbors, float minAngle)
         {
             var dirNew = (newPos - nodePos).normalized;
 
@@ -227,6 +239,57 @@ namespace Controllers.Construction
             }
 
             return true;
+        }
+
+        private bool IntersectsExistingRoad(Vector3 startPos, Vector3 endPos)
+        {
+            var newA = new Vector2(startPos.x, startPos.z);
+            var newB = new Vector2(endPos.x, endPos.z);
+
+            foreach (var node in navigationGraph.Nodes)
+            {
+                foreach (var neighbor in node.Neighbors)
+                {
+                    if (node.NodeId.CompareTo(neighbor.NodeId) > 0)
+                        continue;
+
+                    if (ApproximatelySame(node.Position, startPos) || ApproximatelySame(node.Position, endPos) ||
+                        ApproximatelySame(neighbor.Position, startPos) || ApproximatelySame(neighbor.Position, endPos))
+                        continue;
+
+                    var existingA = new Vector2(node.Position.x, node.Position.z);
+                    var existingB = new Vector2(neighbor.Position.x, neighbor.Position.z);
+
+                    if (DoSegmentsIntersect(newA, newB, existingA, existingB))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool DoSegmentsIntersect(Vector2 p1, Vector2 p2, Vector2 q1, Vector2 q2)
+        {
+            var d1 = Direction(p1, p2, q1);
+            var d2 = Direction(p1, p2, q2);
+            var d3 = Direction(q1, q2, p1);
+            var d4 = Direction(q1, q2, p2);
+
+            if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+                ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)))
+                return true;
+
+            return false;
+        }
+
+        private float Direction(Vector2 a, Vector2 b, Vector2 c)
+        {
+            return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
+        }
+
+        private bool ApproximatelySame(Vector3 a, Vector3 b, float tolerance = 0.01f)
+        {
+            return Vector3.Distance(a, b) <= tolerance;
         }
 
         private List<Vector3> GenerateSegments(Vector3 startPos, Vector3 endPos)

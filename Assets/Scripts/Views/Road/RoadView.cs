@@ -21,6 +21,10 @@ namespace Views.Road
             this.endPos = endPos;
 
             GenerateMesh(startPos, endPos);
+
+            var roadIntersectionGenerator = new RoadIntersectionGenerator(navigationGraph);
+            roadIntersectionGenerator.GenerateIntersection(startPos);
+            roadIntersectionGenerator.GenerateIntersection(endPos);
         }
 
         private void OnDrawGizmos()
@@ -83,9 +87,6 @@ namespace Views.Road
 
             mesh.RecalculateNormals();
             GetComponent<MeshFilter>().mesh = mesh;
-
-            //var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            //GetComponent<MeshRenderer>().material = material;
         }
     }
 }
