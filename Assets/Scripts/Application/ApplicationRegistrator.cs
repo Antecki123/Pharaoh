@@ -1,5 +1,6 @@
 using App.Helpers;
 using App.Signals;
+using Controllers;
 using Controllers.Construction;
 using Controllers.Settler;
 using Models.Ai;
@@ -21,6 +22,7 @@ namespace App.Registrators
             // CONTROLLERS
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable)).To<SettlersController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
+            Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
 
             new ApplicationInitializer();
         }
