@@ -1,3 +1,4 @@
+using App.Configs;
 using UnityEngine;
 using Zenject;
 
@@ -5,21 +6,19 @@ namespace Controllers
 {
     public class CameraController : IInitializable, ILateTickable
     {
+        private CameraConfig cameraConfig;
         private Camera mainCamera;
 
-        private float movementSpeed = 4f;
-        private float acceleration = 10f;
         private Vector3 currentVelocity;
-
-        private float sensitivity = 600f;
-        private float rotationDamping = 20f;
+        private Quaternion targetRotation;
         private float xRotation;
         private float yRotation;
-        private Quaternion targetRotation;
-
-        private float scrollSpeed = 50f;
-        private float scrollDamping = 15f;
         private float scrollVelocity;
+
+        public CameraController(CameraConfig cameraConfig)
+        {
+            this.cameraConfig = cameraConfig;
+        }
 
         public void Initialize()
         {
@@ -40,7 +39,7 @@ namespace Controllers
         {
             Vector3 targetVelocity = Vector3.zero;
 
-            var speedModifier = Input.GetKey(KeyCode.LeftShift) ? movementSpeed * 3 : movementSpeed;
+            var speedModifier = Input.GetKey(KeyCode.LeftShift) ? cameraConfig.movementSpeed * 3 : cameraConfig.movementSpeed;
             var movementInputX = Input.GetAxisRaw("Horizontal");
             var movementInputZ = Input.GetAxisRaw("Vertical");
 
@@ -60,7 +59,7 @@ namespace Controllers
             if (targetVelocity != Vector3.zero)
                 targetVelocity = targetVelocity.normalized * speedModifier;
 
-            currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, acceleration * Time.deltaTime);
+            currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, cameraConfig.acceleration * Time.deltaTime);
 
             mainCamera.transform.position += currentVelocity * Time.deltaTime;
             mainCamera.transform.position = new Vector3(mainCamera.transform.position.x, currentY, mainCamera.transform.position.z);
@@ -70,8 +69,8 @@ namespace Controllers
         {
             if (Input.GetMouseButton(2))
             {
-                var mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-                var mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+                var mouseX = Input.GetAxis("Mouse X") * cameraConfig.sensitivity * Time.deltaTime;
+                var mouseY = Input.GetAxis("Mouse Y") * cameraConfig.sensitivity * Time.deltaTime;
 
                 if (mouseX == 0 && mouseY == 0)
                     return;
@@ -83,7 +82,7 @@ namespace Controllers
                 targetRotation = Quaternion.Euler(xRotation, yRotation, 0f);
             }
 
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, targetRotation, Time.deltaTime * rotationDamping);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, targetRotation, Time.deltaTime * cameraConfig.rotationDamping);
         }
 
         private void Scroll()
@@ -93,7 +92,7 @@ namespace Controllers
             var maxY = 20f;
 
             if (Mathf.Abs(scrollInput) > 0.01f)
-                scrollVelocity += -scrollInput * scrollSpeed;
+                scrollVelocity += -scrollInput * cameraConfig.scrollSpeed;
 
             if (Mathf.Abs(scrollVelocity) > 0.001f)
             {
@@ -102,7 +101,7 @@ namespace Controllers
                 mainCamera.transform.position = newPos;
             }
 
-            scrollVelocity = Mathf.Lerp(scrollVelocity, 0f, Time.deltaTime * scrollDamping);
+            scrollVelocity = Mathf.Lerp(scrollVelocity, 0f, Time.deltaTime * cameraConfig.scrollDamping);
         }
     }
 }
