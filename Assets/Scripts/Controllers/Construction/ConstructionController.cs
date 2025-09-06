@@ -41,7 +41,7 @@ namespace Controllers.Construction
                     currentConstruction = new RoadBuilder(signalBus, prefabManager, navigationGraph);
                     break;
                 case BuildingDefinition.Cottage:
-                    currentConstruction = new CottageBuilder();
+                    currentConstruction = new CottageBuilder(signalBus, prefabManager, navigationGraph);
                     break;
                 case BuildingDefinition.House:
                     break;
