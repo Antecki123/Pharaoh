@@ -8,6 +8,7 @@ namespace App.Signals
         {
             new ApplicationSignals(container);
             new ConstructionSignals(container);
+            new SettlersSignals(container);
         }
     }
 }

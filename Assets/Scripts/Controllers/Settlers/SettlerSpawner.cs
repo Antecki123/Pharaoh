@@ -1,4 +1,5 @@
-using Models.Ai.Pathfinding;
+using App.Helpers;
+using Cysharp.Threading.Tasks;
 using Models.Settler;
 using System;
 using UnityEngine;
@@ -6,25 +7,21 @@ using Views.Settler;
 
 namespace Controllers.Settler
 {
-    public struct SettlerViewModelWrapper
-    {
-        public SettlerView View { get; set; }
-
-        public SettlerModel Model { get; set; }
-    }
-
     public class SettlerSpawner
     {
-        public SettlerViewModelWrapper SpawnSettler(Vector3 position)
-        {
-            var settlerPrefab = Resources.Load<SettlerView>("Prefabs/SettlerView");
-            if (settlerPrefab == null)
-            {
-                Debug.LogError($"Prefab 'settlerPrefab' could not be found in 'Prefabs/SettlerView'. Make sure the path and name are correct.");
-                throw new NullReferenceException();
-            }
+        private PrefabManager prefabManager;
+        private GameObject settlerPrefab;
 
-            var settlerView = UnityEngine.Object.Instantiate(settlerPrefab);
+        public SettlerSpawner(PrefabManager prefabManager)
+        {
+            this.prefabManager = prefabManager;
+
+            _ = LoadAssets();
+        }
+
+        public (SettlerView, SettlerModel) SpawnSettler(Vector3 position, Quaternion rotation)
+        {
+            var settlerView = prefabManager.Instantiate<SettlerView>(settlerPrefab);
             var settlerModel = new SettlerModel()
             {
                 Id = Guid.NewGuid(),
@@ -36,12 +33,14 @@ namespace Controllers.Settler
             };
 
             settlerView.Init(settlerModel);
+            settlerView.transform.SetPositionAndRotation(position, rotation);
 
-            return new SettlerViewModelWrapper()
-            {
-                View = settlerView,
-                Model = settlerModel
-            };
+            return (settlerView, settlerModel);
+        }
+
+        private async UniTask LoadAssets()
+        {
+            settlerPrefab = await AddressablesUtility.LoadAssetAsync<GameObject>("Settler");
         }
     }
 }

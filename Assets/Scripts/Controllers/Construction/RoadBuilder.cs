@@ -1,4 +1,5 @@
-﻿using App.Helpers;
+﻿using App.Configs;
+using App.Helpers;
 using App.Signals;
 using Models.Ai;
 using System;
@@ -22,14 +23,14 @@ namespace Controllers.Construction
         private SignalBus signalBus;
         private PrefabManager prefabManager;
         private NavigationGraph navigationGraph;
+        private ConstructionConfig constructionConfig;
 
-        public bool RoadConnectionRequired => false;
-
-        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph)
+        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
+            this.constructionConfig = constructionConfig;
 
             var loadedAsset = Resources.Load<GameObject>("Prefabs/RoadPreview");
             if (loadedAsset == null)
@@ -45,6 +46,11 @@ namespace Controllers.Construction
             pointer.name = "Pointer";
 
             previewRoadMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        }
+
+        public void Initialize()
+        {
+
         }
 
         public void Tick()
@@ -78,7 +84,7 @@ namespace Controllers.Construction
                         SelectFirstPoint(worldPos);
                     }
                     else if (endPosition == null && !IntersectsExistingRoad(startPosition.Value, worldPos) &&
-                        IsValidRoadAngle(startPosition.Value, worldPos, navigationGraph.GetNeighborsPosition(startPosition.Value), navigationGraph.MinimumRoadAngle))
+                        IsValidRoadAngle(startPosition.Value, worldPos, navigationGraph.GetNeighborsPosition(startPosition.Value), constructionConfig.MinimumRoadAngle))
                     {
                         SelectEndPoint(worldPos);
                     }
@@ -97,7 +103,7 @@ namespace Controllers.Construction
                     if (navigationGraph.Contains(startPosition.Value))
                     {
                         if (IsValidRoadAngle(startPosition.Value, previewPos, navigationGraph.GetNeighborsPosition(startPosition.Value),
-                            navigationGraph.MinimumRoadAngle) && !IntersectsExistingRoad(startPosition.Value, previewPos))
+                            constructionConfig.MinimumRoadAngle) && !IntersectsExistingRoad(startPosition.Value, previewPos))
                             previewRoadMaterial.color = Color.green;
                         else
                             previewRoadMaterial.color = Color.red;
@@ -148,7 +154,7 @@ namespace Controllers.Construction
             var routePrefab = Resources.Load<RoadView>("Prefabs/RoadView");
             if (routePrefab == null)
             {
-                Debug.LogError($"Prefab 'routePrefab' could not be found in 'Prefabs/RoadView'. Make sure the path and name are correct.");
+                Debug.LogError($"Prefab 'roadPrefab' could not be found in 'Prefabs/RoadView'. Make sure the path and name are correct.");
                 throw new NullReferenceException();
             }
 
@@ -188,7 +194,7 @@ namespace Controllers.Construction
             startPosition = endPosition;
             endPosition = null;
             pointer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            pointer.transform.localScale = new Vector3(.5f, .001f, .5f);
+            pointer.transform.localScale = new Vector3(1f, .01f, 1f);
             pointer.name = "Pointer";
         }
 
@@ -298,22 +304,22 @@ namespace Controllers.Construction
 
             var direction = (endPos - startPos).normalized;
             var distance = Vector3.Distance(startPos, endPos);
-            int steps = Mathf.FloorToInt(distance / navigationGraph.SegmentSpacing);
+            int steps = Mathf.FloorToInt(distance / constructionConfig.SegmentSpacing);
 
             Vector3? lastAdded = null;
 
             for (int i = 0; i <= steps; i++)
             {
-                var point = startPos + direction * (i * navigationGraph.SegmentSpacing);
+                var point = startPos + direction * (i * constructionConfig.SegmentSpacing);
 
-                if (lastAdded == null || Vector3.Distance(lastAdded.Value, point) >= navigationGraph.MinimumSpacing)
+                if (lastAdded == null || Vector3.Distance(lastAdded.Value, point) >= constructionConfig.MinimumSpacing)
                 {
                     points.Add(point);
                     lastAdded = point;
                 }
             }
 
-            if (Vector3.Distance(points[^1], endPos) >= navigationGraph.MinimumSpacing)
+            if (Vector3.Distance(points[^1], endPos) >= constructionConfig.MinimumSpacing)
                 points.Add(endPos);
             else
                 points[^1] = endPos;

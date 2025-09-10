@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Constructions
+  m_EditorClassIdentifier: 
+  m_GroupName: Constructions
+  m_GUID: 85f63b23327397e45b42aaa26e3ce22a
+  m_SerializeEntries:
+  - m_GUID: 453efebbbbcd94f40bd3f5c34d0451a2
+    m_Address: Settler
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a3669ab1eb89c045a57ec7b3aa06ec3
+    m_Address: Cottage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87a8dadcd060b9043867d2045d69ce7b
+    m_Address: WheatField
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 916de14cc8ccc0a4e9325ce219d67cdf
+    m_Address: House
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a161a3e8a604c8d4c8e3c4588819a4b5
+    m_Address: Granary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2b7f9ba41da1df4f97a0399e0f57bf2
+    m_Address: FarmersHut
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eff8ba096beae2d489e82f381f1e1499
+    m_Address: LinenField
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: d5245fa0bb56a0e4b9ff1bd28a911f79, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 65b31ef80cead734b9f052bb8ae92846, type: 2}
+    - {fileID: 11400000, guid: e539896da70be6041affe4e721c9467b, type: 2}

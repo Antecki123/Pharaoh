@@ -1,3 +1,4 @@
+using App.Configs;
 using Models.Ai;
 using UnityEditor;
 using UnityEngine;
@@ -9,8 +10,7 @@ namespace Views.Road
     public class RoadView : MonoBehaviour
     {
         [Inject] private NavigationGraph navigationGraph;
-
-        private float roadWidth = .5f;
+        [Inject] private ConstructionConfig constructionConfig;
 
         private Vector3 startPos;
         private Vector3 endPos;
@@ -22,7 +22,7 @@ namespace Views.Road
 
             GenerateMesh(startPos, endPos);
 
-            var roadIntersectionGenerator = new RoadIntersectionGenerator(navigationGraph);
+            var roadIntersectionGenerator = new RoadIntersectionGenerator(navigationGraph, constructionConfig);
             roadIntersectionGenerator.GenerateIntersection(startPos);
             roadIntersectionGenerator.GenerateIntersection(endPos);
         }
@@ -57,7 +57,7 @@ namespace Views.Road
             var mesh = new Mesh();
             var direction = (endPos - startPos).normalized;
             var flatDirection = new Vector3(direction.x, 0f, direction.z).normalized;
-            var right = Vector3.Cross(Vector3.up, flatDirection).normalized * (roadWidth / 2f);
+            var right = Vector3.Cross(Vector3.up, flatDirection).normalized * (constructionConfig.RoadWidth / 2f);
 
             var v0 = startPos - right;
             var v1 = startPos + right;

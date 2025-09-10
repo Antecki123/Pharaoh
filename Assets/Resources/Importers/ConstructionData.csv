@@ -1,0 +1,8 @@
+BuildingDefinition;BuildingOffset;SnapDistance
+Cottage;4;8
+House;5;8
+Residence;5;8
+FarmersHut;3,5;5
+WheatField;5;8
+LinenField;5;8
+Granary;9;13

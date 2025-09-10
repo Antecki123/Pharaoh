@@ -1,6 +1,7 @@
 using Models.Ai.Pathfinding;
 using System;
 using UnityEngine;
+using Views.Road;
 using Views.Settler;
 
 namespace Controllers.Ai.Strategy
@@ -24,10 +25,10 @@ namespace Controllers.Ai.Strategy
     public class StrategyFactory
     {
         private readonly SettlerView context;
-        private readonly IPathfindingBrain<Vector2> pathfinding;
+        private readonly IPathfindingBrain<RoadNode> pathfinding;
         private readonly Animator animator;
 
-        public StrategyFactory(SettlerView context, IPathfindingBrain<Vector2> pathfinding, Animator animator)
+        public StrategyFactory(SettlerView context, IPathfindingBrain<RoadNode> pathfinding, Animator animator)
         {
             this.context = context;
             this.pathfinding = pathfinding;
@@ -38,8 +39,8 @@ namespace Controllers.Ai.Strategy
         {
             return strategyDefinition switch
             {
-                StrategyDefinition.CARAVANEER => new CaravaneerStrategy(context, pathfinding, animator),
-                //StrategyDefinition.EXPLODER => new ExploderStrategy(context, pathfinding, animator),
+                StrategyDefinition.None => new IdleStrategy(),
+                StrategyDefinition.Caravaneer => new CaravaneerStrategy(context, pathfinding, animator),
                 _ => throw new ArgumentException($"Unknown strategy type: {strategyDefinition}")
             };
         }
@@ -47,7 +48,8 @@ namespace Controllers.Ai.Strategy
 
     public enum StrategyDefinition
     {
-        NONE,
-        CARAVANEER
+        None,
+        Caravaneer,
+        Farmer
     }
 }

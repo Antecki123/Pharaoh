@@ -1,6 +1,10 @@
+using App.Configs;
 using App.Helpers;
 using App.Signals;
 using Models.Ai;
+using System;
+using System.Collections.Generic;
+using Views.Construction;
 using Zenject;
 
 namespace Controllers.Construction
@@ -12,16 +16,35 @@ namespace Controllers.Construction
         private SignalBus signalBus;
         private PrefabManager prefabManager;
         private NavigationGraph navigationGraph;
+        private ConstructionConfig constructionConfig;
+        private ConstructionDataImporter constructionDataImporter;
 
-        public ConstructionController(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph)
+        private Dictionary<BuildingDefinition, Func<IConstruction>> constructionFactories;
+
+        public ConstructionController(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig,
+            ConstructionDataImporter constructionDataImporter)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
+            this.constructionConfig = constructionConfig;
+            this.constructionDataImporter = constructionDataImporter;
         }
 
         public void Initialize()
         {
+            constructionFactories = new Dictionary<BuildingDefinition, Func<IConstruction>>
+            {
+                { BuildingDefinition.None, () => null },
+                { BuildingDefinition.Road, () => new RoadBuilder(signalBus, prefabManager, navigationGraph, constructionConfig) },
+                { BuildingDefinition.Cottage, () => new ConstructionBuilder<CottageView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Cottage) },
+                { BuildingDefinition.House, () => new ConstructionBuilder<HouseView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.House) },
+                { BuildingDefinition.FarmersHut, () => new ConstructionBuilder<FarmersHutView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.FarmersHut) },
+                { BuildingDefinition.WheatField, () => new ConstructionBuilder<WheatFieldView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.WheatField) },
+                { BuildingDefinition.LinenField, () => new ConstructionBuilder<LinenFieldView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.LinenField) },
+                { BuildingDefinition.Granary, () => new ConstructionBuilder<GranaryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Granary) },
+            };
+
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
         }
 
@@ -32,23 +55,10 @@ namespace Controllers.Construction
 
         private void SetConstruction(ConstructionSignals.ConstructionMode signal)
         {
-            switch (signal.Building)
+            if (constructionFactories.TryGetValue(signal.Building, out var factory))
             {
-                case BuildingDefinition.None:
-                    currentConstruction = null;
-                    break;
-                case BuildingDefinition.Route:
-                    currentConstruction = new RoadBuilder(signalBus, prefabManager, navigationGraph);
-                    break;
-                case BuildingDefinition.Cottage:
-                    currentConstruction = new CottageBuilder(signalBus, prefabManager, navigationGraph);
-                    break;
-                case BuildingDefinition.House:
-                    break;
-                case BuildingDefinition.Residence:
-                    break;
-                default:
-                    break;
+                currentConstruction = factory?.Invoke();
+                currentConstruction?.Initialize();
             }
         }
     }
@@ -56,9 +66,13 @@ namespace Controllers.Construction
     public enum BuildingDefinition
     {
         None,
-        Route,
+        Road,
         Cottage,
         House,
-        Residence
+        Residence,
+        FarmersHut,
+        WheatField,
+        LinenField,
+        Granary
     }
 }

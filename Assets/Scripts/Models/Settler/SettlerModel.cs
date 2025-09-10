@@ -21,6 +21,7 @@ namespace Models.Settler
     {
         None = 0,
         Caravaneer = 1,
+        Farmer = 2,
     }
 
     public enum SettlerGender

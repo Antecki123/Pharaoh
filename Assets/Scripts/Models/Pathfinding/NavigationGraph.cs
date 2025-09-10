@@ -9,12 +9,6 @@ namespace Models.Ai
         public HashSet<RoadNode> Nodes { get; } = new HashSet<RoadNode>();
         public HashSet<Vector3> Intersections { get; } = new HashSet<Vector3>();
 
-        public float SegmentSpacing { get; } = 1f;
-
-        public float MinimumSpacing { get; } = .33f;
-
-        public float MinimumRoadAngle { get; } = 30f;
-
         public RoadNode GetNode(Vector3 position)
         {
             foreach (var node in Nodes)

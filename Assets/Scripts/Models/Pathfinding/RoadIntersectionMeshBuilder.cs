@@ -1,3 +1,4 @@
+using App.Configs;
 using Models.Ai;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +16,13 @@ namespace Views.Road
 
     public class RoadIntersectionGenerator
     {
-        private readonly NavigationGraph navigationGraph;
-        private readonly float roadWidth = .5f;
+        private NavigationGraph navigationGraph;
+        private ConstructionConfig constructionConfig;
 
-        public RoadIntersectionGenerator(NavigationGraph navigationGraph)
+        public RoadIntersectionGenerator(NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
         {
             this.navigationGraph = navigationGraph;
+            this.constructionConfig = constructionConfig;
         }
 
         public void GenerateIntersection(Vector3 position)
@@ -34,7 +36,7 @@ namespace Views.Road
             var node = navigationGraph.GetNode(position);
             if (node != null && node.Neighbors.Count >= 3 /*&& !navigationGraph.Intersections.Contains(position)*/)
             {
-                var mesh = GenerateMesh(node.Position, node.Neighbors.Select(n => n.Position), roadWidth);
+                var mesh = GenerateMesh(node.Position, node.Neighbors.Select(n => n.Position), constructionConfig.RoadWidth);
 
                 var go = new GameObject($"IntersectionMesh {node.NodeId}");
                 go.transform.position = Vector3.zero + new Vector3(0, .01f, 0);
@@ -56,7 +58,7 @@ namespace Views.Road
         {
             var corners = new List<Corner>();
             var outletId = 0;
-            var distanceFromCenter = navigationGraph.SegmentSpacing / 2f;
+            var distanceFromCenter = constructionConfig.SegmentSpacing / 2f;
 
             foreach (var neighbor in neighbors)
             {

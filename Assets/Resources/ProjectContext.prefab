@@ -75,3 +75,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraConfig: {fileID: 11400000, guid: a52070a0047da7c4aa229bcde89ffb41, type: 2}
+  constructionConfig: {fileID: 11400000, guid: 752f1b79132ace046b8445e9a14146c8, type: 2}

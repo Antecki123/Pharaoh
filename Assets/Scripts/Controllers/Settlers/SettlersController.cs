@@ -1,4 +1,7 @@
-using Models.Ai.Pathfinding;
+using App.Helpers;
+using App.Signals;
+using Models.Ai;
+using Models.Economy;
 using Models.Settler;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,35 +12,44 @@ namespace Controllers.Settler
 {
     public class SettlersController : IInitializable, ITickable
     {
-        [Inject] private SignalBus signalBus;
+        private List<(SettlerView, SettlerModel)> settlers = new List<(SettlerView, SettlerModel)>();
 
-        private Dictionary<SettlerView, SettlerModel> settlers = new Dictionary<SettlerView, SettlerModel>();
-        private IPathfindingBrain<Vector2> pathfinding;
+        private SignalBus signalBus;
+        private PrefabManager prefabManager;
+        private NavigationGraph navigationGraph;
+        private HabitationModel habitationModel;
 
         private SettlerSpawner settlerSpawner;
 
+        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, HabitationModel habitationModel)
+        {
+            this.signalBus = signalBus;
+            this.prefabManager = prefabManager;
+            this.navigationGraph = navigationGraph;
+            this.habitationModel = habitationModel;
+        }
+
         public void Initialize()
         {
-            //signalBus.Subscribe<object>(SpawnSettler);
-            //pathfinding = new DStarLite<Vector2>();
-            //pathfinding.Initialize(new List<Node<Vector2>>());
+            habitationModel.OnHabitationAdded += () => signalBus.Fire(new SettlersSignals.SpawnSettler(new Vector3(47,0,0), Quaternion.identity));
 
-            settlerSpawner = new SettlerSpawner();
-            //SpawnSettler();
+            signalBus.Subscribe<SettlersSignals.SpawnSettler>(SpawnSettler);
+
+            settlerSpawner = new SettlerSpawner(prefabManager);
         }
 
         public void Tick()
         {
             foreach (var settler in settlers)
             {
-                settler.Key.Tick();
+                settler.Item1.Tick();
             }
         }
 
-        private void SpawnSettler()
+        private void SpawnSettler(SettlersSignals.SpawnSettler signal)
         {
-            var newSettler = settlerSpawner.SpawnSettler(Vector3.zero);
-            settlers.Add(newSettler.View, newSettler.Model);
+            var newSettler = settlerSpawner.SpawnSettler(signal.Position, signal.Rotation);
+            settlers.Add((newSettler.Item1, newSettler.Item2));
         }
     }
 }
