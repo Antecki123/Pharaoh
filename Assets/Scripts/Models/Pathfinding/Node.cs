@@ -14,7 +14,11 @@ namespace Models.Ai.Pathfinding
 
     public class Node<T>
     {
+        public Guid Id { get; }
+
         public T Data { get; set; }
+
+        public NodeType NodeType { get; set; }
 
         public Func<Node<T>, Node<T>, float> Cost { get; set; }
 
@@ -26,9 +30,11 @@ namespace Models.Ai.Pathfinding
 
         public List<Node<T>> Neighbors { get; set; } = new();
 
-        public Node(T data, Func<Node<T>, Node<T>, float> cost, Func<Node<T>, Node<T>, float> heuristic)
+        public Node(T data, NodeType nodeType, Func<Node<T>, Node<T>, float> cost, Func<Node<T>, Node<T>, float> heuristic)
         {
+            Id = Guid.NewGuid();
             Data = data;
+            NodeType = nodeType;
             Cost = cost;
             Heuristic = heuristic;
 
@@ -56,5 +62,12 @@ namespace Models.Ai.Pathfinding
         public override bool Equals(object obj) => obj is Key key && this == key;
         public override int GetHashCode() => HashCode.Combine(k1, k2);
         public override string ToString() => $"({k1}, {k2})";
+    }
+
+    public enum NodeType
+    {
+        Road,
+        Terrain,
+        Block
     }
 }

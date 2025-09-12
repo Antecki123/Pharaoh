@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: ConstructionConfig
   m_EditorClassIdentifier: 
   <RoadWidth>k__BackingField: 3
-  <SegmentSpacing>k__BackingField: 5
+  <SegmentSpacing>k__BackingField: 2
   <MinimumSpacing>k__BackingField: 1
   <MinimumRoadAngle>k__BackingField: 30
-  <BuildingOffset>k__BackingField: 5
-  <SnapDistance>k__BackingField: 8

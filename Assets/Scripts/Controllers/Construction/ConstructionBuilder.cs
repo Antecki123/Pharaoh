@@ -3,6 +3,8 @@ using App.Helpers;
 using App.Signals;
 using Cysharp.Threading.Tasks;
 using Models.Ai;
+using Models.Ai.Pathfinding;
+using System.Linq;
 using UnityEngine;
 using Views.Construction;
 using Zenject;
@@ -85,53 +87,57 @@ namespace Controllers.Construction
 
         private bool TryGetSnappedPosition(out Vector3 snappedPos)
         {
-            var layerMask = 1 << 16;
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var layerMask = 1 << 16;
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, layerMask))
+            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
             {
-                var closestDistSqr = float.MaxValue;
-                var bestPos = hit.point;
-                var bestForward = Vector3.forward;
-                var data = constructionData.ConstructionData[buildingDefinition];
-
-                foreach (var node in navigationGraph.Nodes)
-                {
-                    foreach (var neighbor in node.Neighbors)
-                    {
-                        Vector3 closest = ClosestPointOnSegment(node.Position, neighbor.Position, hit.point);
-                        var distSqr = (hit.point - closest).sqrMagnitude;
-
-                        if (distSqr < closestDistSqr && distSqr <= data.SnapDistance * data.SnapDistance)
-                        {
-                            closestDistSqr = distSqr;
-
-                            Vector3 roadDir = (neighbor.Position - node.Position).normalized;
-                            Vector3 forward = new Vector3(roadDir.z, 0, -roadDir.x);
-                            Vector3 toMouse = (hit.point - closest).normalized;
-                            if (Vector3.Dot(toMouse, forward) < 0)
-                                forward = -forward;
-
-                            var totalOffset = constructionConfig.RoadWidth / 2f + data.BuildingOffset;
-
-                            bestPos = closest + forward * totalOffset;
-                            bestForward = forward;
-                        }
-                    }
-                }
-
-                snappedPos = bestPos;
-
-                if (closestDistSqr < float.MaxValue)
-                {
-                    building.transform.rotation = Quaternion.LookRotation(bestForward, Vector3.up);
-                }
-
-                return true;
+                snappedPos = Vector3.zero;
+                return false;
             }
 
-            snappedPos = Vector3.zero;
-            return false;
+            var closestDistSqr = float.MaxValue;
+            var bestPos = hit.point;
+            var bestForward = Vector3.forward;
+
+            var data = constructionData.ConstructionData[buildingDefinition];
+
+            foreach (var node in navigationGraph.Nodes)
+            {
+                if (node.NodeType != NodeType.Road)
+                    continue;
+
+                var roadNeighbors = node.Neighbors.Where(n => n.NodeType == NodeType.Road);
+                foreach (var neighbor in roadNeighbors)
+                {
+                    var closestPoint = ClosestPointOnSegment(node.Data, neighbor.Data, hit.point);
+                    var distSqr = (hit.point - closestPoint).sqrMagnitude;
+
+                    if (distSqr <= data.SnapDistance * data.SnapDistance && distSqr < closestDistSqr)
+                    {
+                        closestDistSqr = distSqr;
+
+                        var roadDir = (neighbor.Data - node.Data).normalized;
+                        var forward = new Vector3(-roadDir.z, 0f, roadDir.x);
+                        var toMouse = (hit.point - closestPoint).normalized;
+
+                        if (Vector3.Dot(toMouse, forward) < 0)
+                            forward = -forward;
+
+                        var totalOffset = constructionConfig.RoadWidth / 2f + data.BuildingOffset;
+                        bestPos = closestPoint + forward * totalOffset;
+                        bestForward = forward;
+                    }
+                }
+            }
+
+            snappedPos = bestPos;
+
+            if (closestDistSqr >= data.SnapDistance * data.SnapDistance)
+                snappedPos = hit.point;
+
+            building.transform.rotation = Quaternion.LookRotation(bestForward, Vector3.up);
+            return true;
         }
 
         private Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 p)

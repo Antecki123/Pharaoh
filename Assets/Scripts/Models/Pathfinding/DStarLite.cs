@@ -6,7 +6,7 @@ namespace Models.Ai.Pathfinding
 {
     public interface IPathfindingBrain<T>
     {
-        public void Initialize(List<Node<T>> allNodes, Node<T> startNode, Node<T> goalNode);
+        public void Initialize(IEnumerable<Node<T>> allNodes, Node<T> startNode, Node<T> goalNode);
 
         public List<Node<T>> GetPath();
     }
@@ -28,9 +28,9 @@ namespace Models.Ai.Pathfinding
         private readonly SortedSet<(Key, Node<T>)> openSet = new SortedSet<(Key, Node<T>)>(new KeyNodeComparer());
         private readonly Dictionary<Node<T>, Key> lookups = new Dictionary<Node<T>, Key>();
 
-        private const int MAX_CYCLES = 1000;
+        private const int MAX_CYCLES = 50000;
 
-        public void Initialize(List<Node<T>> allNodes, Node<T> startNode, Node<T> goalNode)
+        public void Initialize(IEnumerable<Node<T>> allNodes, Node<T> startNode, Node<T> goalNode)
         {
             this.startNode = startNode;
             this.goalNode = goalNode;
@@ -57,17 +57,25 @@ namespace Models.Ai.Pathfinding
 
             var path = new List<Node<T>> { startNode };
             var current = startNode;
+            var visited = new HashSet<Node<T>> { startNode };
+            int maxPathLength = 10000;
 
-            while (current != goalNode)
+            while (current != goalNode && path.Count < maxPathLength)
             {
-                var next = current.Neighbors
-                    .OrderBy(n => n.Cost(current, n) + n.G)
-                    .FirstOrDefault();
+                var next = GetBestSuccessor(current);
 
-                if (next == null) break;
+                if (next == null || visited.Contains(next))
+                    break;
 
                 path.Add(next);
+                visited.Add(next);
                 current = next;
+
+                if (next != current && !current.Neighbors.Contains(next))
+                    current.Neighbors.Add(next);
+
+                if (next == null)
+                    Debug.LogWarning($"[D*Lite] No valid successor for {current.Data}");
             }
 
             return path;
@@ -153,6 +161,25 @@ namespace Models.Ai.Pathfinding
             }
 
             startNode.G = startNode.RHS;
+        }
+
+        private Node<T> GetBestSuccessor(Node<T> node)
+        {
+            Node<T> best = null;
+            float bestScore = float.MaxValue;
+
+            foreach (var s in node.Neighbors)
+            {
+                float score = node.Cost(node, s) + s.G;
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = s;
+                }
+            }
+
+            return best;
         }
 
         private IEnumerable<Node<T>> Predecessors(Node<T> node) => node.Neighbors;

@@ -33,7 +33,7 @@ namespace Controllers.Settler
             };
 
             settlerView.Init(settlerModel);
-            settlerView.transform.SetPositionAndRotation(position, rotation);
+            //settlerView.transform.SetPositionAndRotation(position, rotation);
 
             return (settlerView, settlerModel);
         }

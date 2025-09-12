@@ -1,9 +1,12 @@
 ﻿using App.Configs;
 using App.Helpers;
 using App.Signals;
+using Cysharp.Threading.Tasks;
 using Models.Ai;
+using Models.Ai.Pathfinding;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Views.Road;
 using Zenject;
@@ -31,7 +34,10 @@ namespace Controllers.Construction
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
             this.constructionConfig = constructionConfig;
+        }
 
+        public void Initialize()
+        {
             var loadedAsset = Resources.Load<GameObject>("Prefabs/RoadPreview");
             if (loadedAsset == null)
             {
@@ -39,25 +45,17 @@ namespace Controllers.Construction
                 throw new NullReferenceException();
             }
 
+            previewRoadMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             roadPreview = UnityEngine.Object.Instantiate(loadedAsset);
 
             pointer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            pointer.transform.localScale = new Vector3(.5f, .001f, .5f);
+            pointer.transform.localScale = new Vector3(1f, .001f, 1f);
             pointer.name = "Pointer";
-
-            previewRoadMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        }
-
-        public void Initialize()
-        {
-
+            pointer.GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = Color.cyan };
         }
 
         public void Tick()
         {
-            if (TryGetSnappedPosition(out Vector3 snappedPos) && endPosition == null)
-                pointer.transform.position = new Vector3(snappedPos.x, .01f, snappedPos.z);
-
             if (Input.GetMouseButtonDown(1))
             {
                 if (startPosition != null)
@@ -75,35 +73,37 @@ namespace Controllers.Construction
                 }
             }
 
+            if (!TryGetSnappedPosition(out Vector3 position))
+                return;
+
+            pointer.transform.position = new Vector3(position.x, .1f, position.z);
+
             if (Input.GetMouseButtonDown(0))
             {
-                if (TryGetSnappedPosition(out Vector3 worldPos))
+                if (startPosition == null)
                 {
-                    if (startPosition == null)
-                    {
-                        SelectFirstPoint(worldPos);
-                    }
-                    else if (endPosition == null && !IntersectsExistingRoad(startPosition.Value, worldPos) &&
-                        IsValidRoadAngle(startPosition.Value, worldPos, navigationGraph.GetNeighborsPosition(startPosition.Value), constructionConfig.MinimumRoadAngle))
-                    {
-                        SelectEndPoint(worldPos);
-                    }
+                    SelectFirstPoint(position);
+                }
+                else if (endPosition == null && !IntersectsExistingRoad(startPosition.Value, position) &&
+                    IsValidRoadAngle(startPosition.Value, position, navigationGraph.GetNeighborsPosition(startPosition.Value), constructionConfig.MinimumRoadAngle))
+                {
+                    CreateRoad(position);
                 }
             }
 
             if (startPosition != null && endPosition == null)
             {
-                if (TryGetSnappedPosition(out Vector3 previewPos) && roadPreview != null)
+                if (roadPreview != null)
                 {
                     var lineRenderer = roadPreview.GetComponent<LineRenderer>();
                     lineRenderer.positionCount = 2;
                     lineRenderer.SetPosition(0, startPosition.Value);
-                    lineRenderer.SetPosition(1, previewPos);
+                    lineRenderer.SetPosition(1, position);
 
                     if (navigationGraph.Contains(startPosition.Value))
                     {
-                        if (IsValidRoadAngle(startPosition.Value, previewPos, navigationGraph.GetNeighborsPosition(startPosition.Value),
-                            constructionConfig.MinimumRoadAngle) && !IntersectsExistingRoad(startPosition.Value, previewPos))
+                        if (IsValidRoadAngle(startPosition.Value, position, navigationGraph.GetNeighborsPosition(startPosition.Value),
+                            constructionConfig.MinimumRoadAngle) && !IntersectsExistingRoad(startPosition.Value, position))
                             previewRoadMaterial.color = Color.green;
                         else
                             previewRoadMaterial.color = Color.red;
@@ -113,7 +113,7 @@ namespace Controllers.Construction
 
                     lineRenderer.material = previewRoadMaterial;
 
-                    segmentsPositions = GenerateSegments(startPosition.Value, previewPos);
+                    segmentsPositions = GenerateSegments(startPosition.Value, position);
                 }
             }
         }
@@ -146,10 +146,9 @@ namespace Controllers.Construction
             lineRenderer.SetPosition(1, startPosition.Value);
         }
 
-        private void SelectEndPoint(Vector3 worldPos)
+        private void CreateRoad(Vector3 position)
         {
-            endPosition = new Vector3(worldPos.x, .01f, worldPos.z);
-            UnityEngine.Object.Destroy(pointer);
+            endPosition = new Vector3(position.x, .01f, position.z);
 
             var routePrefab = Resources.Load<RoadView>("Prefabs/RoadView");
             if (routePrefab == null)
@@ -158,77 +157,106 @@ namespace Controllers.Construction
                 throw new NullReferenceException();
             }
 
+            var segmentNodes = new List<Node<Vector3>>();
+
             for (int i = 0; i < segmentsPositions.Count; i++)
             {
-                var position = segmentsPositions[i];
-                var currentNode = navigationGraph.GetNode(position);
+                var nodePosition = segmentsPositions[i];
+                Node<Vector3> node;
 
-                if (currentNode == null)
+                node = navigationGraph.GetNode(nodePosition);
+                if (node == null)
                 {
-                    currentNode = new RoadNode(position);
-                    navigationGraph.Nodes.Add(currentNode);
+                    var nodeType = NodeType.Road;
+                    node = new Node<Vector3>(
+                        nodePosition,
+                        nodeType,
+                        (a, b) =>
+                        {
+                            float dist = Vector3.Distance(a.Data, b.Data);
+                            float multiplier = navigationGraph.MovementCost[nodeType];
+                            return dist * multiplier;
+                        },
+                        (a, goal) => Vector3.Distance(a.Data, goal.Data)
+                    );
+
+                    navigationGraph.Nodes.Add(node);
                 }
 
-                if (i < segmentsPositions.Count - 1)
+                segmentNodes.Add(node);
+            }
+
+            for (int i = 0; i < segmentNodes.Count - 1; i++)
+            {
+                var current = segmentNodes[i];
+                var next = segmentNodes[i + 1];
+
+                if (!current.Neighbors.Contains(next))
+                    current.Neighbors.Add(next);
+
+                if (!next.Neighbors.Contains(current))
+                    next.Neighbors.Add(current);
+
+                var routeView = prefabManager.Instantiate<RoadView>(routePrefab.gameObject);
+                routeView.Init(current.Data, next.Data);
+            }
+
+            float connectionRange = 3f;
+
+            foreach (var roadNode in segmentNodes)
+            {
+                var nearbyTerrainNodes = navigationGraph.Nodes
+                    .Where(n => n.NodeType == NodeType.Terrain)
+                    .Where(n => Vector3.Distance(n.Data, roadNode.Data) <= connectionRange);
+
+                foreach (var terrainNode in nearbyTerrainNodes)
                 {
-                    var nextPos = segmentsPositions[i + 1];
-                    var nextNode = navigationGraph.GetNode(nextPos);
+                    if (!roadNode.Neighbors.Contains(terrainNode))
+                        roadNode.Neighbors.Add(terrainNode);
 
-                    if (nextNode == null)
-                    {
-                        nextNode = new RoadNode(nextPos);
-                        navigationGraph.Nodes.Add(nextNode);
-                    }
-
-                    if (!currentNode.Neighbors.Contains(nextNode))
-                        currentNode.Neighbors.Add(nextNode);
-
-                    if (!nextNode.Neighbors.Contains(currentNode))
-                        nextNode.Neighbors.Add(currentNode);
-
-                    var routeView = prefabManager.Instantiate<RoadView>(routePrefab.gameObject);
-                    routeView.Init(currentNode.Position, nextNode.Position);
+                    if (!terrainNode.Neighbors.Contains(roadNode))
+                        terrainNode.Neighbors.Add(roadNode);
                 }
             }
 
             startPosition = endPosition;
             endPosition = null;
-            pointer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            pointer.transform.localScale = new Vector3(1f, .01f, 1f);
-            pointer.name = "Pointer";
         }
 
         private bool TryGetSnappedPosition(out Vector3 snappedPos)
         {
-            var snapDistance = 0.5f;
+            var snapDistance = 1f;
             var closestDistSqr = float.MaxValue;
-            RoadNode closestNode = null;
+            Node<Vector3> closestNode = null;
 
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             int layerMask = 1 << 16;
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, layerMask))
+            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
             {
-                foreach (var node in navigationGraph.Nodes)
-                {
-                    float distSqr = (hit.point - node.Position).sqrMagnitude;
-                    if (distSqr < closestDistSqr && distSqr <= snapDistance * snapDistance)
-                    {
-                        closestDistSqr = distSqr;
-                        closestNode = node;
-                    }
-                }
-
-                if (closestNode != null)
-                    snappedPos = closestNode.Position;
-                else
-                    snappedPos = hit.point;
-
-                return true;
+                snappedPos = Vector3.zero;
+                return false;
             }
 
-            snappedPos = Vector3.zero;
-            return false;
+            foreach (var node in navigationGraph.Nodes)
+            {
+                if (node.NodeType != NodeType.Road)
+                    continue;
+
+                var distSqr = (hit.point - node.Data).sqrMagnitude;
+                if (distSqr < closestDistSqr && distSqr <= snapDistance * snapDistance)
+                {
+                    closestDistSqr = distSqr;
+                    closestNode = node;
+                }
+            }
+
+            if (closestNode != null)
+                snappedPos = closestNode.Data;
+            else
+                snappedPos = hit.point;
+
+            return true;
         }
 
         private bool IsValidRoadAngle(Vector3 nodePos, Vector3 newPos, IEnumerable<Vector3> neighbors, float minAngle)
@@ -254,17 +282,21 @@ namespace Controllers.Construction
 
             foreach (var node in navigationGraph.Nodes)
             {
-                foreach (var neighbor in node.Neighbors)
+                if (node.NodeType != NodeType.Road)
+                    continue;
+
+                var roadNeighbors = node.Neighbors.Where(n => n.NodeType == NodeType.Road);
+                foreach (var neighbor in roadNeighbors)
                 {
-                    if (node.NodeId.CompareTo(neighbor.NodeId) > 0)
+                    if (node.Id.CompareTo(neighbor.Id) > 0)
                         continue;
 
-                    if (ApproximatelySame(node.Position, startPos) || ApproximatelySame(node.Position, endPos) ||
-                        ApproximatelySame(neighbor.Position, startPos) || ApproximatelySame(neighbor.Position, endPos))
+                    if (ApproximatelySame(node.Data, startPos) || ApproximatelySame(node.Data, endPos) ||
+                        ApproximatelySame(neighbor.Data, startPos) || ApproximatelySame(neighbor.Data, endPos))
                         continue;
 
-                    var existingA = new Vector2(node.Position.x, node.Position.z);
-                    var existingB = new Vector2(neighbor.Position.x, neighbor.Position.z);
+                    var existingA = new Vector2(node.Data.x, node.Data.z);
+                    var existingB = new Vector2(neighbor.Data.x, neighbor.Data.z);
 
                     if (DoSegmentsIntersect(newA, newB, existingA, existingB))
                         return true;
@@ -301,30 +333,35 @@ namespace Controllers.Construction
         private List<Vector3> GenerateSegments(Vector3 startPos, Vector3 endPos)
         {
             var points = new List<Vector3>();
-
             var direction = (endPos - startPos).normalized;
             var distance = Vector3.Distance(startPos, endPos);
-            int steps = Mathf.FloorToInt(distance / constructionConfig.SegmentSpacing);
 
-            Vector3? lastAdded = null;
+            int steps = Mathf.FloorToInt(distance / constructionConfig.SegmentSpacing);
 
             for (int i = 0; i <= steps; i++)
             {
                 var point = startPos + direction * (i * constructionConfig.SegmentSpacing);
-
-                if (lastAdded == null || Vector3.Distance(lastAdded.Value, point) >= constructionConfig.MinimumSpacing)
-                {
-                    points.Add(point);
-                    lastAdded = point;
-                }
+                points.Add(point);
             }
 
-            if (Vector3.Distance(points[^1], endPos) >= constructionConfig.MinimumSpacing)
-                points.Add(endPos);
-            else
+            float lastDist = Vector3.Distance(points[^1], endPos);
+
+            if (lastDist < constructionConfig.MinimumSpacing)
+            {
                 points[^1] = endPos;
+            }
+            else
+            {
+                points.Add(endPos);
+            }
 
             return points;
+        }
+
+
+        private async UniTask LoadAssets()
+        {
+            roadPreview = await AddressablesUtility.LoadAssetAsync<GameObject>("RoadPreview");
         }
     }
 }

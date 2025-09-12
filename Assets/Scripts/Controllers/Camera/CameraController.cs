@@ -89,7 +89,7 @@ namespace Controllers
         {
             var scrollInput = Input.GetAxis("Mouse ScrollWheel");
             var minY = 15f;
-            var maxY = 40f;
+            var maxY = 80f;
 
             if (Mathf.Abs(scrollInput) > 0.01f)
                 scrollVelocity += -scrollInput * cameraConfig.scrollSpeed;

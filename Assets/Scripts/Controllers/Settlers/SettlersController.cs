@@ -27,15 +27,15 @@ namespace Controllers.Settler
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
             this.habitationModel = habitationModel;
+
+            settlerSpawner = new SettlerSpawner(prefabManager);
         }
 
         public void Initialize()
         {
-            habitationModel.OnHabitationAdded += () => signalBus.Fire(new SettlersSignals.SpawnSettler(new Vector3(47,0,0), Quaternion.identity));
+            habitationModel.OnHabitationAdded += () => signalBus.Fire(new SettlersSignals.SpawnSettler(new Vector3(40, 0, 0), Quaternion.identity));
 
             signalBus.Subscribe<SettlersSignals.SpawnSettler>(SpawnSettler);
-
-            settlerSpawner = new SettlerSpawner(prefabManager);
         }
 
         public void Tick()

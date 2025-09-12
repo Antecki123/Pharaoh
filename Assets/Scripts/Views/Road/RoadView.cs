@@ -40,15 +40,24 @@ namespace Views.Road
                 return;
 
             var startNode = navigationGraph.GetNode(startPos);
+            var endNode = navigationGraph.GetNode(endPos);
+
             foreach (var nb in startNode.Neighbors)
             {
-                Handles.DrawLine(startNode.Position, nb.Position);
+                if (nb == endNode)
+                    continue;
+
+                var dir = (nb.Data - startNode.Data).normalized;
+                Handles.ArrowHandleCap(GUIUtility.GetControlID(FocusType.Passive), startNode.Data, Quaternion.LookRotation(dir, Vector3.up), 1f, EventType.Repaint);
             }
 
-            var endNode = navigationGraph.GetNode(endPos);
             foreach (var nb in endNode.Neighbors)
             {
-                Handles.DrawLine(endNode.Position, nb.Position);
+                if (nb == startNode)
+                    continue;
+
+                var dir = (nb.Data - endNode.Data).normalized;
+                Handles.ArrowHandleCap(GUIUtility.GetControlID(FocusType.Passive), endNode.Data, Quaternion.LookRotation(dir, Vector3.up), 1f, EventType.Repaint);
             }
         }
 
@@ -87,6 +96,10 @@ namespace Views.Road
 
             mesh.RecalculateNormals();
             GetComponent<MeshFilter>().mesh = mesh;
+            GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
+            {
+                color = Color.gray
+            };
         }
     }
 }
