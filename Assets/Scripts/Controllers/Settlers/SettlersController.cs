@@ -1,10 +1,9 @@
 using App.Helpers;
 using App.Signals;
-using Models.Ai;
 using Models.Economy;
 using Models.Settler;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
 using Views.Settler;
 using Zenject;
 
@@ -15,27 +14,25 @@ namespace Controllers.Settler
         private List<(SettlerView, SettlerModel)> settlers = new List<(SettlerView, SettlerModel)>();
 
         private SignalBus signalBus;
-        private PrefabManager prefabManager;
-        private NavigationGraph navigationGraph;
         private HabitationModel habitationModel;
+        private EmploymentModel employmentModel;
 
         private SettlerSpawner settlerSpawner;
 
-        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, HabitationModel habitationModel)
+        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentModel employmentModel,
+            SettlersNamesImporter settlersNames)
         {
             this.signalBus = signalBus;
-            this.prefabManager = prefabManager;
-            this.navigationGraph = navigationGraph;
             this.habitationModel = habitationModel;
+            this.employmentModel = employmentModel;
 
-            settlerSpawner = new SettlerSpawner(prefabManager);
+            settlerSpawner = new SettlerSpawner(prefabManager, settlersNames);
         }
 
         public void Initialize()
         {
-            habitationModel.OnHabitationAdded += () => signalBus.Fire(new SettlersSignals.SpawnSettler(new Vector3(40, 0, 0), Quaternion.identity));
-
             signalBus.Subscribe<SettlersSignals.SpawnSettler>(SpawnSettler);
+            signalBus.Subscribe<SettlersSignals.DespawnSettler>(DestroySettler);
         }
 
         public void Tick()
@@ -50,6 +47,20 @@ namespace Controllers.Settler
         {
             var newSettler = settlerSpawner.SpawnSettler(signal.Position, signal.Rotation);
             settlers.Add((newSettler.Item1, newSettler.Item2));
+
+            var habitat = habitationModel.Habitations.Keys.FirstOrDefault(x => x.HasAvailableSpots());
+            newSettler.Item2.Habitation = habitat ?? null;
+            habitat.AddResident(newSettler.Item1);
+        }
+
+        private void DestroySettler(SettlersSignals.DespawnSettler signal)
+        {
+            var settlerToDespawn = settlers.FirstOrDefault(x => x.Item1 == signal.SettlerView);
+
+            if (settlerToDespawn != default)
+                settlers.Remove(settlerToDespawn);
+
+            settlerToDespawn.Item2.Habitation.RemoveResident(settlerToDespawn.Item1);
         }
     }
 }

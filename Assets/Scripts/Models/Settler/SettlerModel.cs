@@ -1,20 +1,17 @@
-using System;
+using Controllers.Work;
+using Models.Economy;
 
 namespace Models.Settler
 {
     public class SettlerModel
     {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
-
-        public int Age { get; set; }
-
-        public float MovementSpeed { get; set; }
-
-        public SettlerGender Gender { get; set; }
+        public SettlerDefinition SettlerDefinition { get; set; }
 
         public SettlerProfession Profession { get; set; }
+
+        public HabitatModel Habitation { get; set; }
+
+        public IWorkplace Workplace { get; set; }
     }
 
     public enum SettlerProfession
@@ -26,8 +23,8 @@ namespace Models.Settler
 
     public enum SettlerGender
     {
-        Male = 0,
-        Female = 1,
-        Unknown = 2
+        Unknown = 0,
+        Male = 1,
+        Female = 2
     }
 }

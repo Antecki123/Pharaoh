@@ -13,6 +13,7 @@ namespace Models.Ai
         {
             {NodeType.Road, 1 },
             {NodeType.Terrain, 10 },
+            {NodeType.Building, 100 },
             {NodeType.Block, float.MaxValue },
         };
 

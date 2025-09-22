@@ -1,4 +1,5 @@
 using UnityEngine;
+using Views.Settler;
 using Zenject;
 
 namespace App.Signals
@@ -8,6 +9,7 @@ namespace App.Signals
         public SettlersSignals(DiContainer container)
         {
             container.DeclareSignal<SpawnSettler>();
+            container.DeclareSignal<DespawnSettler>();
         }
 
         public class SpawnSettler
@@ -19,6 +21,16 @@ namespace App.Signals
             {
                 Position = position;
                 Rotation = rotation;
+            }
+        }
+
+        public class DespawnSettler
+        {
+            public SettlerView SettlerView { get; private set; }
+
+            public DespawnSettler(SettlerView settlerView)
+            {
+                SettlerView = settlerView;
             }
         }
     }

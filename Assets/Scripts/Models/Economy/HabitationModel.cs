@@ -1,33 +1,75 @@
 using System;
 using System.Collections.Generic;
+using Views.Construction;
 using Views.Settler;
 
 namespace Models.Economy
 {
-    public interface IHabitation
-    {
-        public int GetMaxResidents();
-        public IEnumerable<SettlerView> GetResidents();
-    }
-
     public class HabitationModel
     {
-        public event Action OnHabitationAdded;
-        public event Action OnHabitationRemoved;
+        public IReadOnlyDictionary<HabitatModel, BuildingView> Habitations => habitations;
 
-        public List<IHabitation> Habitations { get; set; } = new List<IHabitation>();
+        private Dictionary<HabitatModel, BuildingView> habitations = new Dictionary<HabitatModel, BuildingView>();
 
-
-        public void AddHabitation(IHabitation habitation)
+        public void AddHabitation(HabitatModel habitation, BuildingView buildingView)
         {
-            Habitations.Add(habitation);
-            OnHabitationAdded?.Invoke();
+            habitations.Add(habitation, buildingView);
         }
 
-        public void RemoveHabitation(IHabitation habitation)
+        public void RemoveHabitation(HabitatModel habitation)
         {
-            Habitations.Remove(habitation);
-            OnHabitationRemoved?.Invoke();
+            habitations.Remove(habitation);
+        }
+    }
+
+    public class HabitatModel
+    {
+        public event Action OnValueChanged;
+
+        public string Name { get; private set; }
+
+        public int MaxResidents { get; private set; }
+
+        public IReadOnlyList<SettlerView> Residents => residents;
+
+        public IReadOnlyList<CommodityModel> Storage => storage;
+
+        private List<SettlerView> residents = new List<SettlerView>();
+        private List<CommodityModel> storage = new List<CommodityModel>();
+
+        public HabitatModel(string name, int maxResidents)
+        {
+            Name = name;
+            MaxResidents = maxResidents;
+        }
+
+        public void AddResident(SettlerView settler)
+        {
+            residents.Add(settler);
+            OnValueChanged?.Invoke();
+        }
+
+        public void RemoveResident(SettlerView settler)
+        {
+            residents.Remove(settler);
+            OnValueChanged?.Invoke();
+        }
+
+        public void AddCommodity(CommodityModel commodity)
+        {
+            storage.Add(commodity);
+            OnValueChanged?.Invoke();
+        }
+
+        public void RemoveCommodity(CommodityModel commodity)
+        {
+            storage.Remove(commodity);
+            OnValueChanged?.Invoke();
+        }
+
+        public bool HasAvailableSpots()
+        {
+            return MaxResidents - residents.Count > 0;
         }
     }
 }

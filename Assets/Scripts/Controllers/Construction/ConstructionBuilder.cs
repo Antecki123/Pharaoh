@@ -55,16 +55,25 @@ namespace Controllers.Construction
             {
                 building.transform.position = position;
 
-                if (IsAvailableSpace(position))
-                    building.GetComponentInChildren<MeshRenderer>().material.color = Color.green;
-                else
-                    building.GetComponentInChildren<MeshRenderer>().material.color = Color.red;
+                var color = IsAvailableSpace(position)
+                    ? Color.green
+                    : Color.red;
+
+                foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
+                    renderer.material.color = color;
             }
 
             if (Input.GetMouseButtonDown(0) && IsAvailableSpace(position))
             {
-                building.GetComponentInChildren<MeshRenderer>().material.color = Color.white;
+                foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
+                    renderer.material.color = Color.white;
+
                 building.PlaceBuilding();
+
+                BlockBuildingArea(building.GetComponent<Collider>());
+
+                if (building.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
+                    ConnectEntranceNode(buildingView.EntranceTransform.position);
 
                 building = null;
                 signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition));
@@ -163,6 +172,58 @@ namespace Controllers.Construction
             }
 
             return true;
+        }
+
+        private void BlockBuildingArea(Collider collider)
+        {
+            foreach (var node in navigationGraph.Nodes)
+            {
+                if (node.NodeType == NodeType.Road)
+                    continue;
+
+                var pos = node.Data;
+                if (IsPointInside(collider, pos))
+                {
+                    node.NodeType = NodeType.Building;
+                    node.Neighbors.Clear();
+                }
+            }
+        }
+
+        private bool IsPointInside(Collider col, Vector3 worldPos)
+        {
+            Vector3 closest = col.ClosestPoint(worldPos);
+            return closest == worldPos;
+        }
+
+        private void ConnectEntranceNode(Vector3 entrancePos)
+        {
+            var connectRadius = 3f;
+            //var connectRadius = data.RoadWidth / 2 + data.BuildingOffset;
+            var entranceNode = new Node<Vector3>(
+                entrancePos,
+                NodeType.Building,
+                (a, b) => Vector3.Distance(a.Data, b.Data),
+                (a, goal) => Vector3.Distance(a.Data, goal.Data)
+            );
+
+            foreach (var node in navigationGraph.Nodes)
+            {
+                if (node.NodeType == NodeType.Building || node.NodeType == NodeType.Block)
+                    continue;
+
+                float distSqr = (node.Data - entrancePos).sqrMagnitude;
+                if (distSqr <= connectRadius * connectRadius)
+                {
+                    if (!entranceNode.Neighbors.Contains(node))
+                        entranceNode.Neighbors.Add(node);
+
+                    if (!node.Neighbors.Contains(entranceNode))
+                        node.Neighbors.Add(entranceNode);
+                }
+            }
+
+            navigationGraph.Nodes.Add(entranceNode);
         }
     }
 }

@@ -1,3 +1,4 @@
+using App.Signals;
 using Cysharp.Threading.Tasks;
 using Models.Ai;
 using Models.Ai.Pathfinding;
@@ -13,6 +14,7 @@ public class PathfindingTest : MonoBehaviour
     [SerializeField] private LineRenderer line;
 
     [Inject] private NavigationGraph navigationGraph;
+    [Inject] private SignalBus signalBus;
 
     private Node<Vector3> startNode;
     private Node<Vector3> goalNode;
@@ -25,6 +27,15 @@ public class PathfindingTest : MonoBehaviour
         _ = CalculateNewRoute();
     }
 
+    [ContextMenu("SpawnSettlers")]
+    public void SpawnSettlers()
+    {
+        for (int i = 0; i < sampleCount; i++)
+        {
+            signalBus.Fire(new SettlersSignals.SpawnSettler(Vector3.zero, Quaternion.identity));
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (!EditorApplication.isPlaying)
@@ -33,10 +44,24 @@ public class PathfindingTest : MonoBehaviour
         foreach (var node in navigationGraph.Nodes)
         {
             if (node.NodeType == NodeType.Terrain)
+            {
+                Handles.color = Color.yellow;
                 Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), node.Data, Quaternion.identity, .25f, EventType.Repaint);
+            }
 
-            if (node.NodeType == NodeType.Road)
+            else if (node.NodeType == NodeType.Road)
+            {
+                Handles.color = Color.black;
                 Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), node.Data, Quaternion.identity, .5f, EventType.Repaint);
+            }
+
+            else if (node.NodeType == NodeType.Building)
+            {
+                Handles.color = Color.red;
+                Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), node.Data, Quaternion.identity, .25f, EventType.Repaint);
+            }
+
+            Handles.color = Color.white;
         }
     }
 

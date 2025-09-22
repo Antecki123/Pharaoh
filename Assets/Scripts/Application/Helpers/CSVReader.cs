@@ -21,5 +21,10 @@ namespace App.Helpers
             else
                 return null;
         }
+
+        public int GetCount()
+        {
+            return default;
+        }
     }
 }

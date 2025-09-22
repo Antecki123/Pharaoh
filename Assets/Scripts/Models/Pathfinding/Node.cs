@@ -68,6 +68,7 @@ namespace Models.Ai.Pathfinding
     {
         Road,
         Terrain,
+        Building,
         Block
     }
 }

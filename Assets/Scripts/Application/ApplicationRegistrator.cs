@@ -5,6 +5,7 @@ using Controllers;
 using Controllers.Calendar;
 using Controllers.Construction;
 using Controllers.Settler;
+using Controllers.Work;
 using Models.Ai;
 using Models.Economy;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace App.Registrators
 
             // IMPORTERS
             Container.Bind<ConstructionDataImporter>().To<ConstructionDataImporter>().AsSingle();
+            Container.Bind<SettlersNamesImporter>().To<SettlersNamesImporter>().AsSingle();
 
             // CONFIGS
             Container.Bind<CameraConfig>().FromScriptableObject(cameraConfig).AsSingle();
@@ -32,11 +34,14 @@ namespace App.Registrators
             // MODELS
             Container.Bind<EconomyModel>().To<EconomyModel>().AsSingle();
             Container.Bind<HabitationModel>().To<HabitationModel>().AsSingle();
+            Container.Bind<EmploymentModel>().To<EmploymentModel>().AsSingle();
             Container.Bind<NavigationGraph>().To<NavigationGraph>().AsSingle();
             Container.Bind<PrefabManager>().To<PrefabManager>().AsSingle();
 
             // CONTROLLERS
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable)).To<SettlersController>().AsSingle().NonLazy();
+            Container.Bind(typeof(WorkplacesController), typeof(IInitializable), typeof(ITickable)).To<WorkplacesController>().AsSingle().NonLazy();
+            Container.Bind(typeof(InteractionController), typeof(IInitializable), typeof(ITickable)).To<InteractionController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
             Container.Bind(typeof(CalendarController), typeof(ITickable)).To<CalendarController>().AsSingle().NonLazy();

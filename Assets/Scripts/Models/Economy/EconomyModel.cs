@@ -2,10 +2,10 @@ namespace Models.Economy
 {
     public class EconomyModel
     {
-        public int Settlers { get; set; } = 0;
-        public int Gold { get; set; } = 0;
-        public int Food { get; set; } = 0;
-        public int Wood { get; set; } = 0;
-        public int Stone { get; set; } = 0;
+        public int Settlers { get; set; }
+        public int Gold { get; set; }
+        public CommodityModel Food { get; set; }
+        public CommodityModel Wood { get; set; }
+        public CommodityModel Stone { get; set; }
     }
 }
