@@ -1,6 +1,7 @@
 using Models.Economy;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Models.Work
 {
@@ -24,8 +25,8 @@ namespace Models.Work
 
         public IReadOnlyList<object> Workers => workers;
 
-        public List<CommodityModel> storage = new List<CommodityModel>();
-        public List<object> workers = new List<object>();
+        private List<CommodityModel> storage = new List<CommodityModel>();
+        private List<object> workers = new List<object>();
 
         public WorkplaceModel(
             string name,
@@ -45,14 +46,27 @@ namespace Models.Work
 
         public void AddCommodity(CommodityModel commodity)
         {
-            storage.Add(commodity);
+            var existing = storage.FirstOrDefault(c => c.Name == commodity.Name);
+            if (existing != null)
+                existing.Quantity += commodity.Quantity;
+            else
+                storage.Add(commodity);
+
             OnValueChanged?.Invoke();
         }
 
         public void RemoveCommodity(CommodityModel commodity)
         {
-            storage.Remove(commodity);
-            OnValueChanged?.Invoke();
+            var existing = storage.FirstOrDefault(c => c.Name == commodity.Name);
+            if (existing != null)
+            {
+                existing.Quantity -= commodity.Quantity;
+
+                if (existing.Quantity <= 0)
+                    existing.Quantity = 0;
+
+                OnValueChanged?.Invoke();
+            }
         }
 
         public void AddWorker(object worker)

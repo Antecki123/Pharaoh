@@ -10,6 +10,8 @@ namespace App.Signals
         {
             container.DeclareSignal<RegisterWorkplace>();
             container.DeclareSignal<UnregisterWorkplace>();
+            container.DeclareSignal<RegisterSupplyTarget>();
+            container.DeclareSignal<UnregisterSupplyTarget>();
             container.DeclareSignal<RegisterCropField>();
             container.DeclareSignal<UnregisterCropField>();
         }
@@ -31,6 +33,29 @@ namespace App.Signals
             public UnregisterWorkplace(IWorkplace workplace)
             {
                 Workplace = workplace;
+            }
+        }
+
+        public class RegisterSupplyTarget
+        {
+            public ISupplyTarget SupplyTarget { get; private set; }
+
+            public SupplyType SupplyType { get; private set; }
+
+            public RegisterSupplyTarget(ISupplyTarget supplyTarget, SupplyType supplyType)
+            {
+                SupplyTarget = supplyTarget;
+                SupplyType = supplyType;
+            }
+        }
+
+        public class UnregisterSupplyTarget
+        {
+            public ISupplyTarget SupplyTarget { get; private set; }
+
+            public UnregisterSupplyTarget(ISupplyTarget supplyTarget)
+            {
+                SupplyTarget = supplyTarget;
             }
         }
 

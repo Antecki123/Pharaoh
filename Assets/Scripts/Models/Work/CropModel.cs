@@ -14,9 +14,9 @@ namespace Models.Work
 
         public CommodityModel ProducedCommodity { get; private set; }
 
-        public Vector3 Position { get; private set; }
-
         public CropFieldState CropFieldState { get; private set; }
+
+        public Vector3 Position { get; private set; }
 
         public float GrowthDuration { get; private set; }
 

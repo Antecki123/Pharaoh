@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Models.Economy
 {
@@ -20,14 +21,27 @@ namespace Models.Economy
 
         public void AddCommodity(CommodityModel commodity)
         {
-            storage.Add(commodity);
+            var existing = storage.FirstOrDefault(c => c.Name == commodity.Name);
+            if (existing != null)
+                existing.Quantity += commodity.Quantity;
+            else
+                storage.Add(commodity);
+
             OnValueChanged?.Invoke();
         }
 
         public void RemoveCommodity(CommodityModel commodity)
         {
-            storage.Remove(commodity);
-            OnValueChanged?.Invoke();
+            var existing = storage.FirstOrDefault(c => c.Name == commodity.Name);
+            if (existing != null)
+            {
+                existing.Quantity -= commodity.Quantity;
+
+                if (existing.Quantity <= 0)
+                    existing.Quantity = 0;
+
+                OnValueChanged?.Invoke();
+            }
         }
     }
 }

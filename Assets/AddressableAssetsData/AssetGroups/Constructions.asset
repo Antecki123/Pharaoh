@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Constructions
   m_GUID: 85f63b23327397e45b42aaa26e3ce22a
   m_SerializeEntries:
-  - m_GUID: 453efebbbbcd94f40bd3f5c34d0451a2
-    m_Address: Settler
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6a3669ab1eb89c045a57ec7b3aa06ec3
     m_Address: Cottage
     m_ReadOnly: 0

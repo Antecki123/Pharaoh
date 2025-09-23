@@ -8,6 +8,7 @@ using Controllers.Settler;
 using Controllers.Work;
 using Models.Ai;
 using Models.Economy;
+using Models.Work;
 using UnityEngine;
 using Zenject;
 
@@ -35,6 +36,7 @@ namespace App.Registrators
             Container.Bind<EconomyModel>().To<EconomyModel>().AsSingle();
             Container.Bind<HabitationModel>().To<HabitationModel>().AsSingle();
             Container.Bind<EmploymentModel>().To<EmploymentModel>().AsSingle();
+            Container.Bind<SupplyModel>().To<SupplyModel>().AsSingle();
             Container.Bind<NavigationGraph>().To<NavigationGraph>().AsSingle();
             Container.Bind<PrefabManager>().To<PrefabManager>().AsSingle();
 

@@ -1,5 +1,6 @@
 using Controllers.Work;
 using Models.Economy;
+using System;
 
 namespace Models.Settler
 {
@@ -7,11 +8,13 @@ namespace Models.Settler
     {
         public SettlerDefinition SettlerDefinition { get; set; }
 
-        public SettlerProfession Profession { get; set; }
+        [Obsolete] public SettlerProfession Profession { get; set; }
 
         public HabitatModel Habitation { get; set; }
 
         public IWorkplace Workplace { get; set; }
+
+        public SettlerNeeds SettlerNeeds { get; set; }
     }
 
     public enum SettlerProfession

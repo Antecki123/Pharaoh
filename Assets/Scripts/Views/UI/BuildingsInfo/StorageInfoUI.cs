@@ -11,6 +11,9 @@ namespace Views.Ui.Buildings
 
         private StorageModel storageModel;
 
+        private void OnEnable() => storageModel.OnValueChanged += RefreshUI;
+        private void OnDisable() => storageModel.OnValueChanged -= RefreshUI;
+
         public void Init(Transform buildingTransform, StorageModel storageModel)
         {
             this.buildingTransform = buildingTransform;

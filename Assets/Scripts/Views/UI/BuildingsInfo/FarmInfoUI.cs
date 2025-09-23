@@ -14,6 +14,9 @@ namespace Views.Ui.Buildings
 
         private WorkplaceModel workplaceModel;
 
+        private void OnEnable() => workplaceModel.OnValueChanged += RefreshUI;
+        private void OnDisable() => workplaceModel.OnValueChanged -= RefreshUI;
+
         public void Init(Transform buildingTransform, WorkplaceModel workplace)
         {
             this.buildingTransform = buildingTransform;

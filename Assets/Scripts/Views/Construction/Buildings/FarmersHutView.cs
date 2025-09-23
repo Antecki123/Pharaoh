@@ -1,3 +1,4 @@
+using App.Helpers;
 using App.Signals;
 using Controllers.Work;
 using Models.Economy;
@@ -13,12 +14,17 @@ namespace Views.Construction
     public class FarmersHutView : BuildingView
     {
         private SignalBus signalBus;
+        private PrefabManager prefabManager;
+        private SupplyModel supplyModel;
+
         private FarmWorkplace workplace;
 
         [Inject]
-        public void Constructor(SignalBus signalBus)
+        public void Constructor(SignalBus signalBus, PrefabManager prefabManager, SupplyModel supplyModel)
         {
             this.signalBus = signalBus;
+            this.prefabManager = prefabManager;
+            this.supplyModel = supplyModel;
         }
 
         public override void PlaceBuilding()
@@ -27,12 +33,15 @@ namespace Views.Construction
             SetupWorkplace();
 
             signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(workplace));
+            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.Workplace));
         }
 
         public override void DestroyBuilding()
         {
-            base.DestroyBuilding();
             signalBus.Fire(new WorkplaceSignals.UnregisterWorkplace(workplace));
+            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(workplace));
+
+            base.DestroyBuilding();
         }
 
         public override void Interact()
@@ -50,17 +59,10 @@ namespace Views.Construction
         private void SetupWorkplace()
         {
             var workplaceModel = new WorkplaceModel("Farmers hut", null, null, 5f, 1, 10);
+            workplaceModel.AddCommodity(new CommodityModel() { Name = "Wheat", Quantity = 0, MaxQuantity = 50 });
+            workplaceModel.AddCommodity(new CommodityModel() { Name = "Linen", Quantity = 0, MaxQuantity = 50 });
 
-            var wheatdQuantity = Random.Range(0, 500);
-            var linenQuantity = Random.Range(0, 500);
-            workplaceModel.AddCommodity(new CommodityModel() { Name = "Wheat", Quantity = wheatdQuantity, MaxQuantity = 500 });
-            workplaceModel.AddCommodity(new CommodityModel() { Name = "Linen", Quantity = linenQuantity, MaxQuantity = 500 });
-
-            var workersCount = Random.Range(0, 10);
-            for (int i = 0; i < workersCount; i++)
-                workplaceModel.AddWorker(new Object());
-
-            workplace = new FarmWorkplace(workplaceModel, transform.position);
+            workplace = new FarmWorkplace(prefabManager, supplyModel, workplaceModel, transform.position, EntranceTransform.position);
         }
 
         private void OnDrawGizmosSelected()

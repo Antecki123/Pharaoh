@@ -1,4 +1,5 @@
 using App.Signals;
+using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,25 +10,39 @@ namespace Controllers.Work
     public interface IWorkplace
     {
         public bool HasAvailableSpots();
+
         public void Work();
+    }
+
+    public interface ISupplyTarget
+    {
+        public Vector3 GetEntrancePosition();
+
+        public bool TryPickCommodity(CommodityModel commodity);
+
+        public void DeliverCommodity(CommodityModel commodity);
     }
 
     public class WorkplacesController : IInitializable, ITickable
     {
-        public List<IWorkplace> workplaces = new List<IWorkplace>();
-        public List<CropModel> cropFields = new List<CropModel>();
+        private List<IWorkplace> workplaces = new List<IWorkplace>();
+        private List<CropModel> cropFields = new List<CropModel>();
 
         private SignalBus signalBus;
+        private SupplyModel supplyModel;
 
-        public WorkplacesController(SignalBus signalBus)
+        public WorkplacesController(SignalBus signalBus, SupplyModel supplyModel)
         {
             this.signalBus = signalBus;
+            this.supplyModel = supplyModel;
         }
 
         public void Initialize()
         {
             signalBus.Subscribe<WorkplaceSignals.RegisterWorkplace>(RegisterWorkplace);
             signalBus.Subscribe<WorkplaceSignals.UnregisterWorkplace>(UnregisterWorkplace);
+            signalBus.Subscribe<WorkplaceSignals.RegisterSupplyTarget>(RegisterSupplyTarget);
+            signalBus.Subscribe<WorkplaceSignals.UnregisterSupplyTarget>(UnregisterSupplyTarget);
             signalBus.Subscribe<WorkplaceSignals.RegisterCropField>(RegisterCropField);
             signalBus.Subscribe<WorkplaceSignals.UnregisterCropField>(UnregisterCropField);
         }
@@ -59,6 +74,16 @@ namespace Controllers.Work
 
             if (signal.Workplace is FarmWorkplace)
                 AssignFieldsToFarms();
+        }
+
+        public void RegisterSupplyTarget(WorkplaceSignals.RegisterSupplyTarget signal)
+        {
+            supplyModel.AddSupply(signal.SupplyTarget, signal.SupplyType);
+        }
+
+        public void UnregisterSupplyTarget(WorkplaceSignals.UnregisterSupplyTarget signal)
+        {
+            supplyModel.RemoveSupply(signal.SupplyTarget);
         }
 
         public void RegisterCropField(WorkplaceSignals.RegisterCropField signal)

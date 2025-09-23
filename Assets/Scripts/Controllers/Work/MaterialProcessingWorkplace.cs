@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Controllers.Work
 {
-    public class MaterialProcessingWorkplace : IWorkplace
+    public class MaterialProcessingWorkplace : IWorkplace, ISupplyTarget
     {
         public List<object> currentWorkers = new List<object>();
         public float completionStatus;
@@ -26,9 +26,24 @@ namespace Controllers.Work
             maxWorkersCount = workplaceModel.MaxWorkersCount;
         }
 
+        public void DeliverCommodity(CommodityModel commodity)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Vector3 GetEntrancePosition()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public bool HasAvailableSpots()
         {
             return maxWorkersCount - currentWorkers.Count > 0;
+        }
+
+        public bool TryPickCommodity(CommodityModel commodity)
+        {
+            throw new System.NotImplementedException();
         }
 
         public void Work()
