@@ -6,7 +6,9 @@ namespace Controllers.Construction
 {
     public class ConstructionDataImporter
     {
-        public Dictionary<BuildingDefinition, ConstructionData> ConstructionData { get; } = new Dictionary<BuildingDefinition, ConstructionData>();
+        public IReadOnlyDictionary<BuildingDefinition, ConstructionData> ConstructionData => constructionData;
+
+        private Dictionary<BuildingDefinition, ConstructionData> constructionData = new Dictionary<BuildingDefinition, ConstructionData>();
 
         private CSVReader reader;
         private string CONSTRUCTION_DATA_PATH = "Importers/ConstructionData";
@@ -35,7 +37,7 @@ namespace Controllers.Construction
                     SnapDistance = float.TryParse(text[2], out float snapDistance) ? snapDistance : default
                 };
 
-                ConstructionData.Add(definition, data);
+                constructionData.Add(definition, data);
                 index++;
             }
         }

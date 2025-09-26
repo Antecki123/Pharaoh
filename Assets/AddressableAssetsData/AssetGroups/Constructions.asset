@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Constructions
   m_GUID: 85f63b23327397e45b42aaa26e3ce22a
   m_SerializeEntries:
+  - m_GUID: 29461c74a1de17c459fcd1a9afbf8cc4
+    m_Address: Bakery
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6a3669ab1eb89c045a57ec7b3aa06ec3
     m_Address: Cottage
     m_ReadOnly: 0
@@ -22,6 +27,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 87a8dadcd060b9043867d2045d69ce7b
     m_Address: WheatField
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88536561ebf43944f9ef5140ce8ab87c
+    m_Address: Windmill
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

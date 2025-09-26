@@ -28,7 +28,7 @@ namespace Views.Construction
         {
             base.PlaceBuilding();
 
-            var createdMaterial = new CommodityModel() { Name = "Linen" , Quantity = 2};
+            var createdMaterial = new CommodityModel() { Name = CommodityName.Linen , Quantity = 2};
             var growthDuration = 40f;
             cropModel = new CropModel("Linen field", createdMaterial, transform.position, growthDuration);
 

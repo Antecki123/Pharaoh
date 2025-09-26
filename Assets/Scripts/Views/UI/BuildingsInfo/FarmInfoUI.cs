@@ -12,15 +12,15 @@ namespace Views.Ui.Buildings
         [SerializeField] private CommodityElementUI wheatCommodityElement;
         [SerializeField] private CommodityElementUI linenCommodityElement;
 
-        private WorkplaceModel workplaceModel;
+        private WorkplaceModel workplace;
 
-        private void OnEnable() => workplaceModel.OnValueChanged += RefreshUI;
-        private void OnDisable() => workplaceModel.OnValueChanged -= RefreshUI;
+        private void OnEnable() => workplace.OnValueChanged += RefreshUI;
+        private void OnDisable() => workplace.OnValueChanged -= RefreshUI;
 
         public void Init(Transform buildingTransform, WorkplaceModel workplace)
         {
             this.buildingTransform = buildingTransform;
-            this.workplaceModel = workplace;
+            this.workplace = workplace;
 
             gameObject.SetActive(true);
             RefreshUI();
@@ -28,11 +28,17 @@ namespace Views.Ui.Buildings
 
         private void RefreshUI()
         {
-            nameLabel.text = workplaceModel.Name;
-            workersLabel.text = $"Current workers: {workplaceModel.Workers.Count}/{workplaceModel.MaxWorkersCount}";
+            nameLabel.text = workplace.Name;
+            workersLabel.text = $"Current workers: {workplace.Workers.Count}/{workplace.MaxWorkersCount}";
 
-            wheatCommodityElement.Init(workplaceModel.Storage[0].Name, workplaceModel.Storage[0].Quantity, workplaceModel.Storage[0].MaxQuantity);
-            linenCommodityElement.Init(workplaceModel.Storage[1].Name, workplaceModel.Storage[1].Quantity, workplaceModel.Storage[1].MaxQuantity);
+            wheatCommodityElement.RefreshUI(
+                workplace.StorageModel.Storage[0].Name.ToString(),
+                workplace.StorageModel.Storage[0].Quantity,
+                workplace.StorageModel.Storage[0].MaxQuantity);
+            linenCommodityElement.RefreshUI(
+                workplace.StorageModel.Storage[1].Name.ToString(),
+                workplace.StorageModel.Storage[1].Quantity,
+                workplace.StorageModel.Storage[1].MaxQuantity);
         }
     }
 }

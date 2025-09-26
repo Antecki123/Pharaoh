@@ -43,6 +43,8 @@ namespace Controllers.Construction
                 { BuildingDefinition.WheatField, () => new ConstructionBuilder<WheatFieldView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.WheatField) },
                 { BuildingDefinition.LinenField, () => new ConstructionBuilder<LinenFieldView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.LinenField) },
                 { BuildingDefinition.Granary, () => new ConstructionBuilder<GranaryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Granary) },
+                { BuildingDefinition.Windmill, () => new ConstructionBuilder<WindmillView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Windmill) },
+                { BuildingDefinition.Bakery, () => new ConstructionBuilder<BakeryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Bakery) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
@@ -73,6 +75,8 @@ namespace Controllers.Construction
         FarmersHut,
         WheatField,
         LinenField,
-        Granary
+        Granary,
+        Windmill,
+        Bakery
     }
 }

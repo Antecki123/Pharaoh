@@ -2,6 +2,7 @@ using Controllers.Work;
 using Models.Ai;
 using Models.Ai.Pathfinding;
 using Models.Economy;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,35 +13,38 @@ namespace Views.Settler.Workers
     [SelectionBase]
     public class CarrierView : MonoBehaviour
     {
+        public event Action OnTasksFinished;
+        public int MaxCapacity { get; private set; } = 1;
+
         private Animator animator;
         private NavigationGraph navigationGraph;
 
+        private Queue<CarrierTask> carrierTasks = new Queue<CarrierTask>();
+        private CarrierTask currentTask;
         private CommodityModel carriedCommodity;
-        private ISupplyTarget origin;
-        private ISupplyTarget target;
 
         private List<Vector3> waypoints = new List<Vector3>();
         private int currentIndex = 0;
-        private float movementSpeed = 3f;
+        private float movementSpeed = 13f;
 
         [Inject]
         public void Constructor(NavigationGraph navigationGraph)
         {
             this.navigationGraph = navigationGraph;
+
             animator = GetComponentInChildren<Animator>();
         }
 
-        public void Init(CommodityModel carriedCommodity, ISupplyTarget origin, ISupplyTarget target)
+        public void Init(Queue<CarrierTask> carrierTasks)
         {
-            this.carriedCommodity = carriedCommodity;
-            this.origin = origin;
-            this.target = target;
+            this.carrierTasks = carrierTasks;
 
-            var result = origin.TryPickCommodity(carriedCommodity);
-            if (result)
-            {
-                CalculateWaypoints(origin, target);
-            }
+            StartNextTask();
+        }
+
+        private void OnDestroy()
+        {
+            OnTasksFinished?.Invoke();
         }
 
         private void Update()
@@ -48,7 +52,7 @@ namespace Views.Settler.Workers
             animator.SetBool("CarryingDelivery", carriedCommodity != null);
             var currentSpeed = carriedCommodity != null ? movementSpeed / 2 : movementSpeed;
 
-            if (waypoints.Count == 0)
+            if (waypoints.Count == 0 || currentTask == null)
                 return;
 
             var targetPos = waypoints[currentIndex];
@@ -62,22 +66,45 @@ namespace Views.Settler.Workers
 
             if (Vector3.Distance(transform.position, targetPos) <= 0.1f)
             {
-                currentIndex = (currentIndex + 1) % waypoints.Count;
+                currentIndex++;
+
+                if (currentIndex >= waypoints.Count)
+                {
+                    if (carriedCommodity != null && currentTask.Target != null)
+                    {
+                        currentTask.Target.DeliverCommodity(carriedCommodity);
+                        carriedCommodity = null;
+                    }
+
+                    StartNextTask();
+                }
+            }
+        }
+
+        private void StartNextTask()
+        {
+            if (carrierTasks.Count == 0)
+            {
+                Destroy(gameObject);
+                return;
             }
 
-            if (currentIndex == waypoints.Count - 1)
+            currentTask = carrierTasks.Dequeue();
+            carriedCommodity = null;
+
+            if (currentTask.Origin != null && currentTask.Commodity != null)
             {
-                if (carriedCommodity != null)
+                var commodity = currentTask.Commodity;
+                commodity.MaxQuantity = Mathf.Min(MaxCapacity, commodity.MaxQuantity);
+
+                var result = currentTask.Origin.TryPickCommodity(ref commodity);
+                if (result)
                 {
-                    target.DeliverCommodity(carriedCommodity);
-                    carriedCommodity = null;
-                    CalculateWaypoints(target, origin);
-                }
-                else
-                {
-                    Destroy(gameObject);
+                    carriedCommodity = commodity;
                 }
             }
+
+            CalculateWaypoints(currentTask.Origin ?? currentTask.Target, currentTask.Target);
         }
 
         private void CalculateWaypoints(ISupplyTarget origin, ISupplyTarget target)
@@ -94,6 +121,20 @@ namespace Views.Settler.Workers
 
             foreach (var position in path)
                 waypoints.Add(position.Data);
+        }
+    }
+
+    public class CarrierTask
+    {
+        public ISupplyTarget Origin { get; }
+        public ISupplyTarget Target { get; }
+        public CommodityModel Commodity { get; }
+
+        public CarrierTask(ISupplyTarget origin, ISupplyTarget target, CommodityModel commodity)
+        {
+            Origin = origin;
+            Target = target;
+            Commodity = commodity;
         }
     }
 }

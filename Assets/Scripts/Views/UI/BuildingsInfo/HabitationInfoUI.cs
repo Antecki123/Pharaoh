@@ -32,9 +32,9 @@ namespace Views.Ui.Buildings
             nameLabel.text = habitatModel.Name;
             residentsCountLabel.text = $"Residents: {habitatModel.Residents.Count}/{habitatModel.MaxResidents}";
 
-            foodCommodityElement.Init(habitatModel.Storage[0].Name, habitatModel.Storage[0].Quantity, habitatModel.Storage[0].MaxQuantity);
-            beerCommodityElement.Init(habitatModel.Storage[1].Name, habitatModel.Storage[1].Quantity, habitatModel.Storage[1].MaxQuantity);
-            clothesCommodityElement.Init(habitatModel.Storage[2].Name, habitatModel.Storage[2].Quantity, habitatModel.Storage[2].MaxQuantity);
+            foodCommodityElement.RefreshUI(habitatModel.Storage[0].Name.ToString(), habitatModel.Storage[0].Quantity, habitatModel.Storage[0].MaxQuantity);
+            beerCommodityElement.RefreshUI(habitatModel.Storage[1].Name.ToString(), habitatModel.Storage[1].Quantity, habitatModel.Storage[1].MaxQuantity);
+            clothesCommodityElement.RefreshUI(habitatModel.Storage[2].Name.ToString(), habitatModel.Storage[2].Quantity, habitatModel.Storage[2].MaxQuantity);
         }
     }
 }

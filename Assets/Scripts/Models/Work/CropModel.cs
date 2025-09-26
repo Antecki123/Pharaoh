@@ -40,13 +40,11 @@ namespace Models.Work
             {
                 var progress = GrowthProgress + (deltaTime / GrowthDuration);
                 SetGrowthProgress(progress);
-                OnValueChanged?.Invoke();
             }
 
             if (CropFieldState == CropFieldState.Growing && GrowthProgress >= 1f)
             {
                 UpdateStatus(CropFieldState.ReadyToHarvest);
-                OnValueChanged?.Invoke();
             }
         }
 

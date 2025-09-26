@@ -18,9 +18,11 @@ namespace Controllers.Work
     {
         public Vector3 GetEntrancePosition();
 
-        public bool TryPickCommodity(CommodityModel commodity);
+        public bool TryPickCommodity(ref CommodityModel commodity);
 
         public void DeliverCommodity(CommodityModel commodity);
+
+        public IReadOnlyCollection<CommodityModel> GetStoredCommodities();
     }
 
     public class WorkplacesController : IInitializable, ITickable
@@ -78,12 +80,12 @@ namespace Controllers.Work
 
         public void RegisterSupplyTarget(WorkplaceSignals.RegisterSupplyTarget signal)
         {
-            supplyModel.AddSupply(signal.SupplyTarget, signal.SupplyType);
+            supplyModel.AddSupplyTarget(signal.SupplyTarget, signal.SupplyType);
         }
 
         public void UnregisterSupplyTarget(WorkplaceSignals.UnregisterSupplyTarget signal)
         {
-            supplyModel.RemoveSupply(signal.SupplyTarget);
+            supplyModel.RemoveSupplyTarget(signal.SupplyTarget);
         }
 
         public void RegisterCropField(WorkplaceSignals.RegisterCropField signal)

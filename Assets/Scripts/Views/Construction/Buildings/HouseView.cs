@@ -22,9 +22,9 @@ namespace Views.Construction
             var beerQuantity = Random.Range(0, 300);
             var clothesQuantity = Random.Range(0, 50);
 
-            habitatModel.AddCommodity(new CommodityModel() { Name = "Food", Quantity = foodQuantity, MaxQuantity = 300 });
-            habitatModel.AddCommodity(new CommodityModel() { Name = "Beer", Quantity = beerQuantity, MaxQuantity = 300 });
-            habitatModel.AddCommodity(new CommodityModel() { Name = "Clothes", Quantity = clothesQuantity, MaxQuantity = 50 });
+            habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Food, Quantity = foodQuantity, MaxQuantity = 300 });
+            habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Beer, Quantity = beerQuantity, MaxQuantity = 300 });
+            habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Clothes, Quantity = clothesQuantity, MaxQuantity = 50 });
         }
 
         public override void PlaceBuilding()

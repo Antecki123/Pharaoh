@@ -27,6 +27,7 @@ namespace App.Registrators
             // IMPORTERS
             Container.Bind<ConstructionDataImporter>().To<ConstructionDataImporter>().AsSingle();
             Container.Bind<SettlersNamesImporter>().To<SettlersNamesImporter>().AsSingle();
+            Container.Bind<WorkplaceEconomyImporter>().To<WorkplaceEconomyImporter>().AsSingle();
 
             // CONFIGS
             Container.Bind<CameraConfig>().FromScriptableObject(cameraConfig).AsSingle();

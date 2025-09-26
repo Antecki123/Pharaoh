@@ -1,0 +1,4 @@
+BuildingDefinition;RequiredCommodity;RequiredCommodityQuantity;ProcessedCommodity;ProcessedCommodityQuantity;ProcessingTime;MinimumWorkersCount;MaxWorkersCount;CarriersCount
+Windmill;Wheat;1;Flour;1;5;2;10;2
+Bakery;Flour;1;Bread;3;15;1;5;1
+FarmersHut;;;;;5;1;10;1

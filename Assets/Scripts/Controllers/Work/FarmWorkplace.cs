@@ -22,8 +22,8 @@ namespace Controllers.Work
         public WorkplaceModel WorkplaceModel => workplaceModel;
 
         private PrefabManager prefabManager;
-        private WorkplaceModel workplaceModel;
         private SupplyModel supplyModel;
+        private WorkplaceModel workplaceModel;
 
         private float checkTimer;
         private float checkSpanInSec = 5f;
@@ -37,6 +37,10 @@ namespace Controllers.Work
 
             Position = position;
             EntrancePosition = entrancePosition;
+
+            // DEBUG
+            for (int i = 0; i < workplaceModel.MaxWorkersCount; i++)
+                workplaceModel.AddWorker(new Object());
         }
 
         public bool HasAvailableSpots()
@@ -51,7 +55,7 @@ namespace Controllers.Work
             {
                 checkTimer = checkSpanInSec;
 
-                if (workplaceModel.Storage.Any(x => x.Quantity > 0))
+                if (workplaceModel.StorageModel.Storage.Any(x => x.Quantity > 0))
                 {
                     _ = ScheduleTransport();
                 }
@@ -78,6 +82,55 @@ namespace Controllers.Work
             }
         }
 
+        public bool TryPickCommodity(ref CommodityModel commodity)
+        {
+            var commodityName = commodity.Name;
+            var existing = workplaceModel.StorageModel.Storage
+                .FirstOrDefault(c => c.Name == commodityName);
+
+            if (existing != null && existing.Quantity > 0)
+            {
+                int amountToTake = Mathf.Min(existing.Quantity, commodity.MaxQuantity);
+                commodity.Quantity = amountToTake;
+
+                workplaceModel.StorageModel.RemoveCommodity(commodity);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public void DeliverCommodity(CommodityModel commodity)
+        {
+            workplaceModel.StorageModel.AddCommodity(commodity);
+        }
+
+        public Vector3 GetEntrancePosition()
+        {
+            return EntrancePosition;
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetStoredCommodities()
+        {
+            return workplaceModel.StorageModel.Storage;
+        }
+
+        private async UniTask ScheduleTransport()
+        {
+            var carrierPrefab = await AddressablesUtility.LoadAssetAsync<GameObject>("CarrierView");
+            var carrier = prefabManager.Instantiate<CarrierView>(carrierPrefab);
+
+            var target = supplyModel.GetClosestSupply(EntrancePosition, SupplyType.Storage);
+            var tasks = new Queue<CarrierTask>(new[]
+            {
+                new CarrierTask(this, target, new CommodityModel { Name = CommodityName.Wheat, MaxQuantity = 2 }),
+                new CarrierTask(target, this, null)
+            });
+
+            carrier.Init(tasks);
+        }
+
         private async UniTask SchedulePlanting(CropModel crop)
         {
             crop.IsWorkScheduled = true;
@@ -98,38 +151,11 @@ namespace Controllers.Work
 
             await UniTask.WaitForSeconds(20);
 
-            workplaceModel.AddCommodity(crop.ProducedCommodity);
+            workplaceModel.StorageModel.AddCommodity(crop.ProducedCommodity);
 
             crop.SetGrowthProgress(0f);
             crop.UpdateStatus(CropFieldState.WaitingForPlanting);
             crop.IsWorkScheduled = false;
-        }
-
-        private async UniTask ScheduleTransport()
-        {
-            var carrierPrefab = await AddressablesUtility.LoadAssetAsync<GameObject>("CarrierView");
-            var carrier = prefabManager.Instantiate<CarrierView>(carrierPrefab);
-
-            var target = supplyModel.GetClosestSupply(EntrancePosition, SupplyType.Storage);
-            var commodity = new CommodityModel() { Name = "Wheat", Quantity = 2 };
-            carrier.Init(commodity, this, target);
-        }
-
-        public Vector3 GetEntrancePosition()
-        {
-            return EntrancePosition;
-        }
-
-        public bool TryPickCommodity(CommodityModel commodity)
-        {
-            workplaceModel.RemoveCommodity(commodity);
-
-            return true;
-        }
-
-        public void DeliverCommodity(CommodityModel commodity)
-        {
-            workplaceModel.AddCommodity(commodity);
         }
     }
 }

@@ -29,7 +29,7 @@ namespace Views.Construction
         {
             base.PlaceBuilding();
 
-            var createdMaterial = new CommodityModel() { Name = "Wheat" , Quantity = 3};
+            var createdMaterial = new CommodityModel() { Name = CommodityName.Wheat, Quantity = 3};
             var growthDuration = 20f;
             cropModel = new CropModel("Wheat field", createdMaterial, transform.position, growthDuration);
 

@@ -26,9 +26,9 @@ namespace Views.Construction
             var clothesQuantity = Random.Range(0, 30);
 
             habitatModel = new HabitatModel("Cottage", 5);
-            habitatModel.AddCommodity(new CommodityModel() { Name = "Food", Quantity = foodQuantity, MaxQuantity = 100 });
-            habitatModel.AddCommodity(new CommodityModel() { Name = "Beer", Quantity = beerQuantity, MaxQuantity = 100 });
-            habitatModel.AddCommodity(new CommodityModel() { Name = "Clothes", Quantity = clothesQuantity, MaxQuantity = 30 });
+            habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Food, Quantity = foodQuantity, MaxQuantity = 100 });
+            habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Beer, Quantity = beerQuantity, MaxQuantity = 100 });
+            habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Clothes, Quantity = clothesQuantity, MaxQuantity = 30 });
 
             habitationModel.AddHabitation(habitatModel, this);
         }

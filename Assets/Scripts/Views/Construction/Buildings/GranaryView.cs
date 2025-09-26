@@ -2,6 +2,8 @@ using App.Signals;
 using Controllers.Work;
 using Models.Economy;
 using Models.Work;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Views.Ui.Buildings;
 using Zenject;
@@ -41,7 +43,7 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<HabitationInfoUI>();
+                //var infoPanel = prefabManager.InstantiateUI<StorageInfoUI>();
                 var infoPanel = FindAnyObjectByType<StorageInfoUI>(FindObjectsInactive.Include);
                 infoPanel.Init(transform, storageModel);
             }
@@ -52,11 +54,28 @@ namespace Views.Construction
             return EntranceTransform.position;
         }
 
-        public bool TryPickCommodity(CommodityModel commodity)
+        public IReadOnlyCollection<CommodityModel> GetStoredCommodities()
         {
-            storageModel.RemoveCommodity(commodity);
+            return storageModel.Storage;
+        }
 
-            return true;
+        public bool TryPickCommodity(ref CommodityModel commodity)
+        {
+            var commodityName = commodity.Name;
+            var existing = storageModel.Storage
+                .FirstOrDefault(c => c.Name == commodityName);
+
+            if (existing != null && existing.Quantity > 0)
+            {
+                int amountToTake = Mathf.Min(existing.Quantity, commodity.MaxQuantity);
+                commodity.Quantity = amountToTake;
+
+                storageModel.RemoveCommodity(commodity);
+
+                return true;
+            }
+
+            return false;
         }
 
         public void DeliverCommodity(CommodityModel commodity)
@@ -66,8 +85,12 @@ namespace Views.Construction
 
         private void SetupStorage()
         {
-            storageModel = new StorageModel("Granary");
-            storageModel.AddCommodity(new CommodityModel() { Name = "Wheat", Quantity = 0, MaxQuantity = 1000 });
+            storageModel = new StorageModel("Granary", new List<CommodityModel>()
+            {
+                new CommodityModel() { Name = CommodityName.Wheat, Quantity = 10, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Flour, Quantity = 10, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Bread, Quantity = 0, MaxQuantity = 100 },
+            });
         }
     }
 }

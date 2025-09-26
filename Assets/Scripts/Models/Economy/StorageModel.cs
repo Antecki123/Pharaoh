@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Models.Economy
 {
@@ -14,20 +15,24 @@ namespace Models.Economy
 
         private List<CommodityModel> storage = new List<CommodityModel>();
 
-        public StorageModel(string name)
+        public StorageModel(string name, List<CommodityModel> storage)
         {
             Name = name;
+            this.storage = storage;
         }
 
         public void AddCommodity(CommodityModel commodity)
         {
             var existing = storage.FirstOrDefault(c => c.Name == commodity.Name);
             if (existing != null)
+            {
                 existing.Quantity += commodity.Quantity;
+                OnValueChanged?.Invoke();
+            }
             else
-                storage.Add(commodity);
-
-            OnValueChanged?.Invoke();
+            {
+                Debug.LogWarning($"Cannot add commodity {commodity.Name} to {Name}");
+            }
         }
 
         public void RemoveCommodity(CommodityModel commodity)
@@ -42,6 +47,17 @@ namespace Models.Economy
 
                 OnValueChanged?.Invoke();
             }
+        }
+
+        public bool HasEnoughRoom(CommodityName name, int quantity)
+        {
+            foreach (var commodity in storage)
+            {
+                if (commodity.Name == name && commodity.MaxQuantity - commodity.Quantity >= quantity)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

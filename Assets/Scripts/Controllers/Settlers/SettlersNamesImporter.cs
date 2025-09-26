@@ -5,8 +5,12 @@ namespace Controllers.Settler
 {
     public class SettlersNamesImporter
     {
-        public List<string> MaleNames { get; private set; } = new List<string>();
-        public List<string> FemaleNames { get; private set; } = new List<string>();
+        public IReadOnlyList<string> MaleNames => maleNames;
+
+        public IReadOnlyList<string> FemaleNames => femaleNames;
+
+        private List<string> maleNames = new List<string>();
+        private List<string> femaleNames = new List<string>();
 
         private CSVReader reader;
         private string SETTLERS_NAMES_PATH = "Importers/SettlersNames";
@@ -28,8 +32,8 @@ namespace Controllers.Settler
                 if (text == null || string.IsNullOrEmpty(text[0]))
                     break;
 
-                MaleNames.Add(text[0]);
-                FemaleNames.Add(text[1]);
+                maleNames.Add(text[0]);
+                femaleNames.Add(text[1]);
 
                 index++;
             }

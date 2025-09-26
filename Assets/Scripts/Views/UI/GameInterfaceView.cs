@@ -15,6 +15,8 @@ namespace Views.Ui
         [SerializeField] private Button wheatFieldButton;
         [SerializeField] private Button linenFieldButton;
         [SerializeField] private Button granaryButton;
+        [SerializeField] private Button windmillButton;
+        [SerializeField] private Button bakeryButton;
 
         [Inject] private SignalBus signalBus;
 
@@ -27,6 +29,8 @@ namespace Views.Ui
             wheatFieldButton.onClick.AddListener(() => signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.WheatField)));
             linenFieldButton.onClick.AddListener(() => signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.LinenField)));
             granaryButton.onClick.AddListener(() => signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Granary)));
+            windmillButton.onClick.AddListener(() => signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Windmill)));
+            bakeryButton.onClick.AddListener(() => signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Bakery)));
         }
 
         private void OnDisable()
@@ -38,6 +42,8 @@ namespace Views.Ui
             wheatFieldButton.onClick.RemoveAllListeners();
             linenFieldButton.onClick.RemoveAllListeners();
             granaryButton.onClick.RemoveAllListeners();
+            windmillButton.onClick.RemoveAllListeners();
+            bakeryButton.onClick.RemoveAllListeners();
         }
     }
 }

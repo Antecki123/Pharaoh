@@ -5,7 +5,6 @@ using Controllers.Work;
 using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using Views.Ui.Buildings;
 using Zenject;
@@ -13,14 +12,14 @@ using Zenject;
 namespace Views.Construction
 {
     [SelectionBase]
-    public class FarmersHutView : BuildingView
+    public class WindmillView : BuildingView
     {
         private SignalBus signalBus;
         private PrefabManager prefabManager;
         private SupplyModel supplyModel;
         private WorkplaceEconomyImporter economyImporter;
 
-        private FarmWorkplace workplace;
+        private MaterialProcessingWorkplace workplace;
 
         [Inject]
         public void Constructor(SignalBus signalBus, PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter)
@@ -54,37 +53,25 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<FarmInfoUI>();
-                var infoPanel = FindAnyObjectByType<FarmInfoUI>(FindObjectsInactive.Include);
+                //var infoPanel = prefabManager.InstantiateUI<ProcessingWorkplaceInfoUI>();
+                var infoPanel = FindAnyObjectByType<ProcessingWorkplaceInfoUI>(FindObjectsInactive.Include);
                 infoPanel.Init(transform, workplace.WorkplaceModel);
             }
         }
 
         private void SetupWorkplace()
         {
-            var buildingDefinition = BuildingDefinition.FarmersHut;
+            var buildingDefinition = BuildingDefinition.Windmill;
             var economyData = economyImporter.EconomyData[buildingDefinition];
             var storage = new StorageModel($"{buildingDefinition}Storage", new List<CommodityModel>()
             {
-                new CommodityModel() { Name = CommodityName.Wheat, Quantity = 0, MaxQuantity = 50 },
-                new CommodityModel() { Name = CommodityName.Linen, Quantity = 0, MaxQuantity = 50 }
+                new CommodityModel() { Name = CommodityName.Wheat, MaxQuantity = 1 },
+                new CommodityModel() { Name = CommodityName.Flour, MaxQuantity = 50 }
             });
 
             var workplaceModel = new WorkplaceModel(buildingDefinition, economyData, storage);
 
-            workplace = new FarmWorkplace(prefabManager, supplyModel, workplaceModel, transform.position, EntranceTransform.position);
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            if (workplace == null)
-                return;
-
-            foreach (var crop in workplace.Crops)
-            {
-                Handles.DrawDottedLine(transform.position, crop.Position, 1f);
-                Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), crop.Position, Quaternion.identity, 1f, EventType.Repaint);
-            }
+            workplace = new MaterialProcessingWorkplace(prefabManager, supplyModel, workplaceModel, EntranceTransform.position);
         }
     }
 }

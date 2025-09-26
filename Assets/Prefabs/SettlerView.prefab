@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1406416508900766853}
   - component: {fileID: 3284114506787405644}
   m_Layer: 0
-  m_Name: Settler
+  m_Name: SettlerView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
