@@ -25,21 +25,21 @@ namespace App.Registrators
             new SignalInstaller(Container);
 
             // IMPORTERS
-            Container.Bind<ConstructionDataImporter>().To<ConstructionDataImporter>().AsSingle();
-            Container.Bind<SettlersNamesImporter>().To<SettlersNamesImporter>().AsSingle();
-            Container.Bind<WorkplaceEconomyImporter>().To<WorkplaceEconomyImporter>().AsSingle();
+            Container.Bind<ConstructionDataImporter>().AsSingle();
+            Container.Bind<SettlersNamesImporter>().AsSingle();
+            Container.Bind<WorkplaceEconomyImporter>().AsSingle();
 
             // CONFIGS
             Container.Bind<CameraConfig>().FromScriptableObject(cameraConfig).AsSingle();
             Container.Bind<ConstructionConfig>().FromScriptableObject(constructionConfig).AsSingle();
 
             // MODELS
-            Container.Bind<EconomyModel>().To<EconomyModel>().AsSingle();
-            Container.Bind<HabitationModel>().To<HabitationModel>().AsSingle();
-            Container.Bind<EmploymentModel>().To<EmploymentModel>().AsSingle();
-            Container.Bind<SupplyModel>().To<SupplyModel>().AsSingle();
-            Container.Bind<NavigationGraph>().To<NavigationGraph>().AsSingle();
-            Container.Bind<PrefabManager>().To<PrefabManager>().AsSingle();
+            Container.Bind<EconomyModel>().AsSingle();
+            Container.Bind<HabitationModel>().AsSingle();
+            Container.Bind<EmploymentModel>().AsSingle();
+            Container.Bind<SupplyModel>().AsSingle();
+            Container.Bind<NavigationGraph>().AsSingle();
+            Container.Bind<PrefabManager>().AsSingle();
 
             // CONTROLLERS
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable)).To<SettlersController>().AsSingle().NonLazy();
@@ -49,7 +49,7 @@ namespace App.Registrators
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
             Container.Bind(typeof(CalendarController), typeof(ITickable)).To<CalendarController>().AsSingle().NonLazy();
 
-            new ApplicationInitializer();
+            Container.Bind(typeof(ApplicationInitializer), typeof(IInitializable)).To<ApplicationInitializer>().AsSingle();
         }
     }
 }

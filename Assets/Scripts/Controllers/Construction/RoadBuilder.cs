@@ -197,7 +197,7 @@ namespace Controllers.Construction
                 if (!next.Neighbors.Contains(current))
                     next.Neighbors.Add(current);
 
-                var routeView = prefabManager.Instantiate<RoadView>(routePrefab.gameObject);
+                var routeView = prefabManager.InstantiateWithInject<RoadView>(routePrefab.gameObject);
                 routeView.Init(current.Data, next.Data);
             }
 

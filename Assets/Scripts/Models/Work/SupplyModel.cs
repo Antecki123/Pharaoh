@@ -25,16 +25,6 @@ namespace Models.Work
             OnValueChanged?.Invoke();
         }
 
-        public ISupplyTarget GetClosestSupply(Vector3 position, SupplyType supplyType)
-        {
-            var closest = supplyTargets
-                .Where(x => x.Value == supplyType)
-                .OrderBy(x => Vector3.Distance(position, x.Key.GetEntrancePosition()))
-                .First();
-
-            return closest.Key;
-        }
-
         public ISupplyTarget GetClosestStorageWithCommodity(Vector3 position, CommodityName commodity, int commodityQuantity)
         {
             var storages = supplyTargets.Keys
@@ -42,6 +32,27 @@ namespace Models.Work
             {
                 var commodities = target.GetStoredCommodities();
                 return commodities.Any(c => c.Name == commodity && c.Quantity >= commodityQuantity);
+            })
+            .Where(target => supplyTargets[target] == SupplyType.Storage)
+            .ToList();
+
+            if (storages.Count == 0)
+                return null;
+
+            var closest = storages
+               .OrderBy(storage => Vector3.Distance(position, storage.GetEntrancePosition()))
+               .FirstOrDefault();
+
+            return closest;
+        }
+
+        public ISupplyTarget GetClosestStorageWithCommodity(Vector3 position, CommodityName commodity)
+        {
+            var storages = supplyTargets.Keys
+            .Where(target =>
+            {
+                var commodities = target.GetStoredCommodities();
+                return commodities.Any(c => commodity.HasFlag(c.Name) && c.Quantity > 0);
             })
             .Where(target => supplyTargets[target] == SupplyType.Storage)
             .ToList();
@@ -77,7 +88,12 @@ namespace Models.Work
             return closest;
         }
 
-        public void SetReservation(ISupplyTarget supply, CommodityName commodity, int commodityQuantity)
+        public void SetCommodityReservation(ISupplyTarget supply, CommodityName commodity, int commodityQuantity)
+        {
+
+        }
+
+        public void SetSpaceReservation(ISupplyTarget supply, CommodityName commodity, int commodityQuantity)
         {
 
         }

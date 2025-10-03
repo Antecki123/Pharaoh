@@ -9,15 +9,12 @@ namespace Models.Economy
     {
         public event Action OnValueChanged;
 
-        public string Name { get; private set; }
-
         public IReadOnlyList<CommodityModel> Storage => storage;
 
         private List<CommodityModel> storage = new List<CommodityModel>();
 
-        public StorageModel(string name, List<CommodityModel> storage)
+        public StorageModel(List<CommodityModel> storage)
         {
-            Name = name;
             this.storage = storage;
         }
 
@@ -31,7 +28,7 @@ namespace Models.Economy
             }
             else
             {
-                Debug.LogWarning($"Cannot add commodity {commodity.Name} to {Name}");
+                Debug.LogWarning($"Cannot add commodity {commodity.Name} to storage.");
             }
         }
 
@@ -41,9 +38,7 @@ namespace Models.Economy
             if (existing != null)
             {
                 existing.Quantity -= commodity.Quantity;
-
-                if (existing.Quantity <= 0)
-                    existing.Quantity = 0;
+                existing.Quantity = existing.Quantity <= 0 ? 0 : existing.Quantity;
 
                 OnValueChanged?.Invoke();
             }

@@ -28,7 +28,7 @@ namespace Views.Ui.Buildings
 
         private void RefreshUI()
         {
-            nameLabel.text = storageModel.Name;
+            nameLabel.text = "Storage";
 
             commoditiesToShow.ForEach(x => Destroy(x.gameObject));
             commoditiesToShow.Clear();

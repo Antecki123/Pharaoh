@@ -10,7 +10,7 @@ using Zenject;
 namespace Views.Construction
 {
     [SelectionBase]
-    public class GranaryView : BuildingView
+    public class WarehouseView : BuildingView
     {
         private SignalBus signalBus;
         private StorageWorkplace workplace;
@@ -52,8 +52,11 @@ namespace Views.Construction
         {
             var storageModel = new StorageModel(new List<CommodityModel>()
             {
-                new CommodityModel() { Name = CommodityName.Bread, Quantity = 100, MaxQuantity = 500 },
-                new CommodityModel() { Name = CommodityName.Meat, Quantity = 100, MaxQuantity = 500 },
+                new CommodityModel() { Name = CommodityName.Wheat, Quantity = 0, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Linen, Quantity = 0, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Flour, Quantity = 0, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Beer, Quantity = 0, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Clothes, Quantity = 0, MaxQuantity = 100 }
             });
 
             workplace = new StorageWorkplace(storageModel, EntranceTransform.position);

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Views.Settler.Workers;
+using static TreeEditor.TreeGroup;
 
 namespace Controllers.Work
 {
@@ -57,7 +58,7 @@ namespace Controllers.Work
 
                 if (workplaceModel.StorageModel.Storage.Any(x => x.Quantity > 0))
                 {
-                    _ = ScheduleTransport();
+                    ScheduleTransport();
                 }
             }
 
@@ -85,12 +86,11 @@ namespace Controllers.Work
         public bool TryPickCommodity(ref CommodityModel commodity)
         {
             var commodityName = commodity.Name;
-            var existing = workplaceModel.StorageModel.Storage
-                .FirstOrDefault(c => c.Name == commodityName);
+            var existing = workplaceModel.StorageModel.Storage.FirstOrDefault(c => c.Name == commodityName);
 
             if (existing != null && existing.Quantity > 0)
             {
-                int amountToTake = Mathf.Min(existing.Quantity, commodity.MaxQuantity);
+                int amountToTake = Mathf.Min(existing.Quantity, commodity.Quantity);
                 commodity.Quantity = amountToTake;
 
                 workplaceModel.StorageModel.RemoveCommodity(commodity);
@@ -116,19 +116,43 @@ namespace Controllers.Work
             return workplaceModel.StorageModel.Storage;
         }
 
-        private async UniTask ScheduleTransport()
+        private void ScheduleTransport()
         {
-            var carrierPrefab = await AddressablesUtility.LoadAssetAsync<GameObject>("CarrierView");
-            var carrier = prefabManager.Instantiate<CarrierView>(carrierPrefab);
+            if (workplaceModel.CarriersCount == 0)
+                return;
 
-            var target = supplyModel.GetClosestSupply(EntrancePosition, SupplyType.Storage);
-            var tasks = new Queue<CarrierTask>(new[]
-            {
-                new CarrierTask(this, target, new CommodityModel { Name = CommodityName.Wheat, MaxQuantity = 2 }),
-                new CarrierTask(target, this, null)
-            });
+            var result = BuildCarrierTasks(
+                workplaceModel.StorageModel.Storage[0].Name,
+                workplaceModel.StorageModel.Storage[0].Quantity,
+                out Queue<CarrierTask> tasks);
 
+            if (result == false)
+                return;
+
+            workplaceModel.UseCarrier();
+
+            var carrier = prefabManager.Instantiate<CarrierView>("CarrierView");
             carrier.Init(tasks);
+            carrier.OnTasksFinished += () => workplaceModel.ReturnCarrier();
+        }
+
+        private bool BuildCarrierTasks(CommodityName commodityName, int quantity, out Queue<CarrierTask> tasks)
+        {
+            tasks = new Queue<CarrierTask>();
+
+            var targetWithSpace = supplyModel.GetClosestStorageWithFreeSpace(EntrancePosition, commodityName, quantity);
+
+            if (targetWithSpace == null)
+                return false;
+
+            tasks.Enqueue(new CarrierTask(this, targetWithSpace, new CommodityModel
+            {
+                Name = commodityName,
+                Quantity = quantity
+            }));
+            tasks.Enqueue(new CarrierTask(targetWithSpace, this, null));
+
+            return true;
         }
 
         private async UniTask SchedulePlanting(CropModel crop)

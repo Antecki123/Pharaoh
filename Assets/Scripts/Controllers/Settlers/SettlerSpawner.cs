@@ -1,5 +1,4 @@
 using App.Helpers;
-using Cysharp.Threading.Tasks;
 using Models.Settler;
 using System;
 using UnityEngine;
@@ -10,21 +9,17 @@ namespace Controllers.Settler
     public class SettlerSpawner
     {
         private PrefabManager prefabManager;
-        private GameObject settlerPrefab;
-
         private SettlersNamesImporter settlersNames;
 
         public SettlerSpawner(PrefabManager prefabManager, SettlersNamesImporter settlersNames)
         {
             this.prefabManager = prefabManager;
             this.settlersNames = settlersNames;
-
-            _ = LoadAssets();
         }
 
         public (SettlerView, SettlerModel) SpawnSettler(Vector3 position, Quaternion rotation)
         {
-            var settlerView = prefabManager.Instantiate<SettlerView>(settlerPrefab);
+            var settlerView = prefabManager.Instantiate<SettlerView>("SettlerView");
             var gender = GetRandomGender();
             var name = GetName(gender);
 
@@ -38,11 +33,6 @@ namespace Controllers.Settler
             settlerView.Init(settlerModel);
 
             return (settlerView, settlerModel);
-        }
-
-        private async UniTask LoadAssets()
-        {
-            settlerPrefab = await AddressablesUtility.LoadAssetAsync<GameObject>("Settler");
         }
 
         private SettlerGender GetRandomGender()

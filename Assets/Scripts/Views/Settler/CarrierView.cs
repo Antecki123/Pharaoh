@@ -14,7 +14,6 @@ namespace Views.Settler.Workers
     public class CarrierView : MonoBehaviour
     {
         public event Action OnTasksFinished;
-        public int MaxCapacity { get; private set; } = 1;
 
         private Animator animator;
         private NavigationGraph navigationGraph;
@@ -95,8 +94,6 @@ namespace Views.Settler.Workers
             if (currentTask.Origin != null && currentTask.Commodity != null)
             {
                 var commodity = currentTask.Commodity;
-                commodity.MaxQuantity = Mathf.Min(MaxCapacity, commodity.MaxQuantity);
-
                 var result = currentTask.Origin.TryPickCommodity(ref commodity);
                 if (result)
                 {

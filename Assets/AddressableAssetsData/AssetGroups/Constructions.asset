@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Constructions
   m_GUID: 85f63b23327397e45b42aaa26e3ce22a
   m_SerializeEntries:
+  - m_GUID: 12f782102a588d8449f6c9be15295e26
+    m_Address: Bazaar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 29461c74a1de17c459fcd1a9afbf8cc4
     m_Address: Bakery
     m_ReadOnly: 0
@@ -52,6 +57,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eff8ba096beae2d489e82f381f1e1499
     m_Address: LinenField
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5392adc60286224380fa6c2aba90cdc
+    m_Address: Warehouse
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -9,9 +9,27 @@ namespace Models.Economy
         public int MaxQuantity { get; set; } = int.MaxValue;
 
         public Sprite Sprite { get; set; }
-        public GameObject Model {  get; set; }
+        public GameObject Prefab { get; set; }
     }
 
+    public static class CommodityExtensions
+    {
+        private static readonly CommodityName[] Categories =
+        {
+            CommodityName.Food
+        };
+
+        public static CommodityName GetCategory(this CommodityName commodity)
+        {
+            foreach (var category in Categories)
+            {
+                if (category.HasFlag(commodity))
+                    return category;
+            }
+
+            return commodity;
+        }
+    }
 
     [System.Flags]
     public enum CommodityName

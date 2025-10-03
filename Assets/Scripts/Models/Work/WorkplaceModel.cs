@@ -72,6 +72,17 @@ namespace Models.Work
             return false;
         }
 
+        public bool HasRequiredComodity(CommodityName commodityName, int quantity)
+        {
+            foreach (var commodity in StorageModel.Storage)
+            {
+                if (commodity.Name == commodityName && commodity.Quantity >= quantity)
+                    return true;
+            }
+
+            return false;
+        }
+
         public void AddWorker(object worker)
         {
             workers.Add(worker);
@@ -87,11 +98,13 @@ namespace Models.Work
         public void UseCarrier()
         {
             CarriersCount--;
+            OnValueChanged?.Invoke();
         }
 
         public void ReturnCarrier()
         {
             CarriersCount++;
+            OnValueChanged?.Invoke();
         }
 
         public void SetProcessingProgress(float value)

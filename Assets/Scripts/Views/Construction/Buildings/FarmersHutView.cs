@@ -64,7 +64,7 @@ namespace Views.Construction
         {
             var buildingDefinition = BuildingDefinition.FarmersHut;
             var economyData = economyImporter.EconomyData[buildingDefinition];
-            var storage = new StorageModel($"{buildingDefinition}Storage", new List<CommodityModel>()
+            var storage = new StorageModel(new List<CommodityModel>()
             {
                 new CommodityModel() { Name = CommodityName.Wheat, Quantity = 0, MaxQuantity = 50 },
                 new CommodityModel() { Name = CommodityName.Linen, Quantity = 0, MaxQuantity = 50 }

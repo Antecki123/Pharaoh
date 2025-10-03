@@ -1,7 +1,6 @@
 using App.Configs;
 using App.Helpers;
 using App.Signals;
-using Cysharp.Threading.Tasks;
 using Models.Ai;
 using Models.Ai.Pathfinding;
 using System.Linq;
@@ -35,7 +34,7 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
-            _ = LoadAssets();
+            building = prefabManager.Instantiate<T>(buildingDefinition.ToString());
         }
 
         public void Tick()
@@ -78,12 +77,6 @@ namespace Controllers.Construction
                 building = null;
                 signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition));
             }
-        }
-
-        private async UniTask LoadAssets()
-        {
-            var prefab = await AddressablesUtility.LoadAssetAsync<GameObject>(buildingDefinition.ToString());
-            building = prefabManager.Instantiate<T>(prefab);
         }
 
         private void CancelConstruction()

@@ -45,6 +45,8 @@ namespace Controllers.Construction
                 { BuildingDefinition.Granary, () => new ConstructionBuilder<GranaryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Granary) },
                 { BuildingDefinition.Windmill, () => new ConstructionBuilder<WindmillView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Windmill) },
                 { BuildingDefinition.Bakery, () => new ConstructionBuilder<BakeryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Bakery) },
+                { BuildingDefinition.Bazaar, () => new ConstructionBuilder<BazaarView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Bazaar) },
+                { BuildingDefinition.Warehouse, () => new ConstructionBuilder<WarehouseView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, BuildingDefinition.Warehouse) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
@@ -77,6 +79,8 @@ namespace Controllers.Construction
         LinenField,
         Granary,
         Windmill,
-        Bakery
+        Bakery,
+        Bazaar,
+        Warehouse
     }
 }

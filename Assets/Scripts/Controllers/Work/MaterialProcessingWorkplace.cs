@@ -1,5 +1,4 @@
 using App.Helpers;
-using Cysharp.Threading.Tasks;
 using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
@@ -45,7 +44,7 @@ namespace Controllers.Work
                 checkTimer = checkSpanInSec;
 
                 if (workplaceModel.IsAnyCommodityToTake() || !workplaceModel.HasRequiredComodity())
-                    _ = ScheduleTransport();
+                    ScheduleTransport();
             }
 
             if (workplaceModel.Workers.Count < workplaceModel.MinimumWorkersCount)
@@ -77,7 +76,7 @@ namespace Controllers.Work
                 progress = 0;
 
                 if (workplaceModel.IsAnyCommodityToTake() || !workplaceModel.HasRequiredComodity())
-                    _ = ScheduleTransport();
+                    ScheduleTransport();
             }
 
             workplaceModel.SetProcessingProgress(progress);
@@ -86,12 +85,11 @@ namespace Controllers.Work
         public bool TryPickCommodity(ref CommodityModel commodity)
         {
             var commodityName = commodity.Name;
-            var existing = workplaceModel.StorageModel.Storage
-                .FirstOrDefault(c => c.Name == commodityName);
+            var existing = workplaceModel.StorageModel.Storage.FirstOrDefault(c => c.Name == commodityName);
 
             if (existing != null && existing.Quantity > 0)
             {
-                int amountToTake = Mathf.Min(existing.Quantity, commodity.MaxQuantity);
+                int amountToTake = Mathf.Min(existing.Quantity, commodity.Quantity);
                 commodity.Quantity = amountToTake;
 
                 workplaceModel.StorageModel.RemoveCommodity(commodity);
@@ -122,53 +120,53 @@ namespace Controllers.Work
             return workplaceModel.StorageModel.Storage;
         }
 
-        private async UniTask ScheduleTransport()
+        private void ScheduleTransport()
         {
             if (workplaceModel.CarriersCount == 0)
                 return;
 
+            var result = BuildCarrierTasks(out Queue<CarrierTask> tasks);
+            if (result == false)
+                return;
+
             workplaceModel.UseCarrier();
 
-            var carrierPrefab = await AddressablesUtility.LoadAssetAsync<GameObject>("CarrierView");
-            var carrier = prefabManager.Instantiate<CarrierView>(carrierPrefab);
-
-            var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(EntrancePosition, WorkplaceModel.ProcessedCommodity.Name, WorkplaceModel.ProcessedCommodity.Quantity);
-            var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(EntrancePosition, WorkplaceModel.RequiredCommodity.Name, WorkplaceModel.RequiredCommodity.Quantity);
-
-            var tasks = BuildCarrierTasks();
-
+            var carrier = prefabManager.Instantiate<CarrierView>("CarrierView");
             carrier.Init(tasks);
             carrier.OnTasksFinished += () => workplaceModel.ReturnCarrier();
         }
 
-        private Queue<CarrierTask> BuildCarrierTasks()
+        private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)
         {
-            var tasks = new Queue<CarrierTask>();
+            tasks = new Queue<CarrierTask>();
+
             var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
                 EntrancePosition,
-                WorkplaceModel.ProcessedCommodity.Name,
-                WorkplaceModel.ProcessedCommodity.Quantity);
+                workplaceModel.ProcessedCommodity.Name,
+                workplaceModel.ProcessedCommodity.Quantity);
 
             var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(
                 EntrancePosition,
-                WorkplaceModel.RequiredCommodity.Name,
-                WorkplaceModel.RequiredCommodity.Quantity);
+                workplaceModel.RequiredCommodity.Name,
+                workplaceModel.RequiredCommodity.Quantity);
 
             var carriedSomethingOut = false;
             var broughtSomethingIn = false;
 
-            if (WorkplaceModel.IsAnyCommodityToTake() && targetWithFreeSpace != null)
+            if (targetWithFreeSpace == null && targetWithCommodity == null)
+                return false;
+
+            if (workplaceModel.IsAnyCommodityToTake() && targetWithFreeSpace != null)
             {
                 tasks.Enqueue(new CarrierTask(this, targetWithFreeSpace, new CommodityModel
                 {
-                    Name = WorkplaceModel.ProcessedCommodity.Name,
-                    Quantity = WorkplaceModel.ProcessedCommodity.Quantity,
-                    MaxQuantity = WorkplaceModel.ProcessedCommodity.MaxQuantity
+                    Name = workplaceModel.ProcessedCommodity.Name,
+                    Quantity = workplaceModel.ProcessedCommodity.Quantity,
                 }));
                 carriedSomethingOut = true;
             }
 
-            if (!WorkplaceModel.HasRequiredComodity() && targetWithCommodity != null)
+            if (!workplaceModel.HasRequiredComodity() && targetWithCommodity != null)
             {
                 if (!carriedSomethingOut)
                 {
@@ -181,9 +179,8 @@ namespace Controllers.Work
 
                 tasks.Enqueue(new CarrierTask(targetWithCommodity, this, new CommodityModel
                 {
-                    Name = WorkplaceModel.RequiredCommodity.Name,
-                    Quantity = WorkplaceModel.RequiredCommodity.Quantity,
-                    MaxQuantity = WorkplaceModel.RequiredCommodity.MaxQuantity
+                    Name = workplaceModel.RequiredCommodity.Name,
+                    Quantity = workplaceModel.RequiredCommodity.Quantity,
                 }));
                 broughtSomethingIn = true;
             }
@@ -193,7 +190,7 @@ namespace Controllers.Work
                 tasks.Enqueue(new CarrierTask(targetWithFreeSpace, this, null));
             }
 
-            return tasks;
+            return true;
         }
     }
 }
