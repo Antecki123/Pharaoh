@@ -2,6 +2,7 @@ using App.Helpers;
 using Models.Settler;
 using System;
 using UnityEngine;
+using UnityEngine.Pool;
 using Views.Settler;
 
 namespace Controllers.Settler
@@ -11,10 +12,23 @@ namespace Controllers.Settler
         private PrefabManager prefabManager;
         private SettlersNamesImporter settlersNames;
 
+        private IObjectPool<SettlerView> projectilePool;
+        private Transform settlersContainer;
+        private int maxPoolSize = 200;
+
         public SettlerSpawner(PrefabManager prefabManager, SettlersNamesImporter settlersNames)
         {
             this.prefabManager = prefabManager;
             this.settlersNames = settlersNames;
+
+            /*projectilePool = new ObjectPool<SettlerView>(
+                () => UnityEngine.Object.Instantiate(simpleProjectile),
+                settler => settler.gameObject.SetActive(true),
+                settler => settler.gameObject.SetActive(false),
+                settler => UnityEngine.Object.Destroy(settler.gameObject),
+                true, 50, maxPoolSize);*/
+
+            settlersContainer = new GameObject("SettlersContainer").transform;
         }
 
         public (SettlerView, SettlerModel) SpawnSettler(Vector3 position, Quaternion rotation)
@@ -27,9 +41,9 @@ namespace Controllers.Settler
             var settlerModel = new SettlerModel()
             {
                 SettlerDefinition = settlerDefinition,
-                Profession = SettlerProfession.None
             };
 
+            settlerView.transform.SetParent(settlersContainer);
             settlerView.Init(settlerModel);
 
             return (settlerView, settlerModel);

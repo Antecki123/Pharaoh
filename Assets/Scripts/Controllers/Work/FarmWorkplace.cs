@@ -49,6 +49,11 @@ namespace Controllers.Work
             return workplaceModel.MaxWorkersCount - workplaceModel.Workers.Count > 0;
         }
 
+        public IReservationable GetReservationable()
+        {
+            return workplaceModel.StorageModel;
+        }
+
         public void Work()
         {
             checkTimer -= Time.deltaTime;
@@ -111,9 +116,14 @@ namespace Controllers.Work
             return EntrancePosition;
         }
 
-        public IReadOnlyCollection<CommodityModel> GetStoredCommodities()
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
         {
-            return workplaceModel.StorageModel.Storage;
+            return workplaceModel.StorageModel.GetAvailableCommodities();
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        {
+            return workplaceModel.StorageModel.GetAvailableSpace();
         }
 
         private void ScheduleTransport()

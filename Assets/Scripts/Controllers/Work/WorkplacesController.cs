@@ -22,7 +22,11 @@ namespace Controllers.Work
 
         public void DeliverCommodity(CommodityModel commodity);
 
-        public IReadOnlyCollection<CommodityModel> GetStoredCommodities();
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities();
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace();
+
+        public IReservationable GetReservationable();
     }
 
     public class WorkplacesController : IInitializable, ITickable

@@ -36,7 +36,7 @@ namespace Views.Ui.Buildings
             commoditiesToShow.ForEach(x => Destroy(x));
             commoditiesToShow.Clear();
 
-            for (int i = 0; i < distributionModel.StorageModel.Storage.Count; i++)
+            for (int i = 0; i < distributionModel.MarketStalls.Count; i++)
             {
                 if (!distributionModel.MarketStalls[i].IsAvailable)
                     continue;

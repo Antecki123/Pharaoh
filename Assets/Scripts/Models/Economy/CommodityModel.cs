@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Models.Economy
 {
     public class CommodityModel
@@ -8,26 +6,14 @@ namespace Models.Economy
         public int Quantity { get; set; }
         public int MaxQuantity { get; set; } = int.MaxValue;
 
-        public Sprite Sprite { get; set; }
-        public GameObject Prefab { get; set; }
-    }
-
-    public static class CommodityExtensions
-    {
-        private static readonly CommodityName[] Categories =
+        public static CommodityModel Clone(CommodityModel other)
         {
-            CommodityName.Food
-        };
-
-        public static CommodityName GetCategory(this CommodityName commodity)
-        {
-            foreach (var category in Categories)
+            return new CommodityModel()
             {
-                if (category.HasFlag(commodity))
-                    return category;
-            }
-
-            return commodity;
+                Name = other.Name,
+                Quantity = other.Quantity,
+                MaxQuantity = other.MaxQuantity,
+            };
         }
     }
 

@@ -21,14 +21,17 @@ namespace Controllers.Construction
         private readonly ConstructionConfig constructionConfig;
         private readonly ConstructionDataImporter constructionData;
 
+        private readonly Transform constructionsContainer;
+
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig,
-            ConstructionDataImporter constructionData, BuildingDefinition buildingDefinition)
+            ConstructionDataImporter constructionData, Transform constructionsContainer, BuildingDefinition buildingDefinition)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
             this.constructionConfig = constructionConfig;
             this.constructionData = constructionData;
+            this.constructionsContainer = constructionsContainer;
             this.buildingDefinition = buildingDefinition;
         }
 
@@ -73,6 +76,8 @@ namespace Controllers.Construction
 
                 if (building.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
                     ConnectEntranceNode(buildingView.EntranceTransform.position);
+
+                building.transform.SetParent(constructionsContainer);
 
                 building = null;
                 signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition));

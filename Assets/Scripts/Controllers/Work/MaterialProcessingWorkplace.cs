@@ -53,9 +53,6 @@ namespace Controllers.Work
             if (!workplaceModel.HasRequiredComodity())
                 return;
 
-            if (!workplaceModel.StorageModel.HasEnoughRoom(workplaceModel.ProcessedCommodity.Name, workplaceModel.ProcessedCommodity.Quantity))
-                return;
-
             var efficiency = Mathf.Clamp01((float)workplaceModel.Workers.Count / workplaceModel.MaxWorkersCount);
             progress += (Time.deltaTime / workplaceModel.ProcessingTime) * efficiency;
 
@@ -115,9 +112,19 @@ namespace Controllers.Work
             return workplaceModel.MaxWorkersCount - workplaceModel.Workers.Count > 0;
         }
 
-        public IReadOnlyCollection<CommodityModel> GetStoredCommodities()
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
         {
-            return workplaceModel.StorageModel.Storage;
+            return workplaceModel.StorageModel.GetAvailableCommodities();
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        {
+            return workplaceModel.StorageModel.GetAvailableSpace();
+        }
+
+        public IReservationable GetReservationable()
+        {
+            return workplaceModel.StorageModel;
         }
 
         private void ScheduleTransport()
@@ -138,7 +145,7 @@ namespace Controllers.Work
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)
         {
-            tasks = new Queue<CarrierTask>();
+            tasks = default;
 
             var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
                 EntrancePosition,
@@ -146,50 +153,47 @@ namespace Controllers.Work
                 workplaceModel.ProcessedCommodity.Quantity);
 
             var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(
-                EntrancePosition,
-                workplaceModel.RequiredCommodity.Name,
-                workplaceModel.RequiredCommodity.Quantity);
-
-            var carriedSomethingOut = false;
-            var broughtSomethingIn = false;
+               EntrancePosition,
+               workplaceModel.RequiredCommodity.Name,
+               workplaceModel.RequiredCommodity.Quantity);
 
             if (targetWithFreeSpace == null && targetWithCommodity == null)
                 return false;
 
-            if (workplaceModel.IsAnyCommodityToTake() && targetWithFreeSpace != null)
+            var taskBuilder = new CarrierTaskBuilder();
+
+            if (workplaceModel.IsAnyCommodityToTake() && workplaceModel.HasRequiredComodity())
             {
-                tasks.Enqueue(new CarrierTask(this, targetWithFreeSpace, new CommodityModel
-                {
-                    Name = workplaceModel.ProcessedCommodity.Name,
-                    Quantity = workplaceModel.ProcessedCommodity.Quantity,
-                }));
-                carriedSomethingOut = true;
+                if (targetWithFreeSpace != null)
+                    taskBuilder
+                    .AddTaskWithReservation(this, targetWithFreeSpace, workplaceModel.ProcessedCommodity, ReservationType.Space)
+                    .AddTask(targetWithFreeSpace, this);
+                else
+                    return false;
             }
 
-            if (!workplaceModel.HasRequiredComodity() && targetWithCommodity != null)
+            else if (!workplaceModel.IsAnyCommodityToTake() && !workplaceModel.HasRequiredComodity())
             {
-                if (!carriedSomethingOut)
-                {
-                    tasks.Enqueue(new CarrierTask(this, targetWithCommodity, null));
-                }
-                else if (targetWithFreeSpace != null && targetWithFreeSpace != targetWithCommodity)
-                {
-                    tasks.Enqueue(new CarrierTask(targetWithFreeSpace, targetWithCommodity, null));
-                }
-
-                tasks.Enqueue(new CarrierTask(targetWithCommodity, this, new CommodityModel
-                {
-                    Name = workplaceModel.RequiredCommodity.Name,
-                    Quantity = workplaceModel.RequiredCommodity.Quantity,
-                }));
-                broughtSomethingIn = true;
+                if (targetWithCommodity != null)
+                    taskBuilder
+                        .AddTask(this, targetWithCommodity)
+                        .AddTaskWithReservation(targetWithCommodity, this, workplaceModel.RequiredCommodity, ReservationType.Commodity);
+                else
+                    return false;
             }
 
-            if (carriedSomethingOut && !broughtSomethingIn)
+            else if (workplaceModel.IsAnyCommodityToTake() && !workplaceModel.HasRequiredComodity())
             {
-                tasks.Enqueue(new CarrierTask(targetWithFreeSpace, this, null));
+                if (targetWithFreeSpace != null && targetWithCommodity != null)
+                    taskBuilder
+                    .AddTaskWithReservation(this, targetWithFreeSpace, workplaceModel.ProcessedCommodity, ReservationType.Space)
+                    .AddTask(targetWithFreeSpace, targetWithCommodity)
+                    .AddTaskWithReservation(targetWithCommodity, this, workplaceModel.RequiredCommodity, ReservationType.Commodity);
+                else
+                    return false;
             }
 
+            tasks = new Queue<CarrierTask>(taskBuilder.Tasks);
             return true;
         }
     }

@@ -28,12 +28,15 @@ namespace Controllers.Construction
         private NavigationGraph navigationGraph;
         private ConstructionConfig constructionConfig;
 
-        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
+        private Transform roadContainer;
+
+        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig, Transform roadContainer)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
             this.constructionConfig = constructionConfig;
+            this.roadContainer = roadContainer;
         }
 
         public void Initialize()
@@ -199,6 +202,7 @@ namespace Controllers.Construction
 
                 var routeView = prefabManager.InstantiateWithInject<RoadView>(routePrefab.gameObject);
                 routeView.Init(current.Data, next.Data);
+                routeView.transform.SetParent(roadContainer);
             }
 
             float connectionRange = 3f;

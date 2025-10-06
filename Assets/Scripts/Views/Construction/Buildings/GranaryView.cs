@@ -52,8 +52,8 @@ namespace Views.Construction
         {
             var storageModel = new StorageModel(new List<CommodityModel>()
             {
-                new CommodityModel() { Name = CommodityName.Bread, Quantity = 100, MaxQuantity = 500 },
-                new CommodityModel() { Name = CommodityName.Meat, Quantity = 100, MaxQuantity = 500 },
+                new CommodityModel() { Name = CommodityName.Bread, Quantity = 10, MaxQuantity = 500 },
+                new CommodityModel() { Name = CommodityName.Meat, Quantity = 20, MaxQuantity = 500 },
             });
 
             workplace = new StorageWorkplace(storageModel, EntranceTransform.position);

@@ -63,9 +63,19 @@ namespace Controllers.Work
             storageModel.AddCommodity(commodity);
         }
 
-        public IReadOnlyCollection<CommodityModel> GetStoredCommodities()
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
         {
-            return storageModel.Storage;
+            return storageModel.GetAvailableCommodities();
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        {
+            return storageModel.GetAvailableSpace();
+        }
+
+        public IReservationable GetReservationable()
+        {
+            return storageModel;
         }
     }
 }

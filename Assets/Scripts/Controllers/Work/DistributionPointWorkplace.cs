@@ -42,16 +42,14 @@ namespace Controllers.Work
             for (int i = 0; i < distributionModel.MaxWorkersCount; i++)
                 distributionModel.AddWorker(new UnityEngine.Object());
 
-            foreach (var commodity in distributionModel.StorageModel.Storage)
+            var stallModel = new MarketStallModel(distributionModel.StorageModel.Storage[0])
             {
-                var stallModel = new MarketStallModel(commodity)
-                {
-                    IsAvailable = true
-                };
-                distributionModel.AddStall(stallModel);
-            }
+                IsAvailable = true
+            };
+            distributionModel.AddStall(stallModel);
         }
 
+        #region Interfaces
         public Vector3 GetEntrancePosition()
         {
             return EntrancePosition;
@@ -67,15 +65,27 @@ namespace Controllers.Work
             distributionModel.StorageModel.AddCommodity(commodity);
         }
 
-        public IReadOnlyCollection<CommodityModel> GetStoredCommodities()
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
         {
-            return new List<CommodityModel>();
+            return distributionModel.StorageModel.GetAvailableCommodities();
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        {
+            return distributionModel.StorageModel.GetAvailableSpace();
         }
 
         public bool HasAvailableSpots()
         {
             return distributionModel.MaxWorkersCount - distributionModel.Workers.Count > 0;
         }
+
+        public IReservationable GetReservationable()
+        {
+            return distributionModel.StorageModel;
+        }
+
+        #endregion
 
         public void Work()
         {
@@ -91,7 +101,8 @@ namespace Controllers.Work
 
                     if (stall.Commodity.Quantity < stall.Commodity.MaxQuantity * .25f)
                     {
-                        ScheduleTransport(stall.Commodity.Name, stall.Commodity.MaxQuantity - stall.Commodity.Quantity);
+                        var quantity = stall.Commodity.MaxQuantity - stall.Commodity.Quantity;
+                        ScheduleTransport(new CommodityModel() { Name = stall.Commodity.Name, Quantity = quantity });
                     }
                 }
             }
@@ -115,12 +126,12 @@ namespace Controllers.Work
             }
         }
 
-        private void ScheduleTransport(CommodityName commodityName, int quantity)
+        private void ScheduleTransport(CommodityModel commodity)
         {
             if (distributionModel.CarriersCount == 0)
                 return;
 
-            var result = BuildCarrierTasks(commodityName, quantity, out Queue<CarrierTask> tasks);
+            var result = BuildCarrierTasks(commodity, out Queue<CarrierTask> tasks);
             if (result == false)
                 return;
 
@@ -131,22 +142,22 @@ namespace Controllers.Work
             carrier.OnTasksFinished += () => distributionModel.ReturnCarrier();
         }
 
-        private bool BuildCarrierTasks(CommodityName commodityName, int quantity, out Queue<CarrierTask> tasks)
+        private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks)
         {
-            tasks = new Queue<CarrierTask>();
-
-            var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(EntrancePosition, commodityName);
+            var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(EntrancePosition, commodity.Name);
 
             if (targetWithCommodity == null)
-                return false;
-
-            tasks.Enqueue(new CarrierTask(this, targetWithCommodity, null));
-            tasks.Enqueue(new CarrierTask(targetWithCommodity, this, new CommodityModel
             {
-                Name = commodityName,
-                Quantity = quantity
-            }));
+                tasks = default;
+                return false;
+            }
 
+            var taskBuilder = new CarrierTaskBuilder();
+            taskBuilder
+                .AddTask(this, targetWithCommodity)
+                .AddTaskWithReservation(targetWithCommodity, this, commodity, ReservationType.Commodity);
+
+            tasks = new Queue<CarrierTask>(taskBuilder.Tasks);
             return true;
         }
     }

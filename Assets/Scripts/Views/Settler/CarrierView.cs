@@ -97,11 +97,14 @@ namespace Views.Settler.Workers
                 var result = currentTask.Origin.TryPickCommodity(ref commodity);
                 if (result)
                 {
+                    if (currentTask.ReservationId.HasValue)
+                        currentTask.Origin.GetReservationable().RemoveReservation(currentTask.ReservationId.Value);
+
                     carriedCommodity = commodity;
                 }
             }
 
-            CalculateWaypoints(currentTask.Origin ?? currentTask.Target, currentTask.Target);
+            CalculateWaypoints(currentTask.Origin, currentTask.Target);
         }
 
         private void CalculateWaypoints(ISupplyTarget origin, ISupplyTarget target)
@@ -124,14 +127,19 @@ namespace Views.Settler.Workers
     public class CarrierTask
     {
         public ISupplyTarget Origin { get; }
+
         public ISupplyTarget Target { get; }
+
         public CommodityModel Commodity { get; }
 
-        public CarrierTask(ISupplyTarget origin, ISupplyTarget target, CommodityModel commodity)
+        public Guid? ReservationId { get; }
+
+        public CarrierTask(ISupplyTarget origin, ISupplyTarget target, CommodityModel commodity, Guid? reservationId = null)
         {
             Origin = origin;
             Target = target;
             Commodity = commodity;
+            ReservationId = reservationId;
         }
     }
 }
