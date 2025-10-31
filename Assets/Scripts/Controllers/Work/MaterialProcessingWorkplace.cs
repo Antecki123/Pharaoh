@@ -50,7 +50,7 @@ namespace Controllers.Work
             if (workplaceModel.Workers.Count < workplaceModel.MinimumWorkersCount)
                 return;
 
-            if (!workplaceModel.HasRequiredComodity())
+            if (!workplaceModel.HasRequiredComodity() || !workplaceModel.HasStorageRoom())
                 return;
 
             var efficiency = Mathf.Clamp01((float)workplaceModel.Workers.Count / workplaceModel.MaxWorkersCount);

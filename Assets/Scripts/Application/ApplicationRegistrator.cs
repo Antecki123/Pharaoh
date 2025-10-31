@@ -5,6 +5,7 @@ using Controllers;
 using Controllers.Calendar;
 using Controllers.Construction;
 using Controllers.Settler;
+using Controllers.UI;
 using Controllers.Work;
 using Models.Ai;
 using Models.Economy;
@@ -18,6 +19,8 @@ namespace App.Registrators
     {
         [SerializeField] private CameraConfig cameraConfig;
         [SerializeField] private ConstructionConfig constructionConfig;
+        [Space]
+        [SerializeField] private Canvas mainCanvas;
 
         public override void InstallBindings()
         {
@@ -32,6 +35,8 @@ namespace App.Registrators
             // CONFIGS
             Container.Bind<CameraConfig>().FromScriptableObject(cameraConfig).AsSingle();
             Container.Bind<ConstructionConfig>().FromScriptableObject(constructionConfig).AsSingle();
+
+            Container.Bind<Canvas>().WithId("MainCanvas").FromComponentInNewPrefab(mainCanvas).AsSingle();
 
             // MODELS
             Container.Bind<EconomyModel>().AsSingle();
@@ -48,6 +53,7 @@ namespace App.Registrators
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
             Container.Bind(typeof(CalendarController), typeof(ITickable)).To<CalendarController>().AsSingle().NonLazy();
+            Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();
 
             Container.Bind(typeof(ApplicationInitializer), typeof(IInitializable)).To<ApplicationInitializer>().AsSingle();
         }

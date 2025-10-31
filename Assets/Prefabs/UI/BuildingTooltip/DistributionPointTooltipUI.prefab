@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1715765559427149064}
   - component: {fileID: 5947367900617440397}
   m_Layer: 5
-  m_Name: DistributionPointInfoUI
+  m_Name: DistributionPointTooltipUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

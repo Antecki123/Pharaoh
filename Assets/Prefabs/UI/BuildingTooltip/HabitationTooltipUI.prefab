@@ -554,7 +554,7 @@ GameObject:
   - component: {fileID: 1076348279349138425}
   - component: {fileID: 139490892532712398}
   m_Layer: 5
-  m_Name: HabitationInfoUI
+  m_Name: HabitationTooltipUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

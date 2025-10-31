@@ -35,6 +35,13 @@ namespace App.Registrators
                 "FarmersHut",
                 "LinenField",
                 "Warehouse",
+                "FarmView",
+
+                // UI ELEMENTS
+                "ProcessingWorkplaceTooltipUI",
+                "HabitationTooltipUI",
+                "StorageTooltipUI",
+                "DistributionPointTooltipUI"
             };
 
             foreach (var key in assetsKeys)

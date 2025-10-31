@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Views.Ui.Buildings
 {
-    public class HabitationInfoUI : BuildingInfoUI
+    public class HabitationTooltipUI : BuildingTooltipUI
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text residentsCountLabel;
@@ -14,9 +14,6 @@ namespace Views.Ui.Buildings
         [SerializeField] private CommodityElementUI clothesCommodityElement;
 
         private HabitatModel habitatModel;
-
-        private void OnEnable() => habitatModel.OnValueChanged += RefreshUI;
-        private void OnDisable() => habitatModel.OnValueChanged -= RefreshUI;
 
         public void Init(Transform buildingTransform, HabitatModel habitatModel)
         {

@@ -45,9 +45,9 @@ namespace Controllers.Construction
                 { BuildingDefinition.Road, () => new RoadBuilder(signalBus, prefabManager, navigationGraph, constructionConfig, roadContainer) },
                 { BuildingDefinition.Cottage, () => new ConstructionBuilder<CottageView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Cottage) },
                 { BuildingDefinition.House, () => new ConstructionBuilder<HouseView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.House) },
-                { BuildingDefinition.FarmersHut, () => new ConstructionBuilder<FarmersHutView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.FarmersHut) },
-                { BuildingDefinition.WheatField, () => new ConstructionBuilder<WheatFieldView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.WheatField) },
-                { BuildingDefinition.LinenField, () => new ConstructionBuilder<LinenFieldView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.LinenField) },
+                { BuildingDefinition.WheatField, () => new FarmBuilder(signalBus, prefabManager, constructionsContainer, navigationGraph,BuildingDefinition.WheatFarm) },
+                { BuildingDefinition.LinenField, () => new FarmBuilder(signalBus, prefabManager, constructionsContainer, navigationGraph, BuildingDefinition.LinenFarm) },
+                { BuildingDefinition.Pasture, () => new FarmBuilder(signalBus, prefabManager, constructionsContainer, navigationGraph, BuildingDefinition.Pasture) },
                 { BuildingDefinition.Granary, () => new ConstructionBuilder<GranaryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Granary) },
                 { BuildingDefinition.Windmill, () => new ConstructionBuilder<WindmillView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Windmill) },
                 { BuildingDefinition.Bakery, () => new ConstructionBuilder<BakeryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Bakery) },
@@ -80,13 +80,16 @@ namespace Controllers.Construction
         Cottage,
         House,
         Residence,
-        FarmersHut,
+        [Obsolete] FarmersHut,
         WheatField,
         LinenField,
         Granary,
         Windmill,
         Bakery,
         Bazaar,
-        Warehouse
+        Warehouse,
+        WheatFarm,
+        LinenFarm,
+        Pasture
     }
 }

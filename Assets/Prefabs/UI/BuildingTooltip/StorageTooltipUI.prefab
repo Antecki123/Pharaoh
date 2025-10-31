@@ -146,7 +146,7 @@ GameObject:
   - component: {fileID: 3118380606901311159}
   - component: {fileID: 8396751727068769511}
   m_Layer: 5
-  m_Name: StorageInfoUI
+  m_Name: StorageTooltipUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4560341736907489145}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c0a3aa16ccb94a48b8565c9c5c195e5, type: 3}
+  m_Script: {fileID: 11500000, guid: 74cd33640e4bb714eae9acca50059172, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   nameLabel: {fileID: 2848225366957273380}

@@ -10,6 +10,7 @@ namespace App.Signals
             new ConstructionSignals(container);
             new SettlersSignals(container);
             new WorkplaceSignals(container);
+            new BuildingTooltipSignals(container);
         }
     }
 }

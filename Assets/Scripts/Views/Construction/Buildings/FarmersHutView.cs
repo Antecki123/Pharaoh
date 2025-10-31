@@ -56,7 +56,7 @@ namespace Views.Construction
             {
                 //var infoPanel = prefabManager.InstantiateUI<FarmInfoUI>();
                 var infoPanel = FindAnyObjectByType<FarmInfoUI>(FindObjectsInactive.Include);
-                infoPanel.Init(transform, workplace.WorkplaceModel);
+                //infoPanel.Init(transform, workplace.WorkplaceModel);
             }
         }
 

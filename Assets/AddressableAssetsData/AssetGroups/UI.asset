@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UI
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: UI
+  m_GUID: f25cccef2e03dd64484126220149597c
+  m_SerializeEntries:
+  - m_GUID: 806023d10ce1ed043846b914f7ead159
+    m_Address: HabitationTooltipUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95a8c84890eee6a4b9f28532ebeb7dc2
+    m_Address: ProcessingWorkplaceTooltipUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc25bedf3ee3a9c4895476dfd867ca41
+    m_Address: DistributionPointTooltipUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb93f8da4e1d6e84897b5caa1f18691c
+    m_Address: StorageTooltipUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: d5245fa0bb56a0e4b9ff1bd28a911f79, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5ce758741cde6734a914d327dcf6cd5f, type: 2}
+    - {fileID: 11400000, guid: e65f4439c30bf294a83455e0cb67d11b, type: 2}

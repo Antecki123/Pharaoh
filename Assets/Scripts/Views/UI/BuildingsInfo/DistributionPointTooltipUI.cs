@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Views.Ui.Buildings
 {
-    public class DistributionPointInfoUI : BuildingInfoUI
+    public class DistributionPointTooltipUI : BuildingTooltipUI
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text workersLabel;
@@ -15,9 +15,6 @@ namespace Views.Ui.Buildings
 
         private List<GameObject> commoditiesToShow = new List<GameObject>();
         private DistributionPointModel distributionModel;
-
-        private void OnEnable() => distributionModel.OnValueChanged += RefreshUI;
-        private void OnDisable() => distributionModel.OnValueChanged -= RefreshUI;
 
         public void Init(Transform buildingTransform, DistributionPointModel distributionModel)
         {

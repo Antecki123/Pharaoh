@@ -1,6 +1,6 @@
+using App.Signals;
 using Models.Economy;
 using UnityEngine;
-using Views.Ui.Buildings;
 using Zenject;
 
 namespace Views.Construction
@@ -8,12 +8,15 @@ namespace Views.Construction
     [SelectionBase]
     public class CottageView : BuildingView
     {
+        private SignalBus signalBus;
+
         private HabitationModel habitationModel;
         private HabitatModel habitatModel;
 
         [Inject]
-        public void Constructor(HabitationModel habitationModel)
+        public void Constructor(SignalBus signalBus, HabitationModel habitationModel)
         {
+            this.signalBus = signalBus;
             this.habitationModel = habitationModel;
         }
 
@@ -45,9 +48,7 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<HabitationInfoUI>();
-                var infoPanel = FindAnyObjectByType<HabitationInfoUI>(FindObjectsInactive.Include);
-                infoPanel.Init(transform, habitatModel);
+                signalBus.Fire(new BuildingTooltipSignals.OpenHabitationTooltip(transform, habitatModel));
             }
         }
     }

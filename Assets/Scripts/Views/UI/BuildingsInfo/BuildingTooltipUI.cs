@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Views.Ui.Buildings
 {
-    public abstract class BuildingInfoUI : MonoBehaviour
+    public abstract class BuildingTooltipUI : MonoBehaviour
     {
         protected Transform buildingTransform;
         private RectTransform rectTransform;

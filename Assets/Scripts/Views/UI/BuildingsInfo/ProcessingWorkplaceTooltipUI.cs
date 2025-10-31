@@ -2,25 +2,20 @@ using Models.Work;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Views.Ui.Buildings
 {
-    public class ProcessingWorkplaceInfoUI : BuildingInfoUI
+    public class ProcessingWorkplaceTooltipUI : BuildingTooltipUI
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text workersLabel;
+        [Space]
         [SerializeField] private RectTransform commoditiesContainer;
         [SerializeField] private CommodityElementUI commodityElementPrefab;
-        [Space]
-        [SerializeField] private TMP_Text progressLabel;
-        [SerializeField] private Slider progressSlider;
+        [SerializeField] private ProgressPanelElementUI progressPanel;
 
         private List<CommodityElementUI> commoditiesToShow = new List<CommodityElementUI>();
         private WorkplaceModel workplace;
-
-        private void OnEnable() => workplace.OnValueChanged += RefreshUI;
-        private void OnDisable() => workplace.OnValueChanged -= RefreshUI;
 
         public void Init(Transform buildingTransform, WorkplaceModel workplace)
         {
@@ -52,8 +47,7 @@ namespace Views.Ui.Buildings
                     workplace.StorageModel.Storage[i].MaxQuantity);
             }
 
-            progressLabel.text = $"Progress: {Mathf.RoundToInt(workplace.ProcessingProgress * 100)}%";
-            progressSlider.value = workplace.ProcessingProgress;
+            progressPanel.RefreshUI(workplace.ProcessingProgress);
         }
     }
 }

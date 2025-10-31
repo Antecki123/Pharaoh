@@ -1,29 +1,32 @@
 using Models.Work;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 namespace Views.Ui.Buildings
 {
-    public class FarmInfoUI : BuildingInfoUI
+    public class FarmInfoUI : BuildingTooltipUI
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text workersLabel;
-        [Header("Commodity")]
-        [SerializeField] private CommodityElementUI wheatCommodityElement;
-        [SerializeField] private CommodityElementUI linenCommodityElement;
+        [Space]
+        [SerializeField] private RectTransform commoditiesContainer;
+        [SerializeField] private CommodityElementUI commodityElementPrefab;
+        [SerializeField] private ProgressPanelElementUI progressPanel;
 
-        private WorkplaceModel workplace;
+        private List<CommodityElementUI> commoditiesToShow = new List<CommodityElementUI>();
+        private FarmWorkplaceModel workplace;
 
         private void OnEnable() => workplace.OnValueChanged += RefreshUI;
         private void OnDisable() => workplace.OnValueChanged -= RefreshUI;
 
-        public void Init(Transform buildingTransform, WorkplaceModel workplace)
+        public void Init(Transform buildingTransform, FarmWorkplaceModel workplace)
         {
             this.buildingTransform = buildingTransform;
             this.workplace = workplace;
 
-            gameObject.SetActive(true);
             RefreshUI();
+            gameObject.SetActive(true);
         }
 
         private void RefreshUI()
@@ -31,14 +34,23 @@ namespace Views.Ui.Buildings
             nameLabel.text = workplace.Name;
             workersLabel.text = $"Current workers: {workplace.Workers.Count}/{workplace.MaxWorkersCount}";
 
-            wheatCommodityElement.RefreshUI(
-                workplace.StorageModel.Storage[0].Name.ToString(),
-                workplace.StorageModel.Storage[0].Quantity,
-                workplace.StorageModel.Storage[0].MaxQuantity);
-            linenCommodityElement.RefreshUI(
-                workplace.StorageModel.Storage[1].Name.ToString(),
-                workplace.StorageModel.Storage[1].Quantity,
-                workplace.StorageModel.Storage[1].MaxQuantity);
+            commoditiesToShow.ForEach(x => Destroy(x.gameObject));
+            commoditiesToShow.Clear();
+            for (int i = 0; i < workplace.StorageModel.Storage.Count; i++)
+            {
+                var commodityToShow = Instantiate(commodityElementPrefab, commoditiesContainer);
+                commoditiesToShow.Add(commodityToShow);
+            }
+
+            for (int i = 0; i < commoditiesToShow.Count; i++)
+            {
+                commoditiesToShow[i].RefreshUI(
+                    workplace.StorageModel.Storage[i].Name.ToString(),
+                    workplace.StorageModel.Storage[i].Quantity,
+                    workplace.StorageModel.Storage[i].MaxQuantity);
+            }
+
+            progressPanel.RefreshUI(workplace.ProcessingProgress);
         }
     }
 }

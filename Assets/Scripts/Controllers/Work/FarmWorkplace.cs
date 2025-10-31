@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Views.Settler.Workers;
-using static TreeEditor.TreeGroup;
 
 namespace Controllers.Work
 {

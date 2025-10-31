@@ -72,11 +72,12 @@ namespace Models.Work
             return false;
         }
 
-        public bool HasRequiredComodity(CommodityName commodityName, int quantity)
+        public bool HasStorageRoom()
         {
-            foreach (var commodity in StorageModel.Storage)
+            var availableSpace = StorageModel.GetAvailableSpace();
+            foreach (var space in availableSpace)
             {
-                if (commodity.Name == commodityName && commodity.Quantity >= quantity)
+                if (space.Name == ProcessedCommodity.Name && space.Quantity >= ProcessedCommodity.Quantity)
                     return true;
             }
 

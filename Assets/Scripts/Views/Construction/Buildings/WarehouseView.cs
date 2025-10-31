@@ -42,9 +42,7 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<StorageInfoUI>();
-                var infoPanel = FindAnyObjectByType<StorageInfoUI>(FindObjectsInactive.Include);
-                infoPanel.Init(transform, workplace.StorageModel);
+                signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(transform, workplace.StorageModel));
             }
         }
 

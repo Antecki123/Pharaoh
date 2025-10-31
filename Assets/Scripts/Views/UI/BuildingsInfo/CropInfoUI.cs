@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Views.Ui.Buildings;
 
-public class CropInfoUI : BuildingInfoUI
+public class CropInfoUI : BuildingTooltipUI
 {
     [SerializeField] private TMP_Text nameLabel;
     [SerializeField] private TMP_Text progressLabel;

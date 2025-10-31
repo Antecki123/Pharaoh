@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6dce6a742592f50478ad3f2c8e6473c9
+    m_Address: FarmView
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 87a8dadcd060b9043867d2045d69ce7b
     m_Address: WheatField
     m_ReadOnly: 0

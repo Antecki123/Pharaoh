@@ -4,7 +4,6 @@ using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
 using UnityEngine;
-using Views.Ui.Buildings;
 using Zenject;
 
 namespace Views.Construction
@@ -42,9 +41,7 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<StorageInfoUI>();
-                var infoPanel = FindAnyObjectByType<StorageInfoUI>(FindObjectsInactive.Include);
-                infoPanel.Init(transform, workplace.StorageModel);
+                signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(transform, workplace.StorageModel));
             }
         }
 

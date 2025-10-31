@@ -22,6 +22,7 @@ namespace Controllers.Construction
         private readonly ConstructionDataImporter constructionData;
 
         private readonly Transform constructionsContainer;
+        private Camera mainCamera;
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig,
             ConstructionDataImporter constructionData, Transform constructionsContainer, BuildingDefinition buildingDefinition)
@@ -37,6 +38,7 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
+            mainCamera = Camera.main;
             building = prefabManager.Instantiate<T>(buildingDefinition.ToString());
         }
 
@@ -55,32 +57,13 @@ namespace Controllers.Construction
 
             if (building != null)
             {
-                building.transform.position = position;
-
-                var color = IsAvailableSpace(position)
-                    ? Color.green
-                    : Color.red;
-
-                foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
-                    renderer.material.color = color;
+                UpdatePosition(position);
+                UpdateRotation();
             }
 
             if (Input.GetMouseButtonDown(0) && IsAvailableSpace(position))
             {
-                foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
-                    renderer.material.color = Color.white;
-
-                building.PlaceBuilding();
-
-                BlockBuildingArea(building.GetComponent<Collider>());
-
-                if (building.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
-                    ConnectEntranceNode(buildingView.EntranceTransform.position);
-
-                building.transform.SetParent(constructionsContainer);
-
-                building = null;
-                signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition));
+                PlaceBuilding();
             }
         }
 
@@ -92,9 +75,49 @@ namespace Controllers.Construction
             signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
         }
 
+        private void UpdatePosition(Vector3 position)
+        {
+            building.transform.position = position;
+
+            var color = IsAvailableSpace(position)
+                ? Color.green
+                : Color.red;
+
+            foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
+                renderer.material.color = color;
+        }
+
+        private void UpdateRotation()
+        {
+            float rotationSpeed = 100f;
+
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                building.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+            }
+        }
+
+        private void PlaceBuilding()
+        {
+            foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
+                renderer.material.color = Color.white;
+
+            building.PlaceBuilding();
+
+            BlockBuildingArea(building.GetComponent<Collider>());
+
+            if (building.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
+                ConnectEntranceNode(buildingView.EntranceTransform.position);
+
+            building.transform.SetParent(constructionsContainer);
+
+            building = null;
+            signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition));
+        }
+
         private bool TryGetSnappedPosition(out Vector3 snappedPos)
         {
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             var layerMask = 1 << 16;
 
             if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
@@ -138,12 +161,16 @@ namespace Controllers.Construction
                 }
             }
 
-            snappedPos = bestPos;
-
-            if (closestDistSqr >= data.SnapDistance * data.SnapDistance)
+            if (closestDistSqr < data.SnapDistance * data.SnapDistance)
+            {
+                snappedPos = bestPos;
+                building.transform.rotation = Quaternion.LookRotation(bestForward, Vector3.up);
+            }
+            else
+            {
                 snappedPos = hit.point;
+            }
 
-            building.transform.rotation = Quaternion.LookRotation(bestForward, Vector3.up);
             return true;
         }
 
@@ -200,7 +227,7 @@ namespace Controllers.Construction
             //var connectRadius = data.RoadWidth / 2 + data.BuildingOffset;
             var entranceNode = new Node<Vector3>(
                 entrancePos,
-                NodeType.Building,
+                NodeType.Road,
                 (a, b) => Vector3.Distance(a.Data, b.Data),
                 (a, goal) => Vector3.Distance(a.Data, goal.Data)
             );

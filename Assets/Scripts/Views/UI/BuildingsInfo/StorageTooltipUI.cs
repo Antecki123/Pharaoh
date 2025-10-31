@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Views.Ui.Buildings
 {
-    public class StorageInfoUI : BuildingInfoUI
+    public class StorageTooltipUI : BuildingTooltipUI
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private RectTransform commoditiesContainer;
@@ -13,9 +13,6 @@ namespace Views.Ui.Buildings
 
         private List<CommodityElementUI> commoditiesToShow = new List<CommodityElementUI>();
         private StorageModel storageModel;
-
-        private void OnEnable() => storageModel.OnValueChanged += RefreshUI;
-        private void OnDisable() => storageModel.OnValueChanged -= RefreshUI;
 
         public void Init(Transform buildingTransform, StorageModel storageModel)
         {

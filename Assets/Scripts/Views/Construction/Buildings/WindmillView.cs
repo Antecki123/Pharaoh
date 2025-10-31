@@ -6,7 +6,6 @@ using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
 using UnityEngine;
-using Views.Ui.Buildings;
 using Zenject;
 
 namespace Views.Construction
@@ -53,9 +52,7 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<ProcessingWorkplaceInfoUI>();
-                var infoPanel = FindAnyObjectByType<ProcessingWorkplaceInfoUI>(FindObjectsInactive.Include);
-                infoPanel.Init(transform, workplace.WorkplaceModel);
+                signalBus.Fire(new BuildingTooltipSignals.OpenProcessingWorkplaceTooltip(transform, workplace.WorkplaceModel));
             }
         }
 
