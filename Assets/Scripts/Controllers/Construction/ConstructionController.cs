@@ -1,7 +1,4 @@
-using App.Configs;
-using App.Helpers;
 using App.Signals;
-using Models.Ai;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,26 +9,25 @@ namespace Controllers.Construction
 {
     public class ConstructionController : IInitializable, ITickable
     {
-        private IConstruction currentConstruction;
-
         private SignalBus signalBus;
-        private PrefabManager prefabManager;
-        private NavigationGraph navigationGraph;
-        private ConstructionConfig constructionConfig;
-        private ConstructionDataImporter constructionDataImporter;
+
+        private IConstruction currentConstruction;
 
         private Dictionary<BuildingDefinition, Func<IConstruction>> constructionFactories;
         private Transform constructionsContainer;
         private Transform roadContainer;
 
-        public ConstructionController(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig,
-            ConstructionDataImporter constructionDataImporter)
+        private RoadBuilder.Factory roadFactory;
+        private FarmBuilder.Factory farmFactory;
+        private ConstructionBuilder<BuildingView>.Factory constructionFactory;
+
+        public ConstructionController(SignalBus signalBus, RoadBuilder.Factory roadFactory, FarmBuilder.Factory farmFactory,
+            ConstructionBuilder<BuildingView>.Factory constructionFactory)
         {
             this.signalBus = signalBus;
-            this.prefabManager = prefabManager;
-            this.navigationGraph = navigationGraph;
-            this.constructionConfig = constructionConfig;
-            this.constructionDataImporter = constructionDataImporter;
+            this.roadFactory = roadFactory;
+            this.farmFactory = farmFactory;
+            this.constructionFactory = constructionFactory;
 
             constructionsContainer = new GameObject("ConstructionsContainer").transform;
             roadContainer = new GameObject("RoadContainer").transform;
@@ -39,20 +35,41 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
+            Func<IConstruction> BuildRoad()
+            {
+                var builder = roadFactory.Create();
+                builder.Setup(roadContainer);
+                return () => builder;
+            }
+
+            Func<IConstruction> BuildFarm(BuildingDefinition def)
+            {
+                var builder = farmFactory.Create();
+                builder.Setup(def, constructionsContainer);
+                return () => builder;
+            }
+
+            Func<IConstruction> Build<T>(BuildingDefinition def) where T : BuildingView
+            {
+                var builder = constructionFactory.Create();
+                builder.Setup(def, constructionsContainer);
+                return () => builder;
+            }
+
             constructionFactories = new Dictionary<BuildingDefinition, Func<IConstruction>>
             {
                 { BuildingDefinition.None, () => null },
-                { BuildingDefinition.Road, () => new RoadBuilder(signalBus, prefabManager, navigationGraph, constructionConfig, roadContainer) },
-                { BuildingDefinition.Cottage, () => new ConstructionBuilder<CottageView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Cottage) },
-                { BuildingDefinition.House, () => new ConstructionBuilder<HouseView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.House) },
-                { BuildingDefinition.WheatField, () => new FarmBuilder(signalBus, prefabManager, constructionsContainer, navigationGraph,BuildingDefinition.WheatFarm) },
-                { BuildingDefinition.LinenField, () => new FarmBuilder(signalBus, prefabManager, constructionsContainer, navigationGraph, BuildingDefinition.LinenFarm) },
-                { BuildingDefinition.Pasture, () => new FarmBuilder(signalBus, prefabManager, constructionsContainer, navigationGraph, BuildingDefinition.Pasture) },
-                { BuildingDefinition.Granary, () => new ConstructionBuilder<GranaryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Granary) },
-                { BuildingDefinition.Windmill, () => new ConstructionBuilder<WindmillView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Windmill) },
-                { BuildingDefinition.Bakery, () => new ConstructionBuilder<BakeryView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Bakery) },
-                { BuildingDefinition.Bazaar, () => new ConstructionBuilder<BazaarView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Bazaar) },
-                { BuildingDefinition.Warehouse, () => new ConstructionBuilder<WarehouseView>(signalBus, prefabManager, navigationGraph, constructionConfig, constructionDataImporter, constructionsContainer, BuildingDefinition.Warehouse) },
+                { BuildingDefinition.Road, BuildRoad() },
+                { BuildingDefinition.WheatField, BuildFarm(BuildingDefinition.WheatFarm) },
+                { BuildingDefinition.LinenField, BuildFarm(BuildingDefinition.LinenFarm) },
+                { BuildingDefinition.Pasture, BuildFarm(BuildingDefinition.Pasture) },
+                { BuildingDefinition.Cottage, Build<CottageView>(BuildingDefinition.Cottage) },
+                { BuildingDefinition.House, Build<HouseView>(BuildingDefinition.House) },
+                { BuildingDefinition.Granary, Build<GranaryView>(BuildingDefinition.Granary) },
+                { BuildingDefinition.Windmill, Build<WindmillView>(BuildingDefinition.Windmill) },
+                { BuildingDefinition.Bakery, Build<BakeryView>(BuildingDefinition.Bakery) },
+                { BuildingDefinition.Bazaar, Build<BazaarView>(BuildingDefinition.Bazaar) },
+                { BuildingDefinition.Warehouse, Build<WarehouseView>(BuildingDefinition.Warehouse) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);

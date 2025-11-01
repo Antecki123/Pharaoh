@@ -11,6 +11,7 @@ using Models.Ai;
 using Models.Economy;
 using Models.Work;
 using UnityEngine;
+using Views.Construction;
 using Zenject;
 
 namespace App.Registrators
@@ -54,6 +55,10 @@ namespace App.Registrators
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
             Container.Bind(typeof(CalendarController), typeof(ITickable)).To<CalendarController>().AsSingle().NonLazy();
             Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();
+
+            Container.BindFactory<RoadBuilder, RoadBuilder.Factory>().AsTransient();
+            Container.BindFactory<FarmBuilder, FarmBuilder.Factory>().AsTransient();
+            Container.BindFactory<ConstructionBuilder<BuildingView>, ConstructionBuilder<BuildingView>.Factory>().AsTransient();
 
             Container.Bind(typeof(ApplicationInitializer), typeof(IInitializable)).To<ApplicationInitializer>().AsSingle();
         }

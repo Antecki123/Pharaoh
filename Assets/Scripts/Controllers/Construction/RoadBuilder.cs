@@ -15,6 +15,8 @@ namespace Controllers.Construction
 {
     public class RoadBuilder : IConstruction
     {
+        public class Factory : PlaceholderFactory<RoadBuilder> { }
+
         private List<Vector3> segmentsPositions = new List<Vector3>();
         private Vector3? startPosition;
         private Vector3? endPosition;
@@ -30,12 +32,16 @@ namespace Controllers.Construction
 
         private Transform roadContainer;
 
-        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig, Transform roadContainer)
+        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
             this.constructionConfig = constructionConfig;
+        }
+
+        public void Setup(Transform roadContainer)
+        {
             this.roadContainer = roadContainer;
         }
 

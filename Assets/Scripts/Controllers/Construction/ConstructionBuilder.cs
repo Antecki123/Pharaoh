@@ -12,33 +12,39 @@ namespace Controllers.Construction
 {
     public class ConstructionBuilder<T> : IConstruction where T : BuildingView
     {
+        public class Factory : PlaceholderFactory<ConstructionBuilder<T>> { }
+
         private T building;
-        private readonly BuildingDefinition buildingDefinition;
+        private BuildingDefinition buildingDefinition;
 
-        private readonly SignalBus signalBus;
-        private readonly PrefabManager prefabManager;
-        private readonly NavigationGraph navigationGraph;
-        private readonly ConstructionConfig constructionConfig;
-        private readonly ConstructionDataImporter constructionData;
+        private SignalBus signalBus;
+        private PrefabManager prefabManager;
+        private NavigationGraph navigationGraph;
+        private ConstructionConfig constructionConfig;
+        private ConstructionDataImporter constructionData;
 
-        private readonly Transform constructionsContainer;
+        private Transform constructionsContainer;
         private Camera mainCamera;
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig,
-            ConstructionDataImporter constructionData, Transform constructionsContainer, BuildingDefinition buildingDefinition)
+            ConstructionDataImporter constructionData)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.navigationGraph = navigationGraph;
             this.constructionConfig = constructionConfig;
             this.constructionData = constructionData;
-            this.constructionsContainer = constructionsContainer;
+        }
+
+        public void Setup(BuildingDefinition buildingDefinition, Transform constructionsContainer)
+        {
             this.buildingDefinition = buildingDefinition;
+            this.constructionsContainer = constructionsContainer;
+            mainCamera = Camera.main;
         }
 
         public void Initialize()
         {
-            mainCamera = Camera.main;
             building = prefabManager.Instantiate<T>(buildingDefinition.ToString());
         }
 

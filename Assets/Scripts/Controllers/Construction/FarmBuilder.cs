@@ -11,12 +11,14 @@ namespace Controllers.Construction
 {
     public class FarmBuilder : IConstruction
     {
+        public class Factory : PlaceholderFactory<FarmBuilder> { }
+
         private readonly SignalBus signalBus;
 
-        private readonly Transform constructionsContainer;
-        private readonly PrefabManager prefabManager;
-        private readonly NavigationGraph navigationGraph;
-        private readonly BuildingDefinition buildingDefinition;
+        private Transform constructionsContainer;
+        private PrefabManager prefabManager;
+        private NavigationGraph navigationGraph;
+        private BuildingDefinition buildingDefinition;
 
         private List<Vector3> farmVertices = new List<Vector3>();
         private FarmPreviewView farmPreview;
@@ -24,20 +26,22 @@ namespace Controllers.Construction
         private GameObject pointer;
         private Camera mainCamera;
 
-        public FarmBuilder(SignalBus signalBus, PrefabManager prefabManager, Transform constructionsContainer, NavigationGraph navigationGraph,
-            BuildingDefinition buildingDefinition)
+        public FarmBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
-            this.constructionsContainer = constructionsContainer;
             this.navigationGraph = navigationGraph;
+        }
+
+        public void Setup(BuildingDefinition buildingDefinition, Transform constructionsContainer)
+        {
             this.buildingDefinition = buildingDefinition;
+            this.constructionsContainer = constructionsContainer;
+            mainCamera = Camera.main;
         }
 
         public void Initialize()
         {
-            mainCamera = Camera.main;
-
             CreatePointer();
             CreateFarmPreview();
         }
