@@ -2,8 +2,8 @@ using App.Configs;
 using App.Helpers;
 using App.Signals;
 using Controllers;
-using Controllers.Calendar;
 using Controllers.Construction;
+using Controllers.Environment;
 using Controllers.Settler;
 using Controllers.UI;
 using Controllers.Work;
@@ -18,8 +18,10 @@ namespace App.Registrators
 {
     public class ApplicationRegistrator : MonoInstaller
     {
+        [SerializeField] private GameConfig gameConfig;
         [SerializeField] private CameraConfig cameraConfig;
         [SerializeField] private ConstructionConfig constructionConfig;
+        [SerializeField] private EnvironmentConfig environmentConfig;
         [Space]
         [SerializeField] private Canvas mainCanvas;
 
@@ -34,8 +36,10 @@ namespace App.Registrators
             Container.Bind<WorkplaceEconomyImporter>().AsSingle();
 
             // CONFIGS
+            Container.Bind<GameConfig>().FromScriptableObject(gameConfig).AsSingle();
             Container.Bind<CameraConfig>().FromScriptableObject(cameraConfig).AsSingle();
             Container.Bind<ConstructionConfig>().FromScriptableObject(constructionConfig).AsSingle();
+            Container.Bind<EnvironmentConfig>().FromScriptableObject(environmentConfig).AsSingle();
 
             Container.Bind<Canvas>().WithId("MainCanvas").FromComponentInNewPrefab(mainCanvas).AsSingle();
 
@@ -53,7 +57,7 @@ namespace App.Registrators
             Container.Bind(typeof(InteractionController), typeof(IInitializable), typeof(ITickable)).To<InteractionController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
-            Container.Bind(typeof(CalendarController), typeof(ITickable)).To<CalendarController>().AsSingle().NonLazy();
+            Container.Bind(typeof(EnvironmentController), typeof(ITickable)).To<EnvironmentController>().AsSingle().NonLazy();
             Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();
 
             Container.BindFactory<RoadBuilder, RoadBuilder.Factory>().AsTransient();

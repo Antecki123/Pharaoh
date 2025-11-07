@@ -21,8 +21,6 @@ namespace Controllers.Work
         private SupplyModel supplyModel;
         private DistributionPointModel distributionModel;
 
-        private float availableCommodityRange = 40f;
-
         private float checkTimer;
         private float checkSpanInSec = 5f;
 
@@ -39,9 +37,6 @@ namespace Controllers.Work
             EntrancePosition = entrancePosition;
 
             // DEBUG
-            for (int i = 0; i < distributionModel.MaxWorkersCount; i++)
-                distributionModel.AddWorker(new UnityEngine.Object());
-
             var stallModel = new MarketStallModel(distributionModel.StorageModel.Storage[0])
             {
                 IsAvailable = true
@@ -49,7 +44,6 @@ namespace Controllers.Work
             distributionModel.AddStall(stallModel);
         }
 
-        #region Interfaces
         public Vector3 GetEntrancePosition()
         {
             return EntrancePosition;
@@ -75,17 +69,15 @@ namespace Controllers.Work
             return distributionModel.StorageModel.GetAvailableSpace();
         }
 
-        public bool HasAvailableSpots()
-        {
-            return distributionModel.MaxWorkersCount - distributionModel.Workers.Count > 0;
-        }
-
         public IReservationable GetReservationable()
         {
             return distributionModel.StorageModel;
         }
 
-        #endregion
+        public IEmployer GetEmployer()
+        {
+            return distributionModel;
+        }
 
         public void Work()
         {

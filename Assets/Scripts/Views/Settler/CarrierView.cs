@@ -1,7 +1,7 @@
-using Controllers.Work;
 using Models.Ai;
 using Models.Ai.Pathfinding;
 using Models.Economy;
+using Models.Work;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,7 @@ namespace Views.Settler.Workers
 
         private List<Vector3> waypoints = new List<Vector3>();
         private int currentIndex = 0;
-        private float movementSpeed = 13f;
+        private float movementSpeed = 5f;
 
         [Inject]
         public void Constructor(NavigationGraph navigationGraph)

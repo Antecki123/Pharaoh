@@ -33,14 +33,11 @@ namespace Views.Construction
             cropModel = new CropModel("Linen field", createdMaterial, transform.position, growthDuration);
 
             cropModel.OnWorkScheduled += PlayTimeline;
-            signalBus.Fire(new WorkplaceSignals.RegisterCropField(cropModel));
         }
 
         public override void DestroyBuilding()
         {
             base.DestroyBuilding();
-
-            signalBus.Fire(new WorkplaceSignals.UnregisterCropField(cropModel));
         }
 
         public override void Interact()

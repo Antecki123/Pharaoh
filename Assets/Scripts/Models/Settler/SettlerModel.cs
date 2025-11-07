@@ -1,20 +1,23 @@
 using Controllers.Work;
 using Models.Economy;
-using System;
+using Views.Construction;
+using Views.Settler;
 
 namespace Models.Settler
 {
-    public class SettlerModel
+    public class SettlerModel : IEmployee
     {
         public SettlerDefinition SettlerDefinition { get; set; }
-
-        [Obsolete] public SettlerProfession Profession { get; set; }
 
         public HabitatModel Habitation { get; set; }
 
         public IWorkplace Workplace { get; set; }
 
-        public SettlerNeeds SettlerNeeds { get; set; }
+        public SettlerNeeds SettlerNeeds { get; set; } = new SettlerNeeds();
+
+        public BuildingView CurrentLocation { get; set; }
+
+        public StrategyState StrategyState { get; set; }
     }
 
     public enum SettlerProfession

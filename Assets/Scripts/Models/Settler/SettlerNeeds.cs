@@ -1,49 +1,43 @@
-using System;
+using UnityEngine;
 
 namespace Models.Settler
 {
     public class SettlerNeeds
     {
-        public event Action OnValueChanged;
+        public Need Rest = new Need { DefaultDecayTime = 60f, RestoreFactor = 10f };
+        public Need Entertainment = new Need { DefaultDecayTime = 120f, RestoreFactor = 8f };
+        public Need Health = new Need { DefaultDecayTime = 200f, RestoreFactor = 15f };
+        public Need Pray = new Need { DefaultDecayTime = 150f, RestoreFactor = 12f };
 
-        public float Health { get; private set; }
-
-        public float Hunger { get; private set; }
-
-        public float Entertainment { get; private set; }
-
-        public float Sleep { get; private set; }
-
-        public float Morale { get; private set; }
-
-        public void SetHealth(float value)
+        public SettlerNeeds()
         {
-            Health = value;
-            OnValueChanged?.Invoke();
+            Rest.Value = 0.0f;
+            Entertainment.Value = 1.0f;
+            Health.Value = 1.0f;
+            Pray.Value = 1.0f;
         }
 
-        public void SetHunger(float value)
+        public void UpdateNeeds()
         {
-            Hunger = value;
-            OnValueChanged?.Invoke();
+            Rest.Update();
+            Entertainment.Update();
+            Health.Update();
+            Pray.Update();
         }
+    }
 
-        public void SetEntertainment(float value)
-        {
-            Entertainment = value;
-            OnValueChanged?.Invoke();
-        }
+    public class Need
+    {
+        public float Value;
+        public float DefaultDecayTime;
+        public bool IsRestoring;
+        public float RestoreFactor;
 
-        public void SetSleep(float value)
+        public void Update()
         {
-            Sleep = value;
-            OnValueChanged?.Invoke();
-        }
-
-        public void SetMorale(float value)
-        {
-            Morale = value;
-            OnValueChanged?.Invoke();
+            float delta = Time.deltaTime / (IsRestoring ? RestoreFactor : DefaultDecayTime);
+            Value += IsRestoring ? delta : -delta;
+            Value = Mathf.Max(Value, 0f);
         }
     }
 }

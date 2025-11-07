@@ -1,18 +1,18 @@
 namespace Controllers.Ai.Strategy
 {
-    public class IdleState : IState
+    public class HealingState : IState
     {
-        public void FixedTick()
-        {
-
-        }
-
         public void OnEnter()
         {
 
         }
 
         public void OnExit()
+        {
+
+        }
+
+        public void FixedTick()
         {
 
         }

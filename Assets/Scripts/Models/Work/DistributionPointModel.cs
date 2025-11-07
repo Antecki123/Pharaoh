@@ -7,7 +7,7 @@ using Views.Construction;
 
 namespace Models.Work
 {
-    public class DistributionPointModel
+    public class DistributionPointModel : IEmployer
     {
         public event Action OnValueChanged;
 
@@ -23,11 +23,11 @@ namespace Models.Work
 
         public IReadOnlyList<MarketStallModel> MarketStalls => marketStalls;
 
-        public IReadOnlyList<object> Workers => workers;
+        public IReadOnlyList<IEmployee> Workers => workers;
 
         private List<MarketStallModel> marketStalls = new List<MarketStallModel>();
 
-        private List<object> workers = new List<object>();
+        private List<IEmployee> workers = new List<IEmployee>();
 
         public DistributionPointModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData, StorageModel storageModel)
         {
@@ -39,13 +39,13 @@ namespace Models.Work
             StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();
         }
 
-        public void AddWorker(object worker)
+        public void AddWorker(IEmployee worker)
         {
             workers.Add(worker);
             OnValueChanged?.Invoke();
         }
 
-        public void RemoveWorker(object worker)
+        public void RemoveWorker(IEmployee worker)
         {
             workers.Remove(worker);
             OnValueChanged?.Invoke();
@@ -73,6 +73,16 @@ namespace Models.Work
         {
             marketStalls.Remove(marketStall);
             OnValueChanged?.Invoke();
+        }
+
+        public bool HasAvailableSpot()
+        {
+            return workers.Count < MaxWorkersCount ;
+        }
+
+        public ICollection<IEmployee> GetWorkers()
+        {
+            return workers;
         }
     }
 }

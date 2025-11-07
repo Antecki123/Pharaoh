@@ -1,4 +1,5 @@
 using Models.Economy;
+using Models.Work;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;

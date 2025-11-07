@@ -1,7 +1,6 @@
 ﻿using App.Configs;
 using App.Helpers;
 using App.Signals;
-using Cysharp.Threading.Tasks;
 using Models.Ai;
 using Models.Ai.Pathfinding;
 using System;
@@ -20,6 +19,7 @@ namespace Controllers.Construction
         private List<Vector3> segmentsPositions = new List<Vector3>();
         private Vector3? startPosition;
         private Vector3? endPosition;
+        private Camera mainCamera;
 
         private GameObject roadPreview;
         private GameObject pointer;
@@ -31,6 +31,8 @@ namespace Controllers.Construction
         private ConstructionConfig constructionConfig;
 
         private Transform roadContainer;
+
+        private float zFightOffset = .1f;
 
         public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
         {
@@ -61,6 +63,8 @@ namespace Controllers.Construction
             pointer.transform.localScale = new Vector3(1f, .001f, 1f);
             pointer.name = "Pointer";
             pointer.GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = Color.cyan };
+
+            mainCamera = Camera.main;
         }
 
         public void Tick()
@@ -85,7 +89,8 @@ namespace Controllers.Construction
             if (!TryGetSnappedPosition(out Vector3 position))
                 return;
 
-            pointer.transform.position = new Vector3(position.x, .1f, position.z);
+            var terrainHeight = Terrain.activeTerrain.SampleHeight(new Vector3(position.x, 0, position.z));
+            pointer.transform.position = new Vector3(position.x, terrainHeight + zFightOffset, position.z);
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -147,7 +152,7 @@ namespace Controllers.Construction
 
         private void SelectFirstPoint(Vector3 worldPos)
         {
-            startPosition = new Vector3(worldPos.x, .01f, worldPos.z);
+            startPosition = new Vector3(worldPos.x, worldPos.y + zFightOffset, worldPos.z);
 
             var lineRenderer = roadPreview.GetComponent<LineRenderer>();
             lineRenderer.positionCount = 2;
@@ -157,7 +162,7 @@ namespace Controllers.Construction
 
         private void CreateRoad(Vector3 position)
         {
-            endPosition = new Vector3(position.x, .01f, position.z);
+            endPosition = new Vector3(position.x, position.y + zFightOffset, position.z);
 
             var routePrefab = Resources.Load<RoadView>("Prefabs/RoadView");
             if (routePrefab == null)
@@ -239,7 +244,7 @@ namespace Controllers.Construction
             var closestDistSqr = float.MaxValue;
             Node<Vector3> closestNode = null;
 
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             int layerMask = 1 << 16;
 
             if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
@@ -346,32 +351,35 @@ namespace Controllers.Construction
             var direction = (endPos - startPos).normalized;
             var distance = Vector3.Distance(startPos, endPos);
 
-            int steps = Mathf.FloorToInt(distance / constructionConfig.SegmentSpacing);
+            var steps = Mathf.FloorToInt(distance / constructionConfig.SegmentSpacing);
+
+            var activeTerrain = Terrain.activeTerrain;
+            var terrainPos = activeTerrain.transform.position;
 
             for (int i = 0; i <= steps; i++)
             {
                 var point = startPos + direction * (i * constructionConfig.SegmentSpacing);
+                var terrainHeight = activeTerrain.SampleHeight(point) + terrainPos.y;
+
+                point.y = terrainHeight + zFightOffset;
                 points.Add(point);
             }
 
-            float lastDist = Vector3.Distance(points[^1], endPos);
+            var lastDist = Vector3.Distance(points[^1], endPos);
+            var endPoint = endPos;
+
+            if (activeTerrain != null)
+            {
+                var terrainHeight = activeTerrain.SampleHeight(endPoint) + terrainPos.y;
+                endPoint.y = terrainHeight + zFightOffset;
+            }
 
             if (lastDist < constructionConfig.MinimumSpacing)
-            {
-                points[^1] = endPos;
-            }
+                points[^1] = endPoint;
             else
-            {
-                points.Add(endPos);
-            }
+                points.Add(endPoint);
 
             return points;
-        }
-
-
-        private async UniTask LoadAssets()
-        {
-            roadPreview = await AddressablesUtility.LoadAssetAsync<GameObject>("RoadPreview");
         }
     }
 }

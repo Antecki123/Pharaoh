@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 using Views.Settler;
 
 namespace Controllers.Ai.Strategy
@@ -22,20 +21,19 @@ namespace Controllers.Ai.Strategy
 
     public class StrategyFactory
     {
-        private readonly SettlerView context;
-        private readonly Animator animator;
+        private readonly SettlerView settlerView;
 
-        public StrategyFactory(SettlerView context, Animator animator)
+        public StrategyFactory(SettlerView settlerView)
         {
-            this.context = context;
-            this.animator = animator;
+            this.settlerView = settlerView;
         }
 
         public Strategy GetStrategy(StrategyDefinition strategyDefinition)
         {
             return strategyDefinition switch
             {
-                StrategyDefinition.Idle => new SettlerStrategy(context),
+                StrategyDefinition.Immigrant => new ImmigrantStrategy(settlerView),
+                StrategyDefinition.Settler => new SettlerStrategy(settlerView),
                 _ => throw new ArgumentException($"Unknown strategy type: {strategyDefinition}")
             };
         }
@@ -43,11 +41,7 @@ namespace Controllers.Ai.Strategy
 
     public enum StrategyDefinition
     {
-        Idle,
-        Working,
-        Sleep,
-        Entertainment,
-        Caravaneer,
-        Farmer
+        Immigrant,
+        Settler
     }
 }

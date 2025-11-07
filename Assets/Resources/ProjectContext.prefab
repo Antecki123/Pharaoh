@@ -74,6 +74,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27d93d89d8c22c94cba6bf6608ee89e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameConfig: {fileID: 11400000, guid: 53bd23d4dd732814690b005d924f0990, type: 2}
   cameraConfig: {fileID: 11400000, guid: a52070a0047da7c4aa229bcde89ffb41, type: 2}
   constructionConfig: {fileID: 11400000, guid: 752f1b79132ace046b8445e9a14146c8, type: 2}
+  environmentConfig: {fileID: 11400000, guid: a723d85874bce864fbf39572d7615a54, type: 2}
   mainCanvas: {fileID: 3319954459163991371, guid: 49f38b0a1b9a9f74a8b4f06923782aac, type: 3}

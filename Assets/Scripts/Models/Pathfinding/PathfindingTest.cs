@@ -2,11 +2,13 @@ using App.Signals;
 using Cysharp.Threading.Tasks;
 using Models.Ai;
 using Models.Ai.Pathfinding;
+using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Zenject;
 
+[Obsolete]
 public class PathfindingTest : MonoBehaviour
 {
     [SerializeField, Min(0)] private int sampleCount = 1;
@@ -36,35 +38,6 @@ public class PathfindingTest : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmosSelected()
-    {
-        if (!EditorApplication.isPlaying)
-            return;
-
-        foreach (var node in navigationGraph.Nodes)
-        {
-            if (node.NodeType == NodeType.Terrain)
-            {
-                Handles.color = Color.yellow;
-                Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), node.Data, Quaternion.identity, .25f, EventType.Repaint);
-            }
-
-            else if (node.NodeType == NodeType.Road)
-            {
-                Handles.color = Color.black;
-                Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), node.Data, Quaternion.identity, .5f, EventType.Repaint);
-            }
-
-            else if (node.NodeType == NodeType.Building)
-            {
-                Handles.color = Color.red;
-                Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), node.Data, Quaternion.identity, .25f, EventType.Repaint);
-            }
-
-            Handles.color = Color.white;
-        }
-    }
-
     private async UniTask CalculateNewRoute()
     {
         var nodesList = navigationGraph.Nodes.ToList();
@@ -73,8 +46,8 @@ public class PathfindingTest : MonoBehaviour
         {
             do
             {
-                startNode = nodesList[Random.Range(0, nodesList.Count)];
-                goalNode = nodesList[Random.Range(0, nodesList.Count)];
+                startNode = nodesList[UnityEngine.Random.Range(0, nodesList.Count)];
+                goalNode = nodesList[UnityEngine.Random.Range(0, nodesList.Count)];
             }
             while (startNode == goalNode);
 

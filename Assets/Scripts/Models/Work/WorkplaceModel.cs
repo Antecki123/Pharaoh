@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Models.Work
 {
-    public class WorkplaceModel
+    public class WorkplaceModel : IEmployer
     {
         public event Action OnValueChanged;
 
@@ -28,9 +28,9 @@ namespace Models.Work
 
         public StorageModel StorageModel { get; private set; }
 
-        public IReadOnlyList<object> Workers => workers;
+        public IReadOnlyList<IEmployee> Workers => workers;
 
-        private List<object> workers = new List<object>();
+        private List<IEmployee> workers = new List<IEmployee>();
 
         public WorkplaceModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData, StorageModel storageModel)
         {
@@ -84,13 +84,13 @@ namespace Models.Work
             return false;
         }
 
-        public void AddWorker(object worker)
+        public void AddWorker(IEmployee worker)
         {
             workers.Add(worker);
             OnValueChanged?.Invoke();
         }
 
-        public void RemoveWorker(object worker)
+        public void RemoveWorker(IEmployee worker)
         {
             workers.Remove(worker);
             OnValueChanged?.Invoke();
@@ -112,6 +112,16 @@ namespace Models.Work
         {
             ProcessingProgress = value;
             OnValueChanged?.Invoke();
+        }
+
+        public bool HasAvailableSpot()
+        {
+            return workers.Count < MaxWorkersCount;
+        }
+
+        public ICollection<IEmployee> GetWorkers()
+        {
+            return workers;
         }
     }
 }

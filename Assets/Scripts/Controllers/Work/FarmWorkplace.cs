@@ -37,15 +37,11 @@ namespace Controllers.Work
 
             Position = position;
             EntrancePosition = entrancePosition;
-
-            // DEBUG
-            for (int i = 0; i < workplaceModel.MaxWorkersCount; i++)
-                workplaceModel.AddWorker(new Object());
         }
 
-        public bool HasAvailableSpots()
+        public IEmployer GetEmployer()
         {
-            return workplaceModel.MaxWorkersCount - workplaceModel.Workers.Count > 0;
+            return workplaceModel;
         }
 
         public IReservationable GetReservationable()

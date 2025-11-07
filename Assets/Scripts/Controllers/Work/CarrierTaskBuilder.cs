@@ -1,4 +1,5 @@
 using Models.Economy;
+using Models.Work;
 using System;
 using System.Collections.Generic;
 using Views.Settler.Workers;

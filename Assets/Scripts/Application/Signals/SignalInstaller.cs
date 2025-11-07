@@ -11,6 +11,7 @@ namespace App.Signals
             new SettlersSignals(container);
             new WorkplaceSignals(container);
             new BuildingTooltipSignals(container);
+            new EnvironmentSignals(container);
         }
     }
 }

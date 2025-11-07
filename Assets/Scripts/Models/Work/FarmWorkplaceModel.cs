@@ -1,3 +1,4 @@
+using Controllers.Work;
 using Models.Economy;
 using System;
 using System.Collections.Generic;
@@ -5,7 +6,7 @@ using UnityEngine;
 
 namespace Models.Work
 {
-    public class FarmWorkplaceModel
+    public class FarmWorkplaceModel : IEmployer
     {
         public event Action OnValueChanged;
 
@@ -29,9 +30,9 @@ namespace Models.Work
 
         public float Irrigating { get; private set; } = 1f;
 
-        public IReadOnlyList<object> Workers => workers;
+        public IReadOnlyList<IEmployee> Workers => workers;
 
-        private List<object> workers = new List<object>();
+        private List<IEmployee> workers = new List<IEmployee>();
 
         public FarmWorkplaceModel(CommodityName commodityName, StorageModel storageModel, float surfaceArea)
         {
@@ -67,13 +68,13 @@ namespace Models.Work
             return false;
         }
 
-        public void AddWorker(object worker)
+        public void AddWorker(IEmployee worker)
         {
             workers.Add(worker);
             OnValueChanged?.Invoke();
         }
 
-        public void RemoveWorker(object worker)
+        public void RemoveWorker(IEmployee worker)
         {
             workers.Remove(worker);
             OnValueChanged?.Invoke();
@@ -95,6 +96,16 @@ namespace Models.Work
         {
             ProcessingProgress = value;
             OnValueChanged?.Invoke();
+        }
+
+        public bool HasAvailableSpot()
+        {
+            return workers.Count < MaxWorkersCount;
+        }
+
+        public ICollection<IEmployee> GetWorkers()
+        {
+            return workers;
         }
     }
 }

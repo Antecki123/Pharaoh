@@ -1,4 +1,3 @@
-using Controllers.Work;
 using Models.Economy;
 using System;
 using System.Collections.Generic;
@@ -7,6 +6,21 @@ using UnityEngine;
 
 namespace Models.Work
 {
+    public interface ISupplyTarget
+    {
+        public Vector3 GetEntrancePosition();
+
+        public bool TryPickCommodity(ref CommodityModel commodity);
+
+        public void DeliverCommodity(CommodityModel commodity);
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities();
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace();
+
+        public IReservationable GetReservationable();
+    }
+
     public class SupplyModel
     {
         public event Action OnValueChanged;

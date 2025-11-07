@@ -1,25 +1,118 @@
-namespace Controllers.Ai
+using Models.Ai;
+using Models.Ai.Pathfinding;
+using Models.Economy;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Profiling;
+using Views.Settler;
+using Zenject;
+
+namespace Controllers.Ai.Strategy
 {
     public class WorkState : IState
     {
+        private readonly SettlerView settlerView;
+        private readonly NavigationGraph navigationGraph;
+        private readonly EmploymentModel employmentModel;
+
+        private DStarLite<Vector3> dStar;
+
+        private List<Vector3> waypoints = new List<Vector3>();
+        private int currentIndex = 0;
+        private bool reachedTarget = false;
+
+        public WorkState(SettlerView settlerView)
+        {
+            this.settlerView = settlerView;
+            navigationGraph = ProjectContext.Instance.Container.Resolve<NavigationGraph>();
+            employmentModel = ProjectContext.Instance.Container.Resolve<EmploymentModel>();
+
+            dStar = new DStarLite<Vector3>();
+        }
+
+        public void OnEnter()
+        {
+            reachedTarget = false;
+            waypoints.Clear();
+            currentIndex = 0;
+
+            var currentLocationTransform = settlerView.SettlerModel.CurrentLocation.EntranceTransform;
+            settlerView.transform.SetPositionAndRotation(currentLocationTransform.position, currentLocationTransform.rotation);
+            settlerView.gameObject.SetActive(true);
+
+            if (settlerView.SettlerModel.Workplace != null)
+            {
+                waypoints = CalculateRoute(currentLocationTransform.position, employmentModel.Workplaces[settlerView.SettlerModel.Workplace].EntranceTransform.position);
+            }
+        }
+
+        public void OnExit()
+        {
+            settlerView.gameObject.SetActive(false);
+        }
+
+        public void Tick()
+        {
+            Profiler.BeginSample("Settler.WorkState.Tick");
+            if (!reachedTarget)
+            {
+                settlerView.SettlerModel.StrategyState = StrategyState.GoToWork;
+                GoToLocation();
+            }
+            else
+            {
+                settlerView.SettlerModel.StrategyState = StrategyState.Working;
+            }
+            Profiler.EndSample();
+        }
+
         public void FixedTick()
         {
 
         }
 
-        public void OnEnter()
+        private List<Vector3> CalculateRoute(Vector3 startPoint, Vector3 endPoint)
         {
+            var nodesList = navigationGraph.Nodes;
+            var startNode = navigationGraph.GetNode(startPoint);
+            var goalNode = navigationGraph.GetNode(endPoint);
 
+            dStar = new DStarLite<Vector3>();
+            dStar.Initialize(nodesList, startNode, goalNode);
+
+            var path = dStar.GetPath();
+
+            if (path.Count == 0)
+                Debug.LogWarning($"[D*Lite] Cannot find a path between {startNode.Data} and {goalNode.Data}.");
+
+            return path.ConvertAll(p => new Vector3(p.Data.x, p.Data.y, p.Data.z));
         }
 
-        public void OnExit()
+        private void GoToLocation()
         {
+            if (waypoints.Count == 0 || currentIndex >= waypoints.Count)
+                return;
 
-        }
+            var targetPos = waypoints[currentIndex];
+            settlerView.transform.position = Vector3.MoveTowards(settlerView.transform.position, targetPos, settlerView.SettlerModel.SettlerDefinition.MovementSpeed * Time.deltaTime);
 
-        public void Tick()
-        {
+            var direction = (targetPos - settlerView.transform.position).normalized;
+            if (direction.sqrMagnitude > 0.0001f)
+            {
+                settlerView.transform.forward = Vector3.Lerp(settlerView.transform.forward, direction, Time.deltaTime * 15f);
+            }
 
+            if (Vector3.Distance(settlerView.transform.position, targetPos) <= 0.1f)
+            {
+                currentIndex++;
+
+                if (currentIndex >= waypoints.Count)
+                {
+                    reachedTarget = true;
+                    settlerView.SettlerModel.CurrentLocation = employmentModel.Workplaces[settlerView.SettlerModel.Workplace];
+                    settlerView.gameObject.SetActive(false);
+                }
+            }
         }
     }
 }

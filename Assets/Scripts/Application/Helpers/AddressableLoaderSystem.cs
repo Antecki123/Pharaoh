@@ -234,7 +234,7 @@ namespace App.Helpers
         {
 #if UNITY_EDITOR
             if (EnableLogging)
-                Debug.Log($"[AddressableLoader] {message}");
+                UnityEngine.Debug.Log($"[AddressableLoader] {message}");
 #endif
         }
 
@@ -242,14 +242,14 @@ namespace App.Helpers
         {
 #if UNITY_EDITOR
             if (EnableDetailedWarnings)
-                Debug.LogWarning($"[AddressableLoader] {message}");
+                UnityEngine.Debug.LogWarning($"[AddressableLoader] {message}");
 #endif
         }
 
         private void LogError(string message)
         {
 #if UNITY_EDITOR
-            Debug.LogError($"[AddressableLoader] {message}");
+            UnityEngine.Debug.LogError($"[AddressableLoader] {message}");
 #endif
         }
     }

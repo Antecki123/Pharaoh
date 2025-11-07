@@ -1,9 +1,8 @@
 using System;
-using UnityEngine;
 
 namespace Models.Settler
 {
-    public class SettlerDefinition : MonoBehaviour
+    public class SettlerDefinition
     {
         public Guid Id { get; private set; }
 
@@ -12,6 +11,8 @@ namespace Models.Settler
         public int BirthYear { get; private set; }
 
         public SettlerGender Gender { get; private set; }
+
+        public float MovementSpeed { get; private set; } = 3.0f;
 
         public SettlerDefinition(Guid id, string name, int birthYear, SettlerGender gender)
         {

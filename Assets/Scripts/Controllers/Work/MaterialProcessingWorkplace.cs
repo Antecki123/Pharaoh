@@ -30,10 +30,6 @@ namespace Controllers.Work
             this.workplaceModel = workplaceModel;
 
             EntrancePosition = entrancePosition;
-
-            // DEBUG
-            for (int i = 0; i < workplaceModel.MaxWorkersCount; i++)
-                workplaceModel.AddWorker(new Object());
         }
 
         public void Work()
@@ -107,11 +103,6 @@ namespace Controllers.Work
             return EntrancePosition;
         }
 
-        public bool HasAvailableSpots()
-        {
-            return workplaceModel.MaxWorkersCount - workplaceModel.Workers.Count > 0;
-        }
-
         public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
         {
             return workplaceModel.StorageModel.GetAvailableCommodities();
@@ -125,6 +116,11 @@ namespace Controllers.Work
         public IReservationable GetReservationable()
         {
             return workplaceModel.StorageModel;
+        }
+
+        public IEmployer GetEmployer()
+        {
+            return workplaceModel;
         }
 
         private void ScheduleTransport()

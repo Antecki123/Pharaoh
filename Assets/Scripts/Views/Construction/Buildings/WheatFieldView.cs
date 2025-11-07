@@ -34,7 +34,6 @@ namespace Views.Construction
             cropModel = new CropModel("Wheat field", createdMaterial, transform.position, growthDuration);
 
             cropModel.OnWorkScheduled += PlayTimeline;
-            signalBus.Fire(new WorkplaceSignals.RegisterCropField(cropModel));
         }
 
         public override void DestroyBuilding()
@@ -42,7 +41,6 @@ namespace Views.Construction
             base.DestroyBuilding();
 
             cropModel.OnWorkScheduled -= PlayTimeline;
-            signalBus.Fire(new WorkplaceSignals.UnregisterCropField(cropModel));
         }
 
         public override void Interact()

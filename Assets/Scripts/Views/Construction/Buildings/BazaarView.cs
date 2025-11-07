@@ -38,7 +38,7 @@ namespace Views.Construction
             base.PlaceBuilding();
             SetupWorkplace();
 
-            signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(workplace));
+            signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(workplace, this));
             signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.DistributionPoint));
 
             workplace.OnCreateMarketStall += CreateMarketStall;

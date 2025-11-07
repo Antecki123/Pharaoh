@@ -29,10 +29,6 @@ namespace Controllers.Work
             this.workplaceModel = workplaceModel;
 
             EntrancePosition = entrancePosition;
-
-            // DEBUG
-            for (int i = 0; i < workplaceModel.MaxWorkersCount; i++)
-                workplaceModel.AddWorker(new Object());
         }
 
         public void DeliverCommodity(CommodityModel commodity)
@@ -60,9 +56,9 @@ namespace Controllers.Work
             return workplaceModel.StorageModel;
         }
 
-        public bool HasAvailableSpots()
+        public IEmployer GetEmployer()
         {
-            return default;
+            return workplaceModel;
         }
 
         public bool TryPickCommodity(ref CommodityModel commodity)

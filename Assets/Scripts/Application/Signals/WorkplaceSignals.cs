@@ -1,5 +1,6 @@
 using Controllers.Work;
 using Models.Work;
+using Views.Construction;
 using Zenject;
 
 namespace App.Signals
@@ -12,17 +13,18 @@ namespace App.Signals
             container.DeclareSignal<UnregisterWorkplace>();
             container.DeclareSignal<RegisterSupplyTarget>();
             container.DeclareSignal<UnregisterSupplyTarget>();
-            container.DeclareSignal<RegisterCropField>();
-            container.DeclareSignal<UnregisterCropField>();
         }
 
         public class RegisterWorkplace
         {
             public IWorkplace Workplace { get; private set; }
 
-            public RegisterWorkplace(IWorkplace workplace)
+            public BuildingView BuildingView { get; private set; }
+
+            public RegisterWorkplace(IWorkplace workplace, BuildingView buildingView)
             {
                 Workplace = workplace;
+                BuildingView = buildingView;
             }
         }
 
@@ -56,26 +58,6 @@ namespace App.Signals
             public UnregisterSupplyTarget(ISupplyTarget supplyTarget)
             {
                 SupplyTarget = supplyTarget;
-            }
-        }
-
-        public class RegisterCropField
-        {
-            public CropModel CropModel { get; private set; }
-
-            public RegisterCropField(CropModel cropModel)
-            {
-                CropModel = cropModel;
-            }
-        }
-
-        public class UnregisterCropField
-        {
-            public CropModel CropModel { get; private set; }
-
-            public UnregisterCropField(CropModel cropModel)
-            {
-                CropModel = cropModel;
             }
         }
     }

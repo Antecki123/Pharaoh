@@ -1,15 +1,8 @@
-using App.Signals;
 using Controllers.Ai.Strategy;
-using Models.Ai;
-using Models.Ai.Pathfinding;
-using Models.Economy;
 using Models.Settler;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
 using UnityEngine;
-using Zenject;
+using UnityEngine.Profiling;
 
 namespace Views.Settler
 {
@@ -18,96 +11,68 @@ namespace Views.Settler
     {
         public SettlerModel SettlerModel => settlerModel;
 
-        [SerializeField] private Animator animator;
+        [Header("DEBUG")]
+        public PlayerViewDebug viewDebug;
 
         private SettlerModel settlerModel;
         private Strategy strategy;
 
-        private SignalBus signalBus;
-        private NavigationGraph navigationGraph;
-        private HabitationModel habitationModel;
-
-        [Inject]
-        public void Constructor(SignalBus signalBus, NavigationGraph navigationGraph, HabitationModel habitationModel)
-        {
-            this.signalBus = signalBus;
-            this.navigationGraph = navigationGraph;
-            this.habitationModel = habitationModel;
-        }
-
         public void Init(SettlerModel settlerModel)
         {
             this.settlerModel = settlerModel;
-
-            var strategyFactory = new StrategyFactory(this, animator);
-            strategy = strategyFactory.GetStrategy(StrategyDefinition.Idle);
-
-            StartCoroutine(FindPathToHome());
         }
 
-        int currentIndex = 0;
-        List<Vector3> waypoints = new List<Vector3>();
-        float movementSpeed = 1.8f;
+        public void InitAiStrategy()
+        {
+            var strategyFactory = new StrategyFactory(this);
+            strategy = strategyFactory.GetStrategy(StrategyDefinition.Settler);
+        }
 
         public void Tick()
         {
-            if (waypoints.Count == 0)
-                return;
+            settlerModel?.SettlerNeeds?.UpdateNeeds();
+            viewDebug.Update(settlerModel);
 
-            var targetPos = waypoints[currentIndex];
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, movementSpeed * Time.deltaTime);
-
-            Vector3 direction = (targetPos - transform.position).normalized;
-            if (direction.sqrMagnitude > 0.0001f)
-            {
-                transform.forward = Vector3.Lerp(transform.forward, direction, Time.deltaTime * 15f);
-            }
-
-            if (Vector3.Distance(transform.position, targetPos) <= 0.1f)
-            {
-                currentIndex = (currentIndex + 1) % waypoints.Count;
-            }
-
-            if (currentIndex == waypoints.Count - 1)
-            {
-                movementSpeed = 0f;
-                gameObject.SetActive(false);
-                //Destroy(gameObject);
-            }
-
-            //strategy?.Tick();
+            Profiler.BeginSample("Settler.UpdateBehavior");
+            strategy?.Tick();
+            Profiler.EndSample();
         }
+    }
 
-        private IEnumerator FindPathToHome()
+    [System.Serializable]
+    public class PlayerViewDebug
+    {
+        public float Rest;
+        public float Entertainment;
+        public float Pray;
+        public float Health;
+        [Space]
+        public string strategyState;
+
+        private Dictionary<StrategyState, string> stateNames = new()
         {
-            yield return null;
+            { StrategyState.GoToSleep, "GoToSleep" },
+            { StrategyState.Sleeping, "Sleeping" },
+            { StrategyState.GoToWork, "GoToWork" },
+            { StrategyState.Working, "Working" },
+        };
 
-            var nodesList = navigationGraph.Nodes.ToList();
-            var startNode = nodesList[Random.Range(0, nodesList.Count)];
-            var endNodePosition = habitationModel.Habitations[settlerModel.Habitation].EntranceTransform.position;
-            var endNode = navigationGraph.GetNode(endNodePosition);
-
-            transform.position = startNode.Data;
-
-            var dStar = new DStarLite<Vector3>();
-            dStar.Initialize(nodesList, startNode, endNode);
-            var path = dStar.GetPath();
-
-            foreach (var position in path)
-                waypoints.Add(position.Data);
-        }
-
-        private void OnDestroy()
+        public void Update(SettlerModel settlerModel)
         {
-            signalBus.Fire(new SettlersSignals.DespawnSettler(this));
-        }
+            //Rest = settlerModel.SettlerNeeds.Rest.Value;
+            //Entertainment = settlerModel.SettlerNeeds.Entertainment.Value;
+            //Pray = settlerModel.SettlerNeeds.Pray.Value;
+            //Health = settlerModel.SettlerNeeds.Health.Value;
 
-        private void OnDrawGizmosSelected()
-        {
-            foreach (var waypoint in waypoints)
-            {
-                Handles.SphereHandleCap(GUIUtility.GetControlID(FocusType.Passive), waypoint, Quaternion.identity, .25f, EventType.Repaint);
-            }
+            strategyState = stateNames[settlerModel.StrategyState];
         }
+    }
+
+    public enum StrategyState
+    {
+        GoToSleep,
+        Sleeping,
+        GoToWork,
+        Working
     }
 }

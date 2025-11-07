@@ -36,7 +36,7 @@ namespace App.Helpers
         {
             if (!prefabs.ContainsKey(key))
             {
-                Debug.LogWarning($"Asset {key} has not been loaded. Load asset from addressables first.");
+                UnityEngine.Debug.LogWarning($"Asset {key} has not been loaded. Load asset from addressables first.");
                 return null;
             }
 
@@ -49,7 +49,7 @@ namespace App.Helpers
         {
             if (!prefabs.ContainsKey(key))
             {
-                Debug.LogWarning($"Asset {key} has not been loaded. Load asset from addressables first.");
+                UnityEngine.Debug.LogWarning($"Asset {key} has not been loaded. Load asset from addressables first.");
                 return null;
             }
             var gameObject = Object.Instantiate(prefabs[key]);

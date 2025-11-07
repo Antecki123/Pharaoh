@@ -1,11 +1,24 @@
+using System;
+
 namespace Models.Economy
 {
     public class EconomyModel
     {
-        public int Settlers { get; set; }
-        public int Gold { get; set; }
-        public CommodityModel Food { get; set; }
-        public CommodityModel Wood { get; set; }
-        public CommodityModel Stone { get; set; }
+        public event Action OnValueChanged;
+
+        public int Settlers { get; private set; }
+        public int Gold { get; private set; }
+
+        public void ChangeGold(int value)
+        {
+            Gold += value;
+            OnValueChanged?.Invoke();
+        }
+
+        public void ChangeSettlers(int value)
+        {
+            Settlers += value;
+            OnValueChanged?.Invoke();
+        }
     }
 }

@@ -11,25 +11,25 @@ namespace Models.Ai
 
         public Dictionary<NodeType, float> MovementCost { get; } = new Dictionary<NodeType, float>()
         {
-            {NodeType.Road, 1 },
-            {NodeType.Terrain, 10 },
-            {NodeType.Building, 100 },
-            {NodeType.Block, float.MaxValue },
+            { NodeType.Road, 1 },
+            { NodeType.Terrain, 10 },
+            { NodeType.ShallowWater, 25 },
+            { NodeType.Building, 100 },
+            { NodeType.Block, float.MaxValue },
         };
 
-        private Vector2 gridDimensions = new Vector2(50, 50);
+        private Vector2 gridDimensions = new Vector2(250, 250);
         private float spacing = 2f;
 
         public NavigationGraph()
         {
-            var offset = new Vector3((gridDimensions.x - 1) * spacing / 2f, 0, (gridDimensions.y - 1) * spacing / 2f);
             var nodeGrid = new Dictionary<(int x, int z), Node<Vector3>>();
-
             for (int x = 0; x < gridDimensions.x; x++)
             {
                 for (int z = 0; z < gridDimensions.y; z++)
                 {
-                    var pos = new Vector3(x * spacing, 0, z * spacing) - offset;
+                    var terrainHeight = Terrain.activeTerrain.SampleHeight(new Vector3(x * spacing, 0, z * spacing));
+                    var pos = new Vector3(x * spacing, terrainHeight, z * spacing);
                     var nodeType = NodeType.Terrain;
 
                     var node = new Node<Vector3>(
