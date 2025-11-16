@@ -5,44 +5,39 @@ namespace Controllers.Ai.Strategy
 {
     public class SettlerStrategy : Strategy
     {
-        private bool isBuisy = false;
-
         public SettlerStrategy(SettlerView settler)
         {
             aiBrain = new AiBrain();
 
             var working = new WorkState(settler);
-            var sleeping = new SleepState(settler);
-            var leasure = new LeisureState();
-            var pray = new PrayerState();
-            var healing = new HealingState();
+            var resting = new RestingState(settler);
+            //var leasure = new LeisureState(settler);
+            //var pray = new PrayerState(settler);
+            //var healing = new HealingState();
 
-            AddTransition(sleeping, working, () => settler.SettlerModel.SettlerNeeds.Rest.Value >= 1.0f);
-            AddTransition(leasure, working, () => settler.SettlerModel.SettlerNeeds.Entertainment.Value >= 1.0f);
-            AddTransition(pray, working, () => settler.SettlerModel.SettlerNeeds.Pray.Value >= 1.0f);
+            AddTransition(resting, working, () => settler.SettlerModel.SettlerNeeds.Rest.Value >= 1.0f);
+            //AddTransition(leasure, working, () => settler.SettlerModel.SettlerNeeds.Entertainment.Value >= 1.0f);
+            //AddTransition(pray, working, () => settler.SettlerModel.SettlerNeeds.Pray.Value >= 1.0f);
 
-            AddAnyTransition(sleeping, NeedRest());
-            AddAnyTransition(leasure, NeedEntertainment());
-            AddAnyTransition(pray, NeedPray());
+            AddAnyTransition(resting, NeedRest());
+            //AddAnyTransition(leasure, NeedEntertainment());
+            //AddAnyTransition(pray, NeedPray());
 
-            aiBrain.SetState(sleeping);
+            aiBrain.SetState(working);
 
             Func<bool> NeedRest() => () =>
             {
-                return !isBuisy
-                && settler.SettlerModel.SettlerNeeds.Rest.Value <= 0f;
+                return settler.SettlerModel.SettlerNeeds.Rest.Value <= 0f && !settler.IsBuisy;
             };
 
             Func<bool> NeedEntertainment() => () =>
             {
-                return !isBuisy
-                && settler.SettlerModel.SettlerNeeds.Entertainment.Value <= 0f;
+                return settler.SettlerModel.SettlerNeeds.Entertainment.Value <= 0f && !settler.IsBuisy;
             };
 
             Func<bool> NeedPray() => () =>
             {
-                return !isBuisy
-                && settler.SettlerModel.SettlerNeeds.Pray.Value <= 0f;
+                return settler.SettlerModel.SettlerNeeds.Pray.Value <= 0f && !settler.IsBuisy;
             };
         }
     }

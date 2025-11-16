@@ -7,43 +7,44 @@ using Zenject;
 
 namespace Controllers.Ai.Strategy
 {
-    public class WorkState : IState
+    public class RestingState : IState
     {
         private readonly SettlerView settlerView;
-        private readonly EmploymentModel employmentModel;
+        private readonly HabitationModel habitationModel;
 
         private BuildingView locationOfNeedFulfillment;
 
-        public WorkState(SettlerView settlerView)
+        public RestingState(SettlerView settlerView)
         {
             this.settlerView = settlerView;
-            employmentModel = ProjectContext.Instance.Container.Resolve<EmploymentModel>();
+            habitationModel = ProjectContext.Instance.Container.Resolve<HabitationModel>();
         }
 
         public void OnEnter()
         {
-            locationOfNeedFulfillment = employmentModel.Workplaces[settlerView.SettlerModel.Workplace];
+            settlerView.IsBuisy = true;
+            locationOfNeedFulfillment = habitationModel.Habitations[settlerView.SettlerModel.Habitation];
+
             if (settlerView.SettlerModel.CurrentLocation != locationOfNeedFulfillment)
             {
                 var calculationResult = settlerView.MovementHandler.CalculateRoute(settlerView.SettlerModel.CurrentLocation.EntranceTransform.position, locationOfNeedFulfillment.EntranceTransform.position);
                 if (calculationResult)
                 {
-                    settlerView.IsBuisy = true;
-                    settlerView.SettlerModel.StrategyState = SettlerStrategyState.Relocation;
                     settlerView.transform.position = settlerView.SettlerModel.CurrentLocation.EntranceTransform.position;
+                    settlerView.SettlerModel.StrategyState = SettlerStrategyState.Relocation;
                     settlerView.gameObject.SetActive(true);
                 }
             }
             else
             {
-                settlerView.IsBuisy = false;
-                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Working;
+                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Resting;
             }
         }
 
         public void OnExit()
         {
-
+            settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = false;
+            settlerView.IsBuisy = false;
         }
 
         public void Tick()
@@ -51,13 +52,14 @@ namespace Controllers.Ai.Strategy
             if (Vector3.Distance(settlerView.transform.position, locationOfNeedFulfillment.EntranceTransform.position) <= .1f)
             {
                 settlerView.gameObject.SetActive(false);
-                settlerView.IsBuisy = false;
-                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Working;
+                settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = true;
+                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Resting;
                 settlerView.SettlerModel.CurrentLocation = locationOfNeedFulfillment;
             }
             else
             {
                 settlerView.SettlerModel.StrategyState = SettlerStrategyState.Relocation;
+                settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = false;
                 settlerView.MovementHandler.ExecuteMovement();
             }
         }

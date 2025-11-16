@@ -52,9 +52,9 @@ namespace Views.Construction
             {
                 new CommodityModel() { Name = CommodityName.Wheat, Quantity = 0, MaxQuantity = 100 },
                 new CommodityModel() { Name = CommodityName.Linen, Quantity = 0, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Flour, Quantity = 0, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Beer, Quantity = 0, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Clothes, Quantity = 0, MaxQuantity = 100 }
+                new CommodityModel() { Name = CommodityName.Flour, Quantity = 100, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Beer, Quantity = 100, MaxQuantity = 100 },
+                new CommodityModel() { Name = CommodityName.Clothes, Quantity = 100, MaxQuantity = 100 }
             });
 
             workplace = new StorageWorkplace(storageModel, EntranceTransform.position);

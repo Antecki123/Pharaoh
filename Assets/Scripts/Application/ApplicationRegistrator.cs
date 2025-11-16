@@ -9,7 +9,9 @@ using Controllers.UI;
 using Controllers.Work;
 using Models.Ai;
 using Models.Economy;
+using Models.Environment;
 using Models.Work;
+using System;
 using UnityEngine;
 using Views.Construction;
 using Zenject;
@@ -43,16 +45,17 @@ namespace App.Registrators
 
             Container.Bind<Canvas>().WithId("MainCanvas").FromComponentInNewPrefab(mainCanvas).AsSingle();
 
-            // MODELS
+            // GLOBAL MODELS
             Container.Bind<EconomyModel>().AsSingle();
             Container.Bind<HabitationModel>().AsSingle();
             Container.Bind<EmploymentModel>().AsSingle();
             Container.Bind<SupplyModel>().AsSingle();
             Container.Bind<NavigationGraph>().AsSingle();
             Container.Bind<PrefabManager>().AsSingle();
+            Container.Bind<DateModel>().AsSingle();
 
             // CONTROLLERS
-            Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable)).To<SettlersController>().AsSingle().NonLazy();
+            Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<SettlersController>().AsSingle().NonLazy();
             Container.Bind(typeof(WorkplacesController), typeof(IInitializable), typeof(ITickable)).To<WorkplacesController>().AsSingle().NonLazy();
             Container.Bind(typeof(InteractionController), typeof(IInitializable), typeof(ITickable)).To<InteractionController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();

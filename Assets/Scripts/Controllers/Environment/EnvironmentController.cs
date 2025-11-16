@@ -1,5 +1,6 @@
 using App.Configs;
 using App.Signals;
+using Models.Environment;
 using System;
 using UnityEngine;
 using Zenject;
@@ -8,21 +9,20 @@ namespace Controllers.Environment
 {
     public class EnvironmentController : IInitializable, ITickable
     {
+        private readonly SignalBus signalBus;
+        private readonly EnvironmentConfig environmentConfig;
+        private readonly DateModel dateModel;
+
         [Header("River")]
         private float riverCurrentHeight;
 
-        [Header("Calendar")]
-        private int currentMonth = 1;
-        private int currentYear = 1;
         private float realTimeAccumulator;
 
-        private readonly SignalBus signalBus;
-        private readonly EnvironmentConfig environmentConfig;
-
-        public EnvironmentController(SignalBus signalBus, EnvironmentConfig environmentConfig)
+        public EnvironmentController(SignalBus signalBus, EnvironmentConfig environmentConfig, DateModel dateModel)
         {
             this.signalBus = signalBus;
             this.environmentConfig = environmentConfig;
+            this.dateModel = dateModel;
         }
 
         public void Initialize()
@@ -41,12 +41,12 @@ namespace Controllers.Environment
             if (realTimeAccumulator >= environmentConfig.MonthRealTimeDuration)
             {
                 realTimeAccumulator -= environmentConfig.MonthRealTimeDuration;
-                currentMonth++;
+                dateModel.CurrentMonth++;
 
-                if (currentMonth >= Enum.GetValues(typeof(MonthName)).Length)
+                if (dateModel.CurrentMonth >= Enum.GetValues(typeof(MonthName)).Length)
                 {
-                    currentMonth = 1;
-                    currentYear++;
+                    dateModel.CurrentMonth = 1;
+                    dateModel.CurrentYear++;
                 }
 
                 //signalBus.Fire(new EnvironmentSignals.DateChanged(currentMonth, currentYear));
@@ -56,7 +56,7 @@ namespace Controllers.Environment
 
         private void CalculateRiverHeight()
         {
-            switch ((MonthName)currentMonth)
+            switch ((MonthName)dateModel.CurrentMonth)
             {
                 case MonthName.Thoth:
                     riverCurrentHeight = UnityEngine.Random.Range(environmentConfig.RiverRiseMinHeight, environmentConfig.RiverRiseMaxHeight);
@@ -69,23 +69,5 @@ namespace Controllers.Environment
                     break;
             }
         }
-    }
-
-    public enum MonthName
-    {
-        Phamenoth = 1,
-        Pharmuthi = 2,
-        Pakhons = 3,
-        Payni = 4,
-        Epiphi = 5,
-        Mesore = 6,
-        Thoth = 7,
-        Paopi = 8,
-        Hathor = 9,
-        Khoiak = 10,
-        Tybi = 11,
-        Mekhir = 12,
-
-        Achet = Thoth | Paopi | Hathor | Khoiak
     }
 }

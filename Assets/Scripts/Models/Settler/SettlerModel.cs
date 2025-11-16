@@ -1,7 +1,6 @@
 using Controllers.Work;
 using Models.Economy;
 using Views.Construction;
-using Views.Settler;
 
 namespace Models.Settler
 {
@@ -17,7 +16,7 @@ namespace Models.Settler
 
         public BuildingView CurrentLocation { get; set; }
 
-        public StrategyState StrategyState { get; set; }
+        public SettlerStrategyState StrategyState { get; set; }
     }
 
     public enum SettlerProfession
@@ -32,5 +31,15 @@ namespace Models.Settler
         Unknown = 0,
         Male = 1,
         Female = 2
+    }
+
+    public enum SettlerStrategyState
+    {
+        Relocation,
+        Working,
+        Resting,
+        Leasure,
+        Praying,
+        Healing
     }
 }

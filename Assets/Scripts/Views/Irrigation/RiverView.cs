@@ -25,7 +25,7 @@ namespace Views.Irrigation
         private IEnumerator SetWaterSurfaceHeightCoroutine()
         {
             var epsilon = 0.001f;
-            var speed = 1f;
+            var speed = .1f;
 
             while (Mathf.Abs(waterSurface.transform.position.y - waterSurfaceHeigh) > epsilon)
             {
