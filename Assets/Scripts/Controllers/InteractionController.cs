@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Zenject;
 
 namespace Controllers
@@ -27,7 +29,7 @@ namespace Controllers
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             var layerMask = 1 << 17;
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
+            if (Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask) && !IsUIHit())
             {
                 if (hit.collider.TryGetComponent(out IInteractable interactable))
                 {
@@ -64,7 +66,7 @@ namespace Controllers
 
             if (Input.GetMouseButtonDown(0))
             {
-                if (Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
+                if (Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask) && !IsUIHit())
                 {
                     if (hit.collider.TryGetComponent(out IInteractable interactable))
                     {
@@ -72,6 +74,19 @@ namespace Controllers
                     }
                 }
             }
+        }
+
+        private bool IsUIHit()
+        {
+            var eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Input.mousePosition
+            };
+
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            return results.Count > 0;
         }
     }
 
