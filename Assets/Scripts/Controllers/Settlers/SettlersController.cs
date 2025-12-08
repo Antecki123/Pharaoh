@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Jobs;
 using Views.Settler;
 using Zenject;
 
@@ -18,7 +20,6 @@ namespace Controllers.Settler
     public class SettlersController : IInitializable, ITickable, IDisposable
     {
         private List<(SettlerView, SettlerModel)> settlers = new List<(SettlerView, SettlerModel)>();
-        private List<Transform> spawnPoints = new List<Transform>();
 
         private readonly SignalBus signalBus;
         private readonly HabitationModel habitationModel;
@@ -29,8 +30,10 @@ namespace Controllers.Settler
         private NativeArray<SettlerNeedsData> settlerNeedsArray;
         private NeedsUpdateJob needsUpdateJob;
 
-        //private float timer = 0;
-        //private float timeSpan = 30f;
+        private TransformAccessArray settlerMovementArray;
+
+        private float timer = 0;
+        private float timeSpan = 10f;
 
         public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentModel employmentModel,
             SettlersNamesImporter settlersNames)
@@ -55,19 +58,15 @@ namespace Controllers.Settler
         {
             SettlersTick();
             UpdateSettlersNeeds();
+            UpdateSettlersMovement();
 
-            /*timer -= Time.deltaTime;
-            if (timer <= 0)
-            {
-                timer = timeSpan;
-                var spawnTransform = spawnPoints[UnityEngine.Random.Range(0, spawnPoints.Count)];
-                SpawnSettler(new SettlersSignals.SpawnSettler(spawnTransform.position, spawnTransform.rotation));
-            }*/
+            CheckSpawnSettler();
         }
 
         public void Dispose()
         {
             settlerNeedsArray.Dispose();
+            settlerMovementArray.Dispose();
         }
 
         private void SpawnSettler(SettlersSignals.SpawnSettler signal)
@@ -84,7 +83,7 @@ namespace Controllers.Settler
                 availableHabitat.AddResident(newSettler.Item2);
                 newSettler.Item2.Habitation = availableHabitat ?? null;
 
-                //newSettler.Item2.CurrentLocation = habitationModel.Habitations[availableHabitat];
+                newSettler.Item2.CurrentLocation = habitationModel.Habitations[availableHabitat];
             }
 
             if (availableEmployment != null)
@@ -92,9 +91,9 @@ namespace Controllers.Settler
                 availableEmployment.GetEmployer().AddWorker(newSettler.Item2);
                 newSettler.Item2.Workplace = availableEmployment ?? null;
 
-                newSettler.Item2.CurrentLocation = employmentModel.Workplaces[availableEmployment];
+                //newSettler.Item2.CurrentLocation = employmentModel.Workplaces[availableEmployment];
             }
-
+            newSettler.Item1.transform.position = habitationModel.Habitations[newSettler.Item2.Habitation].EntranceTransform.position;
             newSettler.Item1.InitAiStrategy();
         }
 
@@ -191,6 +190,67 @@ namespace Controllers.Settler
                 settlers[i].Item1.SettlerModel.SettlerNeeds.Entertainment.Value = settlerNeedsArray[i].EntertainmentData.Value;
                 settlers[i].Item1.SettlerModel.SettlerNeeds.Health.Value = settlerNeedsArray[i].HealthData.Value;
                 settlers[i].Item1.SettlerModel.SettlerNeeds.Pray.Value = settlerNeedsArray[i].PrayData.Value;
+            }
+        }
+
+        private void UpdateSettlersMovement()
+        {
+            var settlersToMove = new List<SettlerView>();
+            for (int i = 0; i < settlers.Count; i++)
+            {
+                if (settlers[i].Item1.MovementHandler.RequiredMovement)
+                    settlersToMove.Add(settlers[i].Item1);
+            }
+
+            var transforms = new Transform[settlersToMove.Count];
+            var targetPositionsArray = new NativeArray<float3>(settlersToMove.Count, Allocator.TempJob);
+            var movementSpeedsArray = new NativeArray<float>(settlersToMove.Count, Allocator.TempJob);
+
+            for (int i = 0; i < settlersToMove.Count; i++)
+            {
+                transforms[i] = settlersToMove[i].transform;
+                targetPositionsArray[i] = (float3)settlersToMove[i].MovementHandler.TargetPosition;
+                movementSpeedsArray[i] = settlersToMove[i].SettlerModel.SettlerDefinition.MovementSpeed;
+            }
+
+            settlerMovementArray = new TransformAccessArray(transforms);
+            var movementUpdateJob = new NpcMovementHandler.MovementJob()
+            {
+                targetPositions = targetPositionsArray,
+                movementSpeeds = movementSpeedsArray,
+                deltaTime = Time.deltaTime
+            };
+
+            var handle = movementUpdateJob.Schedule(settlerMovementArray);
+            handle.Complete();
+
+            foreach (var settler in settlersToMove)
+            {
+                if (Vector3.Distance(settler.transform.position, settler.MovementHandler.TargetPosition) <= 0.1f)
+                {
+                    settler.MovementHandler.currentIndex++;
+
+                    if (settler.MovementHandler.currentIndex >= settler.MovementHandler.waypoints.Count)
+                    {
+                        settler.gameObject.SetActive(false);
+                    }
+                }
+            }
+
+            targetPositionsArray.Dispose();
+            movementSpeedsArray.Dispose();
+        }
+
+        private void CheckSpawnSettler()
+        {
+            timer -= Time.deltaTime;
+            if (timer <= 0)
+            {
+                timer = timeSpan;
+                if (habitationModel.Habitations.Any(x => x.Key.HasAvailableSpot()))
+                {
+                    SpawnSettler(new SettlersSignals.SpawnSettler(Vector3.zero, Quaternion.identity));
+                }
             }
         }
     }

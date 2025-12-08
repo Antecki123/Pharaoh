@@ -3,8 +3,11 @@ using Models.Ai;
 using Models.Ai.Pathfinding;
 using Models.Settler;
 using System.Collections.Generic;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
-using Views.Settler;
+using UnityEngine.Jobs;
 using Zenject;
 
 namespace Views.Settler
@@ -30,7 +33,7 @@ namespace Views.Settler
         {
             this.settlerModel = settlerModel;
 
-            movementHandler = new NpcMovementHandler(navigationGraph, this);
+            movementHandler = new NpcMovementHandler(navigationGraph);
         }
 
         public void InitAiStrategy()
@@ -80,20 +83,17 @@ namespace Views.Settler
 
 public class NpcMovementHandler
 {
-    private readonly SettlerView settlerView;
+    public bool RequiredMovement => waypoints?.Count > 0 && currentIndex < waypoints.Count;
+    public Vector3 TargetPosition => waypoints[currentIndex];
 
     private readonly NavigationGraph navigationGraph;
-    private DStarLite<Vector3> dStar;
 
-    private List<Vector3> waypoints = new List<Vector3>();
-    private int currentIndex = 0;
+    public List<Vector3> waypoints = new List<Vector3>();
+    public int currentIndex = 0;
 
-    public NpcMovementHandler(NavigationGraph navigationGraph, SettlerView settlerView)
+    public NpcMovementHandler(NavigationGraph navigationGraph)
     {
         this.navigationGraph = navigationGraph;
-        this.settlerView = settlerView;
-
-        dStar = new DStarLite<Vector3>();
     }
 
     public bool CalculateRoute(Vector3 startPoint, Vector3 endPoint)
@@ -105,7 +105,7 @@ public class NpcMovementHandler
         currentIndex = 0;
         waypoints.Clear();
 
-        dStar = new DStarLite<Vector3>();
+        var dStar = new DStarLite<Vector3>();
         dStar.Initialize(nodesList, startNode, goalNode);
 
         var path = dStar.GetPath();
@@ -117,27 +117,36 @@ public class NpcMovementHandler
         return waypoints.Count > 0;
     }
 
-    public void ExecuteMovement()
+    [BurstCompile]
+    public struct MovementJob : IJobParallelForTransform
     {
-        if (waypoints.Count == 0 || currentIndex >= waypoints.Count)
-            return;
+        [ReadOnly] public NativeArray<float3> targetPositions;
+        [ReadOnly] public NativeArray<float> movementSpeeds;
+        [ReadOnly] public float deltaTime;
 
-        var targetPos = waypoints[currentIndex];
-        settlerView.transform.position = Vector3.MoveTowards(settlerView.transform.position, targetPos, settlerView.SettlerModel.SettlerDefinition.MovementSpeed * Time.deltaTime);
-
-        var direction = (targetPos - settlerView.transform.position).normalized;
-        if (direction.sqrMagnitude > 0.0001f)
+        public void Execute(int index, TransformAccess transform)
         {
-            settlerView.transform.forward = Vector3.Slerp(settlerView.transform.forward, direction, Time.deltaTime * 15f);
-        }
+            float3 currentPos = transform.position;
+            float3 targetPos = targetPositions[index];
+            float distance = math.distance(currentPos, targetPos);
 
-        if (Vector3.Distance(settlerView.transform.position, targetPos) <= 0.1f)
-        {
-            currentIndex++;
-
-            if (currentIndex >= waypoints.Count)
+            if (distance < 0.01f)
             {
-                settlerView.gameObject.SetActive(false);
+                transform.position = targetPos;
+                return;
+            }
+
+            float t = math.min(movementSpeeds[index] * deltaTime / distance, 1f);
+            transform.position = math.lerp(currentPos, targetPos, t);
+
+            float3 direction = targetPos - currentPos;
+            direction.y = 0;
+
+            if (math.lengthsq(direction) > 0.001f)
+            {
+                direction = math.normalize(direction);
+                quaternion targetRotation = quaternion.LookRotation(direction, math.up());
+                transform.rotation = targetRotation;
             }
         }
     }

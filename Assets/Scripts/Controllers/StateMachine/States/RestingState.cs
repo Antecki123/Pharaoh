@@ -60,7 +60,6 @@ namespace Controllers.Ai.Strategy
             {
                 settlerView.SettlerModel.StrategyState = SettlerStrategyState.Relocation;
                 settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = false;
-                settlerView.MovementHandler.ExecuteMovement();
             }
         }
 
