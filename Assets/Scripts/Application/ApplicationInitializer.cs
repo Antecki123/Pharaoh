@@ -32,7 +32,6 @@ namespace App.Registrators
                 "Windmill",
                 "House",
                 "Granary",
-                "FarmersHut",
                 "LinenField",
                 "Warehouse",
                 "FarmView",
@@ -41,7 +40,8 @@ namespace App.Registrators
                 "ProcessingWorkplaceTooltipUI",
                 "HabitationTooltipUI",
                 "StorageTooltipUI",
-                "DistributionPointTooltipUI"
+                "DistributionPointTooltipUI",
+                "FarmTooltipUI"
             };
 
             foreach (var key in assetsKeys)

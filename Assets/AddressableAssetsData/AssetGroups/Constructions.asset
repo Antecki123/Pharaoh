@@ -55,11 +55,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a2b7f9ba41da1df4f97a0399e0f57bf2
-    m_Address: FarmersHut
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eff8ba096beae2d489e82f381f1e1499
     m_Address: LinenField
     m_ReadOnly: 0

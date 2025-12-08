@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: UI
   m_GUID: f25cccef2e03dd64484126220149597c
   m_SerializeEntries:
+  - m_GUID: 6dc2ec872e7704a40a7773ef887f070e
+    m_Address: FarmTooltipUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 806023d10ce1ed043846b914f7ead159
     m_Address: HabitationTooltipUI
     m_ReadOnly: 0

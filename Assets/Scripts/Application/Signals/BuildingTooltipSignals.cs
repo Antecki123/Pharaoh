@@ -1,3 +1,4 @@
+using Controllers.Work;
 using Models.Economy;
 using Models.Work;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace App.Signals
             container.DeclareSignal<OpenProcessingWorkplaceTooltip>();
             container.DeclareSignal<OpenStorageTooltipUI>();
             container.DeclareSignal<OpenDistributionPointTooltipUI>();
+            container.DeclareSignal<OpenFarmTooltipUI>();
         }
 
         public class OpenHabitationTooltip
@@ -61,6 +63,19 @@ namespace App.Signals
             public DistributionPointModel Model { get; private set; }
 
             public OpenDistributionPointTooltipUI(Transform transform, DistributionPointModel model)
+            {
+                Transform = transform;
+                Model = model;
+            }
+        }
+
+        public class OpenFarmTooltipUI
+        {
+            public Transform Transform { get; private set; }
+
+            public FarmWorkplaceModel Model { get; private set; }
+
+            public OpenFarmTooltipUI(Transform transform, FarmWorkplaceModel model)
             {
                 Transform = transform;
                 Model = model;

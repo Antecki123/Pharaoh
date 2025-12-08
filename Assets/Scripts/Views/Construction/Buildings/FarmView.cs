@@ -7,7 +7,6 @@ using Models.Work;
 using System.Collections.Generic;
 using UnityEngine;
 using Views.Helpers;
-using Views.Ui.Buildings;
 using Zenject;
 
 namespace Views.Construction
@@ -21,7 +20,7 @@ namespace Views.Construction
         private PrefabManager prefabManager;
         private SupplyModel supplyModel;
 
-        private FarmWorkplaceNew workplace;
+        private FarmWorkplace workplace;
 
         private BuildingDefinition buildingDefinition;
         private float fieldArea;
@@ -43,7 +42,7 @@ namespace Views.Construction
             farmFieldTransform.GetComponent<MeshFilter>().mesh = MeshBuilder.BuildMeshFromVertices(farmVertices, out var center);
             farmFieldTransform.GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
 
-            transform.position = new Vector3(center.x, transform.position.y, center.z);
+            transform.position = center;
 
             var coll = GetComponent<MeshCollider>();
             coll.sharedMesh = MeshBuilder.BuildColliderFromVertices(farmVertices);
@@ -75,9 +74,7 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                //var infoPanel = prefabManager.InstantiateUI<FarmInfoUI>();
-                var infoPanel = FindAnyObjectByType<FarmInfoUI>(FindObjectsInactive.Include);
-                infoPanel.Init(transform, workplace.WorkplaceModel);
+                signalBus.Fire(new BuildingTooltipSignals.OpenFarmTooltipUI(transform, workplace.WorkplaceModel));
             }
         }
 
@@ -96,7 +93,7 @@ namespace Views.Construction
             });
 
             var workplaceModel = new FarmWorkplaceModel(cropName, storage, fieldArea);
-            workplace = new FarmWorkplaceNew(prefabManager, supplyModel, workplaceModel, EntranceTransform.position);
+            workplace = new FarmWorkplace(prefabManager, supplyModel, workplaceModel, EntranceTransform.position);
         }
     }
 }

@@ -26,6 +26,8 @@ namespace Controllers.Construction
         private GameObject pointer;
         private Camera mainCamera;
 
+        private readonly float zFightOffset = .05f;
+
         public FarmBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph)
         {
             this.signalBus = signalBus;
@@ -60,7 +62,10 @@ namespace Controllers.Construction
                 return;
 
             if (pointer != null)
-                pointer.transform.position = new Vector3(position.x, .1f, position.z);
+            {
+                var terrainHeight = Terrain.activeTerrain.SampleHeight(new Vector3(position.x, 0, position.z));
+                pointer.transform.position = new Vector3(position.x, terrainHeight + zFightOffset, position.z);
+            }
 
             if (Input.GetMouseButtonDown(0))
             {

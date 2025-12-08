@@ -32,7 +32,7 @@ namespace Controllers.Construction
 
         private Transform roadContainer;
 
-        private float zFightOffset = .1f;
+        private readonly float zFightOffset = .1f;
 
         public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
         {
@@ -89,8 +89,11 @@ namespace Controllers.Construction
             if (!TryGetSnappedPosition(out Vector3 position))
                 return;
 
-            var terrainHeight = Terrain.activeTerrain.SampleHeight(new Vector3(position.x, 0, position.z));
-            pointer.transform.position = new Vector3(position.x, terrainHeight + zFightOffset, position.z);
+            if (pointer != null)
+            {
+                var terrainHeight = Terrain.activeTerrain.SampleHeight(new Vector3(position.x, 0, position.z));
+                pointer.transform.position = new Vector3(position.x, terrainHeight + zFightOffset, position.z);
+            }
 
             if (Input.GetMouseButtonDown(0))
             {

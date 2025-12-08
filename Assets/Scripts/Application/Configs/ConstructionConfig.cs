@@ -10,6 +10,7 @@ namespace App.Configs
         [field: SerializeField] public float SegmentSpacing { get; private set; } = 5f;
         [field: SerializeField] public float MinimumSpacing { get; private set; } = 1f;
         [field: SerializeField] public float MinimumRoadAngle { get; private set; } = 30f;
+        [field: SerializeField] public float MaxHeightDiff { get; private set; } = 2f;
 
     }
 }

@@ -1,5 +1,4 @@
 using App.Helpers;
-using Cysharp.Threading.Tasks;
 using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
@@ -11,37 +10,45 @@ namespace Controllers.Work
 {
     public class FarmWorkplace : IWorkplace, ISupplyTarget
     {
-        public List<CropModel> Crops { get; private set; } = new List<CropModel>();
-
-        public float Range { get; private set; } = 25f;
-
-        public Vector3 Position { get; private set; }
-
         public Vector3 EntrancePosition { get; private set; }
 
-        public WorkplaceModel WorkplaceModel => workplaceModel;
+        public FarmWorkplaceModel WorkplaceModel => workplaceModel;
 
         private PrefabManager prefabManager;
         private SupplyModel supplyModel;
-        private WorkplaceModel workplaceModel;
+        private FarmWorkplaceModel workplaceModel;
 
+        private float progress = 0f;
         private float checkTimer;
         private float checkSpanInSec = 5f;
 
-        public FarmWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceModel workplaceModel,
-            Vector3 position, Vector3 entrancePosition)
+        public FarmWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, FarmWorkplaceModel workplaceModel, Vector3 entrancePosition)
         {
             this.prefabManager = prefabManager;
             this.supplyModel = supplyModel;
             this.workplaceModel = workplaceModel;
 
-            Position = position;
             EntrancePosition = entrancePosition;
         }
 
-        public IEmployer GetEmployer()
+        public void DeliverCommodity(CommodityModel commodity)
         {
-            return workplaceModel;
+            workplaceModel.StorageModel.AddCommodity(commodity);
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
+        {
+            return workplaceModel.StorageModel.GetAvailableCommodities();
+        }
+
+        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        {
+            return workplaceModel.StorageModel.GetAvailableSpace();
+        }
+
+        public Vector3 GetEntrancePosition()
+        {
+            return EntrancePosition;
         }
 
         public IReservationable GetReservationable()
@@ -49,38 +56,9 @@ namespace Controllers.Work
             return workplaceModel.StorageModel;
         }
 
-        public void Work()
+        public IEmployer GetEmployer()
         {
-            checkTimer -= Time.deltaTime;
-            if (checkTimer < 0)
-            {
-                checkTimer = checkSpanInSec;
-
-                if (workplaceModel.StorageModel.Storage.Any(x => x.Quantity > 0))
-                {
-                    ScheduleTransport();
-                }
-            }
-
-            foreach (var crop in Crops)
-            {
-                if (crop.IsWorkScheduled)
-                    continue;
-
-                switch (crop.CropFieldState)
-                {
-                    case CropFieldState.WaitingForPlanting:
-                        _ = SchedulePlanting(crop);
-                        break;
-                    case CropFieldState.Growing:
-                        break;
-                    case CropFieldState.ReadyToHarvest:
-                        _ = ScheduleHarvest(crop);
-                        break;
-                    default:
-                        break;
-                }
-            }
+            return workplaceModel;
         }
 
         public bool TryPickCommodity(ref CommodityModel commodity)
@@ -101,24 +79,38 @@ namespace Controllers.Work
             return false;
         }
 
-        public void DeliverCommodity(CommodityModel commodity)
+        public void Work()
         {
-            workplaceModel.StorageModel.AddCommodity(commodity);
-        }
+            checkTimer -= Time.deltaTime;
+            if (checkTimer < 0)
+            {
+                checkTimer = checkSpanInSec;
 
-        public Vector3 GetEntrancePosition()
-        {
-            return EntrancePosition;
-        }
+                if (workplaceModel.IsAnyCommodityToTake())
+                    ScheduleTransport();
+            }
 
-        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
-        {
-            return workplaceModel.StorageModel.GetAvailableCommodities();
-        }
+            if (workplaceModel.Workers.Count < workplaceModel.MinimumWorkersCount)
+                return;
 
-        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
-        {
-            return workplaceModel.StorageModel.GetAvailableSpace();
+            if (!workplaceModel.HasStorageRoom())
+                return;
+
+            var efficiency = Mathf.Clamp01((float)workplaceModel.Workers.Count / workplaceModel.MaxWorkersCount) * workplaceModel.Irrigating;
+            progress += (Time.deltaTime / workplaceModel.ProcessingTime) * efficiency;
+
+            if (progress >= 1)
+            {
+                workplaceModel.StorageModel.AddCommodity(new CommodityModel
+                {
+                    Name = workplaceModel.Commodity.Name,
+                    Quantity = workplaceModel.Commodity.Quantity
+                });
+
+                progress = 0;
+            }
+
+            workplaceModel.SetProcessingProgress(progress);
         }
 
         private void ScheduleTransport()
@@ -126,11 +118,7 @@ namespace Controllers.Work
             if (workplaceModel.CarriersCount == 0)
                 return;
 
-            var result = BuildCarrierTasks(
-                workplaceModel.StorageModel.Storage[0].Name,
-                workplaceModel.StorageModel.Storage[0].Quantity,
-                out Queue<CarrierTask> tasks);
-
+            var result = BuildCarrierTasks(out Queue<CarrierTask> tasks);
             if (result == false)
                 return;
 
@@ -141,50 +129,24 @@ namespace Controllers.Work
             carrier.OnTasksFinished += () => workplaceModel.ReturnCarrier();
         }
 
-        private bool BuildCarrierTasks(CommodityName commodityName, int quantity, out Queue<CarrierTask> tasks)
+        private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)
         {
-            tasks = new Queue<CarrierTask>();
+            tasks = default;
 
-            var targetWithSpace = supplyModel.GetClosestStorageWithFreeSpace(EntrancePosition, commodityName, quantity);
+            var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
+                EntrancePosition,
+                workplaceModel.Commodity.Name,
+                workplaceModel.Commodity.Quantity);
 
-            if (targetWithSpace == null)
+            if (targetWithFreeSpace == null)
                 return false;
 
-            tasks.Enqueue(new CarrierTask(this, targetWithSpace, new CommodityModel
-            {
-                Name = commodityName,
-                Quantity = quantity
-            }));
-            tasks.Enqueue(new CarrierTask(targetWithSpace, this, null));
+            var taskBuilder = new CarrierTaskBuilder()
+                .AddTaskWithReservation(this, targetWithFreeSpace, workplaceModel.Commodity, ReservationType.Space)
+                .AddTask(targetWithFreeSpace, this);
 
+            tasks = new Queue<CarrierTask>(taskBuilder.Tasks);
             return true;
-        }
-
-        private async UniTask SchedulePlanting(CropModel crop)
-        {
-            crop.IsWorkScheduled = true;
-            crop.OnWorkScheduled?.Invoke("WheatFieldPlanting");
-            crop.UpdateStatus(CropFieldState.Planting);
-
-            await UniTask.WaitForSeconds(30);
-
-            crop.UpdateStatus(CropFieldState.Growing);
-            crop.IsWorkScheduled = false;
-        }
-
-        private async UniTask ScheduleHarvest(CropModel crop)
-        {
-            crop.IsWorkScheduled = true;
-            crop.OnWorkScheduled?.Invoke("WheatFieldHarvesting");
-            crop.UpdateStatus(CropFieldState.Harvesting);
-
-            await UniTask.WaitForSeconds(20);
-
-            workplaceModel.StorageModel.AddCommodity(crop.ProducedCommodity);
-
-            crop.SetGrowthProgress(0f);
-            crop.UpdateStatus(CropFieldState.WaitingForPlanting);
-            crop.IsWorkScheduled = false;
         }
     }
 }

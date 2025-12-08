@@ -27,6 +27,7 @@ namespace Controllers.UI
             signalBus.Subscribe<BuildingTooltipSignals.OpenProcessingWorkplaceTooltip>(OpenProcessingWorkplaceTooltip);
             signalBus.Subscribe<BuildingTooltipSignals.OpenStorageTooltipUI>(OpenStorageTooltipUI);
             signalBus.Subscribe<BuildingTooltipSignals.OpenDistributionPointTooltipUI>(OpenDistributionPointTooltipUI);
+            signalBus.Subscribe<BuildingTooltipSignals.OpenFarmTooltipUI>(OpenFarmTooltipUI);
         }
 
         public void Tick()
@@ -83,6 +84,17 @@ namespace Controllers.UI
             CloseTooltips();
 
             var tooltip = prefabManager.Instantiate("DistributionPointTooltipUI").GetComponent<DistributionPointTooltipUI>();
+            tooltip.Init(signal.Transform, signal.Model);
+            currentTooltip = tooltip;
+
+            tooltip.transform.SetParent(mainCanvas.transform);
+        }
+
+        private void OpenFarmTooltipUI(BuildingTooltipSignals.OpenFarmTooltipUI signal)
+        {
+            CloseTooltips();
+
+            var tooltip = prefabManager.Instantiate("FarmTooltipUI").GetComponent<FarmTooltipUI>();
             tooltip.Init(signal.Transform, signal.Model);
             currentTooltip = tooltip;
 

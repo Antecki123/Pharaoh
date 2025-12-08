@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Views.Ui.Buildings
 {
-    public class FarmInfoUI : BuildingTooltipUI
+    public class FarmTooltipUI : BuildingTooltipUI
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text workersLabel;
@@ -16,9 +16,6 @@ namespace Views.Ui.Buildings
 
         private List<CommodityElementUI> commoditiesToShow = new List<CommodityElementUI>();
         private FarmWorkplaceModel workplace;
-
-        private void OnEnable() => workplace.OnValueChanged += RefreshUI;
-        private void OnDisable() => workplace.OnValueChanged -= RefreshUI;
 
         public void Init(Transform buildingTransform, FarmWorkplaceModel workplace)
         {

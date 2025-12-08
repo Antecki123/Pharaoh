@@ -67,7 +67,7 @@ namespace Controllers.Construction
                 UpdateRotation();
             }
 
-            if (Input.GetMouseButtonDown(0) && IsAvailableSpace(position))
+            if (Input.GetMouseButtonDown(0) && IsAvailableSpace(position) && IsTerrainFlat(building.GetComponent<Collider>()))
             {
                 PlaceBuilding();
             }
@@ -84,8 +84,7 @@ namespace Controllers.Construction
         private void UpdatePosition(Vector3 position)
         {
             building.transform.position = position;
-
-            var color = IsAvailableSpace(position)
+            var color = IsAvailableSpace(position) && IsTerrainFlat(building.GetComponent<Collider>())
                 ? Color.green
                 : Color.red;
 
@@ -255,6 +254,43 @@ namespace Controllers.Construction
             }
 
             navigationGraph.Nodes.Add(entranceNode);
+        }
+
+        private bool IsTerrainFlat(Collider collider, int resolution = 3)
+        {
+            Terrain t = Terrain.activeTerrain;
+            if (t == null || collider == null)
+                return false;
+
+            Transform tr = collider.transform;
+
+            BoxCollider box = collider as BoxCollider;
+            if (box == null)
+                return false;
+
+            Vector3 localCenter = box.center;
+            Vector3 localSize = box.size;
+
+            float minH = float.MaxValue;
+            float maxH = float.MinValue;
+
+            for (int x = 0; x < resolution; x++)
+            {
+                for (int z = 0; z < resolution; z++)
+                {
+                    float lx = Mathf.Lerp(-localSize.x * 0.5f, localSize.x * 0.5f, x / (float)(resolution - 1));
+                    float lz = Mathf.Lerp(-localSize.z * 0.5f, localSize.z * 0.5f, z / (float)(resolution - 1));
+
+                    Vector3 localPoint = localCenter + new Vector3(lx, 0f, lz);
+                    Vector3 worldPoint = tr.TransformPoint(localPoint);
+                    float h = t.SampleHeight(worldPoint);
+
+                    if (h < minH) minH = h;
+                    if (h > maxH) maxH = h;
+                }
+            }
+
+            return (maxH - minH) <= constructionConfig.MaxHeightDiff;
         }
     }
 }
