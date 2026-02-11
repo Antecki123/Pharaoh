@@ -22,44 +22,57 @@ namespace Controllers.Ai.Strategy
 
         public void OnEnter()
         {
-            settlerView.IsBuisy = true;
             locationOfNeedFulfillment = habitationModel.Habitations[settlerView.SettlerModel.Habitation];
+
+            if (locationOfNeedFulfillment == null)
+            {
+                settlerView.SettlerState = SettlerState.Idle;
+                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Idle;
+                settlerView.gameObject.SetActive(false);
+
+                return;
+            }
 
             if (settlerView.SettlerModel.CurrentLocation != locationOfNeedFulfillment)
             {
-                var calculationResult = settlerView.MovementHandler.CalculateRoute(settlerView.SettlerModel.CurrentLocation.EntranceTransform.position, locationOfNeedFulfillment.EntranceTransform.position);
+                var calculationResult = settlerView.MovementHandler.CalculateRoute(settlerView.SettlerModel.CurrentLocation, locationOfNeedFulfillment);
                 if (calculationResult)
                 {
-                    settlerView.transform.position = settlerView.SettlerModel.CurrentLocation.EntranceTransform.position;
-                    settlerView.SettlerModel.StrategyState = SettlerStrategyState.Relocation;
+                    settlerView.SettlerState = SettlerState.Movement;
+                    settlerView.SettlerModel.StrategyState = SettlerStrategyState.Resting;
                     settlerView.gameObject.SetActive(true);
                 }
             }
             else
             {
+                settlerView.SettlerState = SettlerState.Busy;
                 settlerView.SettlerModel.StrategyState = SettlerStrategyState.Resting;
+                settlerView.gameObject.SetActive(false);
             }
         }
 
         public void OnExit()
         {
             settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = false;
-            settlerView.IsBuisy = false;
         }
 
         public void Tick()
         {
-            if (Vector3.Distance(settlerView.transform.position, locationOfNeedFulfillment.EntranceTransform.position) <= .1f)
+            if (Vector3.Distance(settlerView.transform.position, settlerView.MovementHandler.TargetPosition) <= .1f)
             {
                 settlerView.gameObject.SetActive(false);
                 settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = true;
+
+                settlerView.SettlerState = SettlerState.Busy;
                 settlerView.SettlerModel.StrategyState = SettlerStrategyState.Resting;
                 settlerView.SettlerModel.CurrentLocation = locationOfNeedFulfillment;
             }
-            else
+
+            if (settlerView.SettlerModel.SettlerNeeds.Rest.Value >= 1.0f)
             {
-                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Relocation;
                 settlerView.SettlerModel.SettlerNeeds.Rest.IsRestoring = false;
+                settlerView.SettlerState = SettlerState.Idle;
+                settlerView.SettlerModel.StrategyState = SettlerStrategyState.Idle;
             }
         }
 

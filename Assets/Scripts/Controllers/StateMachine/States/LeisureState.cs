@@ -14,14 +14,12 @@ namespace Controllers.Ai.Strategy
 
         public void OnEnter()
         {
-            settlerView.IsBuisy = true; 
             settlerView.SettlerModel.StrategyState = SettlerStrategyState.Leasure;
         }
 
         public void OnExit()
         {
             settlerView.SettlerModel.SettlerNeeds.Entertainment.IsRestoring = false;
-            settlerView.IsBuisy = false;
         }
 
         public void Tick()

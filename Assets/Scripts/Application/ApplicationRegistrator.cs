@@ -8,6 +8,7 @@ using Controllers.Settler;
 using Controllers.UI;
 using Controllers.Work;
 using Models.Ai;
+using Models.Construction;
 using Models.Economy;
 using Models.Environment;
 using Models.Work;
@@ -51,6 +52,7 @@ namespace App.Registrators
             Container.Bind<EmploymentModel>().AsSingle();
             Container.Bind<SupplyModel>().AsSingle();
             Container.Bind<NavigationGraph>().AsSingle();
+            Container.Bind<ConstructionGrid>().AsSingle();
             Container.Bind<PrefabManager>().AsSingle();
             Container.Bind<DateModel>().AsSingle();
 
@@ -63,6 +65,7 @@ namespace App.Registrators
             Container.Bind(typeof(EnvironmentController), typeof(ITickable)).To<EnvironmentController>().AsSingle().NonLazy();
             Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();
 
+            Container.BindFactory<RoadBuilderRectangular, RoadBuilderRectangular.Factory>().AsTransient();
             Container.BindFactory<RoadBuilder, RoadBuilder.Factory>().AsTransient();
             Container.BindFactory<FarmBuilder, FarmBuilder.Factory>().AsTransient();
             Container.BindFactory<ConstructionBuilder<BuildingView>, ConstructionBuilder<BuildingView>.Factory>().AsTransient();

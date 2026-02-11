@@ -11,15 +11,13 @@ namespace Controllers.Work
 {
     public class DistributionPointWorkplace : IWorkplace, ISupplyTarget
     {
-        public Vector3 EntrancePosition { get; private set; }
-
         public DistributionPointModel DistributionModel => distributionModel;
-
         public event Action<CommodityModel> OnCreateMarketStall;
 
         private PrefabManager prefabManager;
         private SupplyModel supplyModel;
         private DistributionPointModel distributionModel;
+        private BuildingView buildingView;
 
         private float checkTimer;
         private float checkSpanInSec = 5f;
@@ -27,14 +25,12 @@ namespace Controllers.Work
         private float consumptionTimer;
         private float consumptionTimeSpan = 2f;
 
-        public DistributionPointWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, DistributionPointModel distributionModel,
-            Vector3 entrancePosition)
+        public DistributionPointWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, DistributionPointModel distributionModel, BuildingView buildingView)
         {
             this.prefabManager = prefabManager;
             this.supplyModel = supplyModel;
             this.distributionModel = distributionModel;
-
-            EntrancePosition = entrancePosition;
+            this.buildingView = buildingView;
 
             // DEBUG
             var stallModel = new MarketStallModel(distributionModel.StorageModel.Storage[0])
@@ -44,9 +40,9 @@ namespace Controllers.Work
             distributionModel.AddStall(stallModel);
         }
 
-        public Vector3 GetEntrancePosition()
+        public BuildingView GetBuildingView()
         {
-            return EntrancePosition;
+            return buildingView;
         }
 
         public bool TryPickCommodity(ref CommodityModel commodity)
@@ -136,7 +132,7 @@ namespace Controllers.Work
 
         private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks)
         {
-            var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(EntrancePosition, commodity.Name);
+            var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(buildingView.transform.position, commodity.Name);
 
             if (targetWithCommodity == null)
             {

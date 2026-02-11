@@ -35,7 +35,7 @@ namespace Models.Settler
 
     public enum SettlerStrategyState
     {
-        Relocation,
+        Idle,
         Working,
         Resting,
         Leasure,

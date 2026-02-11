@@ -161,8 +161,8 @@ namespace Controllers.Construction
 
             //BlockBuildingArea(farmView.GetComponent<MeshCollider>());
 
-            if (farmView.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
-                ConnectEntranceNode(buildingView.EntranceTransform.position);
+            //if (farmView.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
+            //    ConnectEntranceNode(buildingView.EntranceTransform.position);
 
             farmView.transform.SetParent(constructionsContainer);
 
@@ -196,7 +196,7 @@ namespace Controllers.Construction
                 }
             }
 
-            navigationGraph.Nodes.Add(entranceNode);
+            //navigationGraph.Nodes.Add(entranceNode);
         }
 
         private void BlockBuildingArea(Collider collider)

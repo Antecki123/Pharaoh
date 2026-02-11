@@ -1,10 +1,9 @@
 using Models.Ai;
-using Models.Ai.Pathfinding;
+using Models.Construction;
 using Models.Economy;
 using Models.Work;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -17,19 +16,20 @@ namespace Views.Settler.Workers
 
         private Animator animator;
         private NavigationGraph navigationGraph;
+        private ConstructionGrid constructionGrid;
 
         private Queue<CarrierTask> carrierTasks = new Queue<CarrierTask>();
         private CarrierTask currentTask;
         private CommodityModel carriedCommodity;
 
-        private List<Vector3> waypoints = new List<Vector3>();
-        private int currentIndex = 0;
+        private NpcMovementHandler movementHandler;
         private float movementSpeed = 5f;
 
         [Inject]
-        public void Constructor(NavigationGraph navigationGraph)
+        public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
         {
             this.navigationGraph = navigationGraph;
+            this.constructionGrid = constructionGrid;
 
             animator = GetComponentInChildren<Animator>();
         }
@@ -37,6 +37,8 @@ namespace Views.Settler.Workers
         public void Init(Queue<CarrierTask> carrierTasks)
         {
             this.carrierTasks = carrierTasks;
+
+            movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid);
 
             StartNextTask();
         }
@@ -51,23 +53,23 @@ namespace Views.Settler.Workers
             animator.SetBool("CarryingDelivery", carriedCommodity != null);
             var currentSpeed = carriedCommodity != null ? movementSpeed / 2 : movementSpeed;
 
-            if (waypoints.Count == 0 || currentTask == null)
+            if (movementHandler.Waypoints.Count == 0 || currentTask == null)
                 return;
 
-            var targetPos = waypoints[currentIndex];
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, currentSpeed * Time.deltaTime);
+            var nextPos = movementHandler.NextPosition;
+            transform.position = Vector3.MoveTowards(transform.position, nextPos, currentSpeed * Time.deltaTime);
 
-            var direction = (targetPos - transform.position).normalized;
+            var direction = (nextPos - transform.position).normalized;
             if (direction.sqrMagnitude > 0.0001f)
             {
                 transform.forward = Vector3.Lerp(transform.forward, direction, Time.deltaTime * 15f);
             }
 
-            if (Vector3.Distance(transform.position, targetPos) <= 0.1f)
+            if (Vector3.Distance(transform.position, nextPos) <= 0.1f)
             {
-                currentIndex++;
+                movementHandler.CurrentIndex++;
 
-                if (currentIndex >= waypoints.Count)
+                if (movementHandler.CurrentIndex >= movementHandler.Waypoints.Count)
                 {
                     if (carriedCommodity != null && currentTask.Target != null)
                     {
@@ -104,23 +106,9 @@ namespace Views.Settler.Workers
                 }
             }
 
-            CalculateWaypoints(currentTask.Origin, currentTask.Target);
-        }
-
-        private void CalculateWaypoints(ISupplyTarget origin, ISupplyTarget target)
-        {
-            var nodesList = navigationGraph.Nodes.ToList();
-            var startNode = navigationGraph.GetNode(origin.GetEntrancePosition());
-            var endNode = navigationGraph.GetNode(target.GetEntrancePosition());
-
-            transform.position = startNode.Data;
-
-            var dStar = new DStarLite<Vector3>();
-            dStar.Initialize(nodesList, startNode, endNode);
-            var path = dStar.GetPath();
-
-            foreach (var position in path)
-                waypoints.Add(position.Data);
+            var calculationResult = movementHandler.CalculateRoute(currentTask.Origin.GetBuildingView(), currentTask.Target.GetBuildingView());
+            if (calculationResult)
+                transform.position = movementHandler.Waypoints[0];
         }
     }
 

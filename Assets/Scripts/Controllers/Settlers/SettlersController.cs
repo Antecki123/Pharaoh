@@ -24,6 +24,7 @@ namespace Controllers.Settler
         private readonly SignalBus signalBus;
         private readonly HabitationModel habitationModel;
         private readonly EmploymentModel employmentModel;
+        private readonly EconomyModel economyModel;
 
         private readonly SettlerSpawner settlerSpawner;
 
@@ -33,14 +34,15 @@ namespace Controllers.Settler
         private TransformAccessArray settlerMovementArray;
 
         private float timer = 0;
-        private float timeSpan = 10f;
+        private float settlerSpawnTimeSpan = 10f;
 
-        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentModel employmentModel,
+        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentModel employmentModel, EconomyModel economyModel,
             SettlersNamesImporter settlersNames)
         {
             this.signalBus = signalBus;
             this.habitationModel = habitationModel;
             this.employmentModel = employmentModel;
+            this.economyModel = economyModel;
 
             settlerSpawner = new SettlerSpawner(prefabManager, settlersNames);
         }
@@ -75,6 +77,8 @@ namespace Controllers.Settler
             newSettler.Item1.gameObject.SetActive(false);
             settlers.Add((newSettler.Item1, newSettler.Item2));
 
+            economyModel.AddSettlers(1);
+
             var availableHabitat = habitationModel.GetAvailableHabitat();
             var availableEmployment = employmentModel.GetAvailableWorkplace();
 
@@ -93,7 +97,7 @@ namespace Controllers.Settler
 
                 //newSettler.Item2.CurrentLocation = employmentModel.Workplaces[availableEmployment];
             }
-            newSettler.Item1.transform.position = habitationModel.Habitations[newSettler.Item2.Habitation].EntranceTransform.position;
+            newSettler.Item1.transform.position = habitationModel.Habitations[newSettler.Item2.Habitation].transform.position;
             newSettler.Item1.InitAiStrategy();
         }
 
@@ -105,6 +109,8 @@ namespace Controllers.Settler
                 settlers.Remove(settlerToDespawn);
 
             settlerToDespawn.Item2.Habitation.RemoveResident(settlerToDespawn.Item2);
+
+            economyModel.RemoveSettlers(1);
         }
 
         private void OnHabitationModelChanged(CollectionChangeType changeType, HabitatModel habitation)
@@ -162,7 +168,7 @@ namespace Controllers.Settler
 
         private void UpdateSettlersNeeds()
         {
-            settlerNeedsArray = new NativeArray<SettlerNeedsData>(settlers.Count, Allocator.TempJob);
+            settlerNeedsArray = new NativeArray<SettlerNeedsData>(settlers.Count, Allocator.Persistent);
             for (int i = 0; i < settlers.Count; i++)
             {
                 var n = settlers[i].Item1.SettlerModel.SettlerNeeds;
@@ -172,6 +178,7 @@ namespace Controllers.Settler
                     EntertainmentData = new SettlerNeedsData.NeedData(n.Entertainment.Value, n.Entertainment.DefaultDecayTime, n.Entertainment.RestoreFactor, n.Entertainment.IsRestoring),
                     HealthData = new SettlerNeedsData.NeedData(n.Health.Value, n.Health.DefaultDecayTime, n.Health.RestoreFactor, n.Health.IsRestoring),
                     PrayData = new SettlerNeedsData.NeedData(n.Pray.Value, n.Pray.DefaultDecayTime, n.Pray.RestoreFactor, n.Pray.IsRestoring),
+                    WorkData = new SettlerNeedsData.NeedData(n.Work.Value, n.Work.DefaultDecayTime, n.Work.RestoreFactor, n.Work.IsRestoring),
                 };
             }
 
@@ -190,6 +197,7 @@ namespace Controllers.Settler
                 settlers[i].Item1.SettlerModel.SettlerNeeds.Entertainment.Value = settlerNeedsArray[i].EntertainmentData.Value;
                 settlers[i].Item1.SettlerModel.SettlerNeeds.Health.Value = settlerNeedsArray[i].HealthData.Value;
                 settlers[i].Item1.SettlerModel.SettlerNeeds.Pray.Value = settlerNeedsArray[i].PrayData.Value;
+                settlers[i].Item1.SettlerModel.SettlerNeeds.Work.Value = settlerNeedsArray[i].WorkData.Value;
             }
         }
 
@@ -209,7 +217,7 @@ namespace Controllers.Settler
             for (int i = 0; i < settlersToMove.Count; i++)
             {
                 transforms[i] = settlersToMove[i].transform;
-                targetPositionsArray[i] = (float3)settlersToMove[i].MovementHandler.TargetPosition;
+                targetPositionsArray[i] = (float3)settlersToMove[i].MovementHandler.NextPosition;
                 movementSpeedsArray[i] = settlersToMove[i].SettlerModel.SettlerDefinition.MovementSpeed;
             }
 
@@ -226,11 +234,11 @@ namespace Controllers.Settler
 
             foreach (var settler in settlersToMove)
             {
-                if (Vector3.Distance(settler.transform.position, settler.MovementHandler.TargetPosition) <= 0.1f)
+                if (Vector3.Distance(settler.transform.position, settler.MovementHandler.NextPosition) <= 0.1f)
                 {
-                    settler.MovementHandler.currentIndex++;
+                    settler.MovementHandler.CurrentIndex++;
 
-                    if (settler.MovementHandler.currentIndex >= settler.MovementHandler.waypoints.Count)
+                    if (settler.MovementHandler.CurrentIndex >= settler.MovementHandler.Waypoints.Count)
                     {
                         settler.gameObject.SetActive(false);
                     }
@@ -246,7 +254,7 @@ namespace Controllers.Settler
             timer -= Time.deltaTime;
             if (timer <= 0)
             {
-                timer = timeSpan;
+                timer = settlerSpawnTimeSpan;
                 if (habitationModel.Habitations.Any(x => x.Key.HasAvailableSpot()))
                 {
                     SpawnSettler(new SettlersSignals.SpawnSettler(Vector3.zero, Quaternion.identity));

@@ -5,8 +5,6 @@ namespace Views.Construction
 {
     public class BuildingView : MonoBehaviour, IInteractable
     {
-        public Transform EntranceTransform;
-
         protected bool isPlaced;
 
         public virtual void PlaceBuilding()

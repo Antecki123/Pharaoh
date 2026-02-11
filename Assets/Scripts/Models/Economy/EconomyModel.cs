@@ -6,18 +6,30 @@ namespace Models.Economy
     {
         public event Action OnValueChanged;
 
-        public int Settlers { get; private set; }
-        public int Gold { get; private set; }
+        public int Settlers { get; private set; } = 0;
+        public int Currency { get; private set; } = 1000;
 
-        public void ChangeGold(int value)
+        public void AddCurrency(int value)
         {
-            Gold += value;
+            Currency += value;
             OnValueChanged?.Invoke();
         }
 
-        public void ChangeSettlers(int value)
+        public void RemoveCurrency(int value)
+        {
+            Currency -= value;
+            OnValueChanged?.Invoke();
+        }
+
+        public void AddSettlers(int value)
         {
             Settlers += value;
+            OnValueChanged?.Invoke();
+        }
+
+        public void RemoveSettlers(int value)
+        {
+            Settlers -= value;
             OnValueChanged?.Invoke();
         }
     }

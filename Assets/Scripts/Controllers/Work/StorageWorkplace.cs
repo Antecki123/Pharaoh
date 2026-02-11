@@ -3,27 +3,26 @@ using Models.Work;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Views.Construction;
 
 namespace Controllers.Work
 {
     public class StorageWorkplace : ISupplyTarget
     {
-        public Vector3 EntrancePosition { get; private set; }
-
         public StorageModel StorageModel => storageModel;
 
         private StorageModel storageModel;
+        private BuildingView buildingView;
 
-        public StorageWorkplace(StorageModel storageModel, Vector3 entrancePosition)
+        public StorageWorkplace(StorageModel storageModel, BuildingView buildingView)
         {
             this.storageModel = storageModel;
-
-            EntrancePosition = entrancePosition;
+            this.buildingView = buildingView;
         }
 
-        public Vector3 GetEntrancePosition()
+        public BuildingView GetBuildingView()
         {
-            return EntrancePosition;
+            return buildingView;
         }
 
         public bool TryPickCommodity(ref CommodityModel commodity)

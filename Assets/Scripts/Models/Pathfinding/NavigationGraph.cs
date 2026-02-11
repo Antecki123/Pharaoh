@@ -1,4 +1,5 @@
 using Models.Ai.Pathfinding;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,22 +7,23 @@ namespace Models.Ai
 {
     public class NavigationGraph
     {
-        public HashSet<Node<Vector3>> Nodes { get; } = new HashSet<Node<Vector3>>();
-        public HashSet<Vector3> Intersections { get; } = new HashSet<Vector3>();
+        public IReadOnlyList<Node<Vector3>> Nodes => nodes;
+        [Obsolete] public HashSet<Vector3> Intersections { get; } = new HashSet<Vector3>();
 
-        public Dictionary<NodeType, float> MovementCost { get; } = new Dictionary<NodeType, float>()
+        private List<Node<Vector3>> nodes { get; } = new List<Node<Vector3>>();
+
+        public IReadOnlyDictionary<NodeType, float> MovementCost { get; } = new Dictionary<NodeType, float>()
         {
             { NodeType.Road, 1 },
             { NodeType.Terrain, 10 },
             { NodeType.ShallowWater, 25 },
-            { NodeType.Building, 100 },
             { NodeType.Block, float.MaxValue },
         };
 
         private Vector2 gridDimensions = new Vector2(250, 250);
         private float spacing = 2f;
 
-        public NavigationGraph()
+        /*public NavigationGraph()
         {
             var nodeGrid = new Dictionary<(int x, int z), Node<Vector3>>();
             for (int x = 0; x < gridDimensions.x; x++)
@@ -43,7 +45,7 @@ namespace Models.Ai
                         (a, goal) => Vector3.Distance(a.Data, goal.Data)
                     );
 
-                    Nodes.Add(node);
+                    nodes.Add(node);
                     nodeGrid[(x, z)] = node;
                 }
             }
@@ -65,11 +67,50 @@ namespace Models.Ai
                     if (nodeGrid.TryGetValue((x - 1, z - 1), out var dl)) node.Neighbors.Add(dl);
                 }
             }
+        }*/
+
+        public void AddNode(Vector3 nodePosition, NodeType nodeType)
+        {
+            if (Contains(nodePosition))
+                return;
+
+            var newNode = new Node<Vector3>(
+                nodePosition,
+                nodeType,
+                (a, b) =>
+                {
+                    float dist = Vector3.Distance(a.Data, b.Data);
+                    float multiplier = MovementCost[nodeType];
+                    return dist * multiplier;
+                },
+                (a, goal) => Vector3.Distance(a.Data, goal.Data)
+            );
+
+            nodes.Add(newNode);
+
+            foreach (var node in nodes)
+            {
+                var connectionRange = 4f;
+                float dist = Vector3.Distance(newNode.Data, node.Data);
+                if (dist <= connectionRange && node != newNode)
+                {
+                    if (!newNode.Neighbors.Contains(node))
+                        newNode.Neighbors.Add(node);
+
+                    if (!node.Neighbors.Contains(newNode))
+                        node.Neighbors.Add(newNode);
+                }
+            }
+        }
+
+        public void RemoveNode(Vector3 nodePosition, NodeType nodeType)
+        {
+
         }
 
         public Node<Vector3> GetNode(Vector3 position)
         {
-            foreach (var node in Nodes)
+            foreach (var node in nodes)
             {
                 if (node.Data.x == position.x && node.Data.z == position.z)
                     return node;
@@ -78,9 +119,23 @@ namespace Models.Ai
             return null;
         }
 
+        public Node<Vector3> GetClosestNode(Vector3 position, float range = 4f)
+        {
+            foreach (var node in nodes)
+            {
+                var distace = Vector2.Distance(new Vector2(node.Data.x, node.Data.z), new Vector2(position.x, position.z));
+
+                if (distace <= range)
+                    return node;
+            }
+
+            return null;
+        }
+
+
         public bool Contains(Vector3 position)
         {
-            foreach (var node in Nodes)
+            foreach (var node in nodes)
             {
                 if (node.Data.x == position.x && node.Data.z == position.z)
                     return true;

@@ -197,7 +197,7 @@ namespace Controllers.Construction
                         (a, goal) => Vector3.Distance(a.Data, goal.Data)
                     );
 
-                    navigationGraph.Nodes.Add(node);
+                    //navigationGraph.Nodes.Add(node);
                 }
 
                 segmentNodes.Add(node);

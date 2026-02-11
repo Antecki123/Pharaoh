@@ -1,6 +1,7 @@
 using Models.Settler;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Models.Economy
 {
@@ -53,5 +54,36 @@ namespace Models.Economy
         {
             return MaxResidents - residents.Count > 0;
         }
+    }
+
+    public class HabitationRequirement
+    {
+        public HabitationRequirementDefinition RequirementDefinition { get; private set; }
+
+        public float Value { get; private set; }
+
+        public float DecayTime { get; private set; }
+
+        public void Decay()
+        {
+            Value -= DecayTime * Time.deltaTime;
+        }
+    }
+
+    public enum HabitationRequirementDefinition
+    {
+        Water,
+        Food,
+        Tavern,
+        Clothes,
+        Pottery,
+        Tool,
+        Entertainment_1,
+        Papyrus,
+        Arts,
+        Entertainment_2,
+        Jewellery,
+        Incense,
+        Weapon
     }
 }

@@ -1,25 +1,31 @@
 using App.Configs;
 using Models.Ai;
-using UnityEditor;
+using Models.Ai.Pathfinding;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Views.Construction;
 using Zenject;
 
 namespace Views.Road
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-    public class RoadView : MonoBehaviour
+    public class RoadView : BuildingView
     {
-        [Inject] private NavigationGraph navigationGraph;
-        [Inject] private ConstructionConfig constructionConfig;
+        private NavigationGraph navigationGraph;
+        private ConstructionConfig constructionConfig;
 
-        private Vector3 startPos;
-        private Vector3 endPos;
+        private readonly float zFightOffset = .05f;
+
+        [Inject]
+        public void Constructor(NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
+        {
+            this.navigationGraph = navigationGraph;
+            this.constructionConfig = constructionConfig;
+        }
 
         public void Init(Vector3 startPos, Vector3 endPos)
         {
-            this.startPos = startPos;
-            this.endPos = endPos;
-
             GenerateMesh(startPos, endPos);
 
             var roadIntersectionGenerator = new RoadIntersectionGenerator(navigationGraph, constructionConfig);
@@ -27,38 +33,10 @@ namespace Views.Road
             roadIntersectionGenerator.GenerateIntersection(endPos);
         }
 
-        private void OnDrawGizmos()
+        public void Init(Vector3 centerPosition)
         {
-            Handles.matrix = transform.localToWorldMatrix;
-            Handles.SphereHandleCap(0, startPos, Quaternion.identity, .1f, EventType.Repaint);
-            Handles.SphereHandleCap(1, endPos, Quaternion.identity, .1f, EventType.Repaint);
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            if (!Application.IsPlaying(gameObject))
-                return;
-
-            var startNode = navigationGraph.GetNode(startPos);
-            var endNode = navigationGraph.GetNode(endPos);
-
-            foreach (var nb in startNode.Neighbors)
-            {
-                if (nb == endNode)
-                    continue;
-
-                var dir = (nb.Data - startNode.Data).normalized;
-                Handles.ArrowHandleCap(GUIUtility.GetControlID(FocusType.Passive), startNode.Data, Quaternion.LookRotation(dir, Vector3.up), 1f, EventType.Repaint);
-            }
-
-            foreach (var nb in endNode.Neighbors)
-            {
-                if (nb == startNode)
-                    continue;
-
-                var dir = (nb.Data - endNode.Data).normalized;
-                Handles.ArrowHandleCap(GUIUtility.GetControlID(FocusType.Passive), endNode.Data, Quaternion.LookRotation(dir, Vector3.up), 1f, EventType.Repaint);
-            }
+            GenerateMesh(centerPosition);
+            GenerateNavigationNodes(centerPosition);
         }
 
         private void GenerateMesh(Vector3 startPos, Vector3 endPos)
@@ -100,6 +78,151 @@ namespace Views.Road
             {
                 color = Color.gray
             };
+        }
+
+        private void GenerateMesh(Vector3 centerPosition)
+        {
+            var cellSize = 4f;
+            var mesh = new Mesh();
+            float halfSize = cellSize / 2f;
+
+            var corners = new Vector3[4];
+            corners[0] = new Vector3(centerPosition.x - halfSize, 0, centerPosition.z - halfSize);
+            corners[1] = new Vector3(centerPosition.x + halfSize, 0, centerPosition.z - halfSize);
+            corners[2] = new Vector3(centerPosition.x - halfSize, 0, centerPosition.z + halfSize);
+            corners[3] = new Vector3(centerPosition.x + halfSize, 0, centerPosition.z + halfSize);
+
+            var terrain = Terrain.activeTerrain;
+            if (terrain != null)
+            {
+                for (int i = 0; i < corners.Length; i++)
+                {
+                    float height = terrain.SampleHeight(corners[i]) + zFightOffset;
+                    corners[i].y = height;
+                }
+            }
+
+            mesh.vertices = corners;
+            mesh.triangles = new int[]
+            {
+                0, 2, 1,
+                2, 3, 1
+            };
+
+            mesh.uv = new Vector2[]
+            {
+                new Vector2(0, 0),
+                new Vector2(1, 0),
+                new Vector2(0, 1),
+                new Vector2(1, 1)
+            };
+
+            mesh.RecalculateNormals();
+            GetComponent<MeshFilter>().mesh = mesh;
+            GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
+            {
+                color = Color.gray
+            };
+        }
+
+        private void GenerateNavigationNodes(Vector3 center)
+        {
+            var cellSize = 2f;
+            var resolution = 2;
+            var nodesPositions = new List<Vector3>();
+            var offset = (resolution - 1) * cellSize / 2f;
+
+            for (int x = 0; x < resolution; x++)
+            {
+                for (int z = 0; z < resolution; z++)
+                {
+                    var xPos = center.x - offset + (x * cellSize);
+                    var zPos = center.z - offset + (z * cellSize);
+                    var height = Terrain.activeTerrain.SampleHeight(new Vector3(xPos, 0, zPos)) + zFightOffset;
+                    nodesPositions.Add(new Vector3(xPos, height, zPos));
+                }
+            }
+
+            foreach (var position in nodesPositions)
+            {
+                navigationGraph.AddNode(position, NodeType.Road);
+                this.navigationNodes.Add(position);
+            }
+
+            return;
+
+            var navigationNodes = new List<Node<Vector3>>();
+            for (int i = 0; i < nodesPositions.Count; i++)
+            {
+                var nodePosition = nodesPositions[i];
+                Node<Vector3> node;
+
+                node = navigationGraph.GetNode(nodePosition);
+                if (node == null)
+                {
+                    var nodeType = NodeType.Road;
+                    node = new Node<Vector3>(
+                        nodePosition,
+                        nodeType,
+                        (a, b) =>
+                        {
+                            float dist = Vector3.Distance(a.Data, b.Data);
+                            float multiplier = navigationGraph.MovementCost[nodeType];
+                            return dist * multiplier;
+                        },
+                        (a, goal) => Vector3.Distance(a.Data, goal.Data)
+                    );
+
+                    //navigationGraph.Nodes.Add(node);
+                }
+
+                navigationNodes.Add(node);
+            }
+
+            for (int i = 0; i < navigationNodes.Count - 1; i++)
+            {
+                var current = navigationNodes[i];
+                var next = navigationNodes[i + 1];
+
+                if (!current.Neighbors.Contains(next))
+                    current.Neighbors.Add(next);
+
+                if (!next.Neighbors.Contains(current))
+                    next.Neighbors.Add(current);
+            }
+
+            var connectionRange = .5f;
+            foreach (var roadNode in navigationNodes)
+            {
+                var nearbyTerrainNodes = navigationGraph.Nodes
+                    .Where(n => n.NodeType == NodeType.Terrain)
+                    .Where(n => Vector3.Distance(n.Data, roadNode.Data) <= connectionRange);
+
+                foreach (var terrainNode in nearbyTerrainNodes)
+                {
+                    if (!roadNode.Neighbors.Contains(terrainNode))
+                        roadNode.Neighbors.Add(terrainNode);
+
+                    if (!terrainNode.Neighbors.Contains(roadNode))
+                        terrainNode.Neighbors.Add(roadNode);
+                }
+            }
+        }
+
+        List<Vector3> navigationNodes = new List<Vector3>();
+
+        private void OnDrawGizmosSelected()
+        {
+            foreach (var nodePosition in navigationNodes)
+            {
+                var node = navigationGraph.GetNode(nodePosition);
+                Gizmos.DrawWireSphere(node.Data, .2f);
+
+                foreach (var neighbor in node.Neighbors)
+                {
+                    Gizmos.DrawLine(nodePosition, neighbor.Data);
+                }
+            }
         }
     }
 }

@@ -53,7 +53,7 @@ namespace Views.Construction
                 new CommodityModel() { Name = CommodityName.Meat, Quantity = 300, MaxQuantity = 500 },
             });
 
-            workplace = new StorageWorkplace(storageModel, EntranceTransform.position);
+            workplace = new StorageWorkplace(storageModel, this);
         }
     }
 }

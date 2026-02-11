@@ -4,6 +4,7 @@ using Models.Work;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Views.Construction;
 using Views.Settler.Workers;
 
 namespace Controllers.Work
@@ -17,18 +18,18 @@ namespace Controllers.Work
         private PrefabManager prefabManager;
         private SupplyModel supplyModel;
         private FarmWorkplaceModel workplaceModel;
+        private BuildingView buildingView;
 
         private float progress = 0f;
         private float checkTimer;
         private float checkSpanInSec = 5f;
 
-        public FarmWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, FarmWorkplaceModel workplaceModel, Vector3 entrancePosition)
+        public FarmWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, FarmWorkplaceModel workplaceModel, BuildingView buildingView)
         {
             this.prefabManager = prefabManager;
             this.supplyModel = supplyModel;
             this.workplaceModel = workplaceModel;
-
-            EntrancePosition = entrancePosition;
+            this.buildingView = buildingView;
         }
 
         public void DeliverCommodity(CommodityModel commodity)
@@ -46,9 +47,9 @@ namespace Controllers.Work
             return workplaceModel.StorageModel.GetAvailableSpace();
         }
 
-        public Vector3 GetEntrancePosition()
+        public BuildingView GetBuildingView()
         {
-            return EntrancePosition;
+            return buildingView;
         }
 
         public IReservationable GetReservationable()

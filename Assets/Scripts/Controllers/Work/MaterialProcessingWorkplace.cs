@@ -4,6 +4,7 @@ using Models.Work;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Views.Construction;
 using Views.Settler.Workers;
 
 namespace Controllers.Work
@@ -12,24 +13,21 @@ namespace Controllers.Work
     {
         public WorkplaceModel WorkplaceModel => workplaceModel;
 
-        public Vector3 EntrancePosition { get; private set; }
-
         private PrefabManager prefabManager;
         private SupplyModel supplyModel;
         private WorkplaceModel workplaceModel;
+        private BuildingView buildingView;
 
         private float progress = 0f;
         private float checkTimer;
         private float checkSpanInSec = 5f;
 
-        public MaterialProcessingWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceModel workplaceModel,
-            Vector3 entrancePosition)
+        public MaterialProcessingWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceModel workplaceModel, BuildingView buildingView)
         {
             this.prefabManager = prefabManager;
             this.supplyModel = supplyModel;
             this.workplaceModel = workplaceModel;
-
-            EntrancePosition = entrancePosition;
+            this.buildingView = buildingView;
         }
 
         public void Work()
@@ -98,9 +96,9 @@ namespace Controllers.Work
             workplaceModel.StorageModel.AddCommodity(commodity);
         }
 
-        public Vector3 GetEntrancePosition()
+        public BuildingView GetBuildingView()
         {
-            return EntrancePosition;
+            return buildingView;
         }
 
         public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
@@ -144,12 +142,12 @@ namespace Controllers.Work
             tasks = default;
 
             var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
-                EntrancePosition,
+                Vector3.zero,
                 workplaceModel.ProcessedCommodity.Name,
                 workplaceModel.ProcessedCommodity.Quantity);
 
             var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(
-               EntrancePosition,
+               Vector3.zero,
                workplaceModel.RequiredCommodity.Name,
                workplaceModel.RequiredCommodity.Quantity);
 

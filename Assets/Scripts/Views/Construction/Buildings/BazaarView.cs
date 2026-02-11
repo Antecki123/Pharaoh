@@ -76,7 +76,7 @@ namespace Views.Construction
             });
 
             var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel);
-            workplace = new DistributionPointWorkplace(prefabManager, supplyModel, distributionModel, EntranceTransform.position);
+            workplace = new DistributionPointWorkplace(prefabManager, supplyModel, distributionModel, this);
 
             foreach (var commodity in distributionModel.StorageModel.Storage)
                 CreateMarketStall(commodity);

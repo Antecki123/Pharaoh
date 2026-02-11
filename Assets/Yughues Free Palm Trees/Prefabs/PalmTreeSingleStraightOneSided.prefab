@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 424274}
   - component: {fileID: 6459010}
-  - component: {fileID: 9524274}
   m_Layer: 0
   m_Name: PalmTreeSingleStraightOneSided
   m_TagString: Untagged
@@ -57,28 +56,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300002, guid: ef5cd9cdbb80e6849a5f7dd239d56605, type: 3}
---- !u!95 &9524274
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 124274}
-  m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: ef5cd9cdbb80e6849a5f7dd239d56605, type: 3}
-  m_Controller: {fileID: 0}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 1
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &124276
 GameObject:
   m_ObjectHideFlags: 0

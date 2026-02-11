@@ -93,7 +93,7 @@ namespace Views.Construction
             });
 
             var workplaceModel = new FarmWorkplaceModel(cropName, storage, fieldArea);
-            workplace = new FarmWorkplace(prefabManager, supplyModel, workplaceModel, EntranceTransform.position);
+            workplace = new FarmWorkplace(prefabManager, supplyModel, workplaceModel, this);
         }
     }
 }

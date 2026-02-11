@@ -13,6 +13,7 @@ namespace Models.Settler
         public Need Entertainment = new Need { DefaultDecayTime = 30f, RestoreFactor = 8f };
         public Need Health = new Need { DefaultDecayTime = 80f, RestoreFactor = 15f };
         public Need Pray = new Need { DefaultDecayTime = 50f, RestoreFactor = 5f };
+        public Need Work = new Need { DefaultDecayTime = 10f, RestoreFactor = 2f };
 
         public SettlerNeeds()
         {
@@ -20,6 +21,7 @@ namespace Models.Settler
             Entertainment.Value = 1.0f;
             Health.Value = 1.0f;
             Pray.Value = 1.0f;
+            Work.Value = 0.0f;
         }
 
         public class Need
@@ -44,6 +46,7 @@ namespace Models.Settler
         public NeedData EntertainmentData;
         public NeedData HealthData;
         public NeedData PrayData;
+        public NeedData WorkData;
 
         public void Update(float deltaTime)
         {
@@ -51,6 +54,7 @@ namespace Models.Settler
             EntertainmentData.Update(deltaTime);
             HealthData.Update(deltaTime);
             PrayData.Update(deltaTime);
+            WorkData.Update(deltaTime);
         }
 
         public struct NeedData

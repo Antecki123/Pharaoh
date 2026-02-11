@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Views.Construction;
 
 namespace Models.Work
 {
     public interface ISupplyTarget
     {
-        public Vector3 GetEntrancePosition();
+        public BuildingView GetBuildingView();
 
         public bool TryPickCommodity(ref CommodityModel commodity);
 
@@ -54,7 +55,7 @@ namespace Models.Work
                 return null;
 
             var closest = storages
-               .OrderBy(storage => Vector3.Distance(position, storage.GetEntrancePosition()))
+               .OrderBy(storage => Vector3.Distance(position, storage.GetBuildingView().transform.position))
                .FirstOrDefault();
 
             return closest;
@@ -75,7 +76,7 @@ namespace Models.Work
                 return null;
 
             var closest = storages
-               .OrderBy(storage => Vector3.Distance(position, storage.GetEntrancePosition()))
+               .OrderBy(storage => Vector3.Distance(position, storage.GetBuildingView().transform.position))
                .FirstOrDefault();
 
             return closest;
@@ -96,7 +97,7 @@ namespace Models.Work
                 return null;
 
             var closest = storages
-               .OrderBy(storage => Vector3.Distance(position, storage.GetEntrancePosition()))
+               .OrderBy(storage => Vector3.Distance(position, storage.GetBuildingView().transform.position))
                .FirstOrDefault();
 
             return closest;

@@ -33,5 +33,14 @@ namespace Models.Economy
                 .Where(x => x.HasAvailableSpot())
                 .FirstOrDefault();
         }
+
+        public int GetHousingCapacity()
+        {
+            var capacity = 0;
+            foreach (var habitat in habitations)
+                capacity += habitat.Key.MaxResidents;
+
+            return capacity;
+        }
     }
 }
