@@ -28,13 +28,13 @@ namespace App.Registrators
                 "Bazaar",
                 "Bakery",
                 "Cottage",
-                "WheatField",
+                "WheatFarm",
+                "LinenFarm",
+                "Pasture",
                 "Windmill",
                 "House",
                 "Granary",
-                "LinenField",
                 "Warehouse",
-                "FarmView",
 
                 // UI ELEMENTS
                 "ProcessingWorkplaceTooltipUI",

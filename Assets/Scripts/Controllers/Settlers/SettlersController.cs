@@ -2,6 +2,7 @@ using App.Helpers;
 using App.Signals;
 using Controllers.Work;
 using Models.Economy;
+using Models.Habitation;
 using Models.Helpers;
 using Models.Settler;
 using System;
@@ -19,7 +20,7 @@ namespace Controllers.Settler
 {
     public class SettlersController : IInitializable, ITickable, IDisposable
     {
-        private List<(SettlerView, SettlerModel)> settlers = new List<(SettlerView, SettlerModel)>();
+        private List<SettlerPresenter> settlers = new List<SettlerPresenter>();
 
         private readonly SignalBus signalBus;
         private readonly HabitationModel habitationModel;
@@ -27,14 +28,12 @@ namespace Controllers.Settler
         private readonly EconomyModel economyModel;
 
         private readonly SettlerSpawner settlerSpawner;
+        private readonly Timer settlerSpawnTimer = new Timer(10f);
 
         private NativeArray<SettlerNeedsData> settlerNeedsArray;
         private NeedsUpdateJob needsUpdateJob;
 
         private TransformAccessArray settlerMovementArray;
-
-        private float timer = 0;
-        private float settlerSpawnTimeSpan = 10f;
 
         public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentModel employmentModel, EconomyModel economyModel,
             SettlersNamesImporter settlersNames)
@@ -74,8 +73,8 @@ namespace Controllers.Settler
         private void SpawnSettler(SettlersSignals.SpawnSettler signal)
         {
             var newSettler = settlerSpawner.SpawnSettler(signal.Position, signal.Rotation);
-            newSettler.Item1.gameObject.SetActive(false);
-            settlers.Add((newSettler.Item1, newSettler.Item2));
+            newSettler.View.gameObject.SetActive(false);
+            settlers.Add(new SettlerPresenter(newSettler.View, newSettler.Model));
 
             economyModel.AddSettlers(1);
 
@@ -84,31 +83,29 @@ namespace Controllers.Settler
 
             if (availableHabitat != null)
             {
-                availableHabitat.AddResident(newSettler.Item2);
-                newSettler.Item2.Habitation = availableHabitat ?? null;
+                availableHabitat.AddResident(newSettler.Model);
+                newSettler.Model.Habitation = availableHabitat ?? null;
 
-                newSettler.Item2.CurrentLocation = habitationModel.Habitations[availableHabitat];
+                newSettler.Model.CurrentLocation = habitationModel.Habitations[availableHabitat];
             }
 
             if (availableEmployment != null)
             {
-                availableEmployment.GetEmployer().AddWorker(newSettler.Item2);
-                newSettler.Item2.Workplace = availableEmployment ?? null;
-
-                //newSettler.Item2.CurrentLocation = employmentModel.Workplaces[availableEmployment];
+                availableEmployment.GetEmployer().AddWorker(newSettler.Model);
+                newSettler.Model.Workplace = availableEmployment ?? null;
             }
-            newSettler.Item1.transform.position = habitationModel.Habitations[newSettler.Item2.Habitation].transform.position;
-            newSettler.Item1.InitAiStrategy();
+            newSettler.View.transform.position = habitationModel.Habitations[newSettler.Model.Habitation].transform.position;
+            newSettler.View.InitAiStrategy();
         }
 
         private void DestroySettler(SettlersSignals.DespawnSettler signal)
         {
-            var settlerToDespawn = settlers.FirstOrDefault(x => x.Item1 == signal.SettlerView);
+            var settlerToDespawn = settlers.FirstOrDefault(x => x.View == signal.SettlerView);
 
             if (settlerToDespawn != default)
                 settlers.Remove(settlerToDespawn);
 
-            settlerToDespawn.Item2.Habitation.RemoveResident(settlerToDespawn.Item2);
+            settlerToDespawn.Model.Habitation.RemoveResident(settlerToDespawn.Model);
 
             economyModel.RemoveSettlers(1);
         }
@@ -119,10 +116,10 @@ namespace Controllers.Settler
             {
                 foreach (var settler in settlers)
                 {
-                    if (settler.Item2.Habitation == null)
+                    if (settler.Model.Habitation == null && habitation.HasAvailableSpot())
                     {
-                        settler.Item2.Habitation = habitation;
-                        habitation.AddResident(settler.Item2);
+                        settler.Model.Habitation = habitation;
+                        habitation.AddResident(settler.Model);
                     }
                 }
             }
@@ -141,10 +138,10 @@ namespace Controllers.Settler
             {
                 foreach (var settler in settlers)
                 {
-                    if (settler.Item2.Workplace == null)
+                    if (settler.Model.Workplace == null && workplace.GetEmployer().HasAvailableSpot())
                     {
-                        settler.Item2.Workplace = workplace;
-                        workplace.GetEmployer().AddWorker(settler.Item2);
+                        settler.Model.Workplace = workplace;
+                        workplace.GetEmployer().AddWorker(settler.Model);
                     }
                 }
             }
@@ -162,7 +159,7 @@ namespace Controllers.Settler
         {
             foreach (var settler in settlers)
             {
-                settler.Item1.Tick();
+                settler.View.Tick();
             }
         }
 
@@ -171,7 +168,7 @@ namespace Controllers.Settler
             settlerNeedsArray = new NativeArray<SettlerNeedsData>(settlers.Count, Allocator.Persistent);
             for (int i = 0; i < settlers.Count; i++)
             {
-                var n = settlers[i].Item1.SettlerModel.SettlerNeeds;
+                var n = settlers[i].View.SettlerModel.SettlerNeeds;
                 settlerNeedsArray[i] = new SettlerNeedsData()
                 {
                     RestData = new SettlerNeedsData.NeedData(n.Rest.Value, n.Rest.DefaultDecayTime, n.Rest.RestoreFactor, n.Rest.IsRestoring),
@@ -193,11 +190,11 @@ namespace Controllers.Settler
 
             for (int i = 0; i < settlers.Count; i++)
             {
-                settlers[i].Item1.SettlerModel.SettlerNeeds.Rest.Value = settlerNeedsArray[i].RestData.Value;
-                settlers[i].Item1.SettlerModel.SettlerNeeds.Entertainment.Value = settlerNeedsArray[i].EntertainmentData.Value;
-                settlers[i].Item1.SettlerModel.SettlerNeeds.Health.Value = settlerNeedsArray[i].HealthData.Value;
-                settlers[i].Item1.SettlerModel.SettlerNeeds.Pray.Value = settlerNeedsArray[i].PrayData.Value;
-                settlers[i].Item1.SettlerModel.SettlerNeeds.Work.Value = settlerNeedsArray[i].WorkData.Value;
+                settlers[i].View.SettlerModel.SettlerNeeds.Rest.Value = settlerNeedsArray[i].RestData.Value;
+                settlers[i].View.SettlerModel.SettlerNeeds.Entertainment.Value = settlerNeedsArray[i].EntertainmentData.Value;
+                settlers[i].View.SettlerModel.SettlerNeeds.Health.Value = settlerNeedsArray[i].HealthData.Value;
+                settlers[i].View.SettlerModel.SettlerNeeds.Pray.Value = settlerNeedsArray[i].PrayData.Value;
+                settlers[i].View.SettlerModel.SettlerNeeds.Work.Value = settlerNeedsArray[i].WorkData.Value;
             }
         }
 
@@ -206,8 +203,8 @@ namespace Controllers.Settler
             var settlersToMove = new List<SettlerView>();
             for (int i = 0; i < settlers.Count; i++)
             {
-                if (settlers[i].Item1.MovementHandler.RequiredMovement)
-                    settlersToMove.Add(settlers[i].Item1);
+                if (settlers[i].View.MovementHandler.RequiredMovement)
+                    settlersToMove.Add(settlers[i].View);
             }
 
             var transforms = new Transform[settlersToMove.Count];
@@ -251,15 +248,28 @@ namespace Controllers.Settler
 
         private void CheckSpawnSettler()
         {
-            timer -= Time.deltaTime;
-            if (timer <= 0)
+            settlerSpawnTimer.Tick(Time.deltaTime);
+
+            if (settlerSpawnTimer.IsFinished)
             {
-                timer = settlerSpawnTimeSpan;
+                settlerSpawnTimer.Reset();
                 if (habitationModel.Habitations.Any(x => x.Key.HasAvailableSpot()))
                 {
                     SpawnSettler(new SettlersSignals.SpawnSettler(Vector3.zero, Quaternion.identity));
                 }
             }
+        }
+    }
+
+    public class SettlerPresenter
+    {
+        public SettlerView View { get; }
+        public SettlerModel Model { get; }
+
+        public SettlerPresenter(SettlerView view, SettlerModel model)
+        {
+            View = view;
+            Model = model;
         }
     }
 }

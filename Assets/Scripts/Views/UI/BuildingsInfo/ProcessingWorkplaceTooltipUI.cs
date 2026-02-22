@@ -22,8 +22,13 @@ namespace Views.Ui.Buildings
             this.buildingTransform = buildingTransform;
             this.workplace = workplace;
 
+            this.workplace.OnValueChanged += RefreshUI;
             RefreshUI();
-            gameObject.SetActive(true);
+        }
+
+        private void OnDisable()
+        {
+            workplace.OnValueChanged -= RefreshUI;
         }
 
         private void RefreshUI()

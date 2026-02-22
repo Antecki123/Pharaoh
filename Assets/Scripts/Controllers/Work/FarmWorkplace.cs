@@ -1,4 +1,5 @@
 using App.Helpers;
+using App.Signals;
 using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Linq;
 using UnityEngine;
 using Views.Construction;
 using Views.Settler.Workers;
+using Zenject;
 
 namespace Controllers.Work
 {
@@ -15,7 +17,7 @@ namespace Controllers.Work
 
         public FarmWorkplaceModel WorkplaceModel => workplaceModel;
 
-        private PrefabManager prefabManager;
+        private SignalBus signalBus;
         private SupplyModel supplyModel;
         private FarmWorkplaceModel workplaceModel;
         private BuildingView buildingView;
@@ -24,9 +26,9 @@ namespace Controllers.Work
         private float checkTimer;
         private float checkSpanInSec = 5f;
 
-        public FarmWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, FarmWorkplaceModel workplaceModel, BuildingView buildingView)
+        public FarmWorkplace(SignalBus signalBus, SupplyModel supplyModel, FarmWorkplaceModel workplaceModel, BuildingView buildingView)
         {
-            this.prefabManager = prefabManager;
+            this.signalBus = signalBus;
             this.supplyModel = supplyModel;
             this.workplaceModel = workplaceModel;
             this.buildingView = buildingView;
@@ -124,10 +126,7 @@ namespace Controllers.Work
                 return;
 
             workplaceModel.UseCarrier();
-
-            var carrier = prefabManager.Instantiate<CarrierView>("CarrierView");
-            carrier.Init(tasks);
-            carrier.OnTasksFinished += () => workplaceModel.ReturnCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier()));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)

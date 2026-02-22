@@ -4,6 +4,7 @@ using App.Signals;
 using Controllers;
 using Controllers.Construction;
 using Controllers.Environment;
+using Controllers.Habitation;
 using Controllers.Settler;
 using Controllers.UI;
 using Controllers.Work;
@@ -11,6 +12,7 @@ using Models.Ai;
 using Models.Construction;
 using Models.Economy;
 using Models.Environment;
+using Models.Habitation;
 using Models.Work;
 using System;
 using UnityEngine;
@@ -55,10 +57,13 @@ namespace App.Registrators
             Container.Bind<ConstructionGrid>().AsSingle();
             Container.Bind<PrefabManager>().AsSingle();
             Container.Bind<DateModel>().AsSingle();
+            Container.Bind<IrrigationModel>().AsSingle();
 
             // CONTROLLERS
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<SettlersController>().AsSingle().NonLazy();
+            Container.Bind(typeof(CarriersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<CarriersController>().AsSingle().NonLazy();
             Container.Bind(typeof(WorkplacesController), typeof(IInitializable), typeof(ITickable)).To<WorkplacesController>().AsSingle().NonLazy();
+            Container.Bind(typeof(HabitationController), typeof(IInitializable), typeof(ITickable)).To<HabitationController>().AsSingle().NonLazy();
             Container.Bind(typeof(InteractionController), typeof(IInitializable), typeof(ITickable)).To<InteractionController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
@@ -67,7 +72,6 @@ namespace App.Registrators
 
             Container.BindFactory<RoadBuilderRectangular, RoadBuilderRectangular.Factory>().AsTransient();
             Container.BindFactory<RoadBuilder, RoadBuilder.Factory>().AsTransient();
-            Container.BindFactory<FarmBuilder, FarmBuilder.Factory>().AsTransient();
             Container.BindFactory<ConstructionBuilder<BuildingView>, ConstructionBuilder<BuildingView>.Factory>().AsTransient();
 
             Container.Bind(typeof(ApplicationInitializer), typeof(IInitializable)).To<ApplicationInitializer>().AsSingle();

@@ -1,5 +1,6 @@
 using App.Signals;
 using Models.Economy;
+using Models.Habitation;
 using UnityEngine;
 using Zenject;
 
@@ -9,21 +10,21 @@ namespace Views.Construction
     public class HouseView : BuildingView
     {
         private SignalBus signalBus;
-
-        private HabitationModel habitationModel;
         private HabitatModel habitatModel;
 
+        private readonly int[] residentsPerLevel = { 16, 32, 64 };
+        private readonly string[] namesPerLevel = { "Farmers House", "Workers House", "Engineers House" };
+
         [Inject]
-        public void Constructor(SignalBus signalBus, HabitationModel habitationModel)
+        public void Constructor(SignalBus signalBus)
         {
             this.signalBus = signalBus;
-            this.habitationModel = habitationModel;
-            habitatModel = new HabitatModel("House", 16);
 
             var foodQuantity = Random.Range(0, 300);
             var beerQuantity = Random.Range(0, 300);
             var clothesQuantity = Random.Range(0, 50);
 
+            habitatModel = new HabitatModel(namesPerLevel, residentsPerLevel);
             habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Food, Quantity = foodQuantity, MaxQuantity = 300 });
             habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Beer, Quantity = beerQuantity, MaxQuantity = 300 });
             habitatModel.AddCommodity(new CommodityModel() { Name = CommodityName.Clothes, Quantity = clothesQuantity, MaxQuantity = 50 });
@@ -32,13 +33,13 @@ namespace Views.Construction
         public override void PlaceBuilding()
         {
             base.PlaceBuilding();
-            habitationModel.AddHabitation(habitatModel, this);
+            signalBus.Fire(new HabitationSignals.RegisterHabitat(habitatModel, this));
         }
 
         public override void DestroyBuilding()
         {
             base.DestroyBuilding();
-            habitationModel.RemoveHabitation(habitatModel);
+            signalBus.Fire(new HabitationSignals.UnregisterHabitat(habitatModel));
         }
 
         public override void Interact()

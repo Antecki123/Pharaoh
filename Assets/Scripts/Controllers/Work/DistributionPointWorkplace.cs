@@ -1,4 +1,5 @@
 using App.Helpers;
+using App.Signals;
 using Models.Economy;
 using Models.Work;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Views.Construction;
 using Views.Settler.Workers;
+using Zenject;
 
 namespace Controllers.Work
 {
@@ -14,7 +16,7 @@ namespace Controllers.Work
         public DistributionPointModel DistributionModel => distributionModel;
         public event Action<CommodityModel> OnCreateMarketStall;
 
-        private PrefabManager prefabManager;
+        private SignalBus signalBus;
         private SupplyModel supplyModel;
         private DistributionPointModel distributionModel;
         private BuildingView buildingView;
@@ -25,9 +27,9 @@ namespace Controllers.Work
         private float consumptionTimer;
         private float consumptionTimeSpan = 2f;
 
-        public DistributionPointWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, DistributionPointModel distributionModel, BuildingView buildingView)
+        public DistributionPointWorkplace(SignalBus signalBus, SupplyModel supplyModel, DistributionPointModel distributionModel, BuildingView buildingView)
         {
-            this.prefabManager = prefabManager;
+            this.signalBus = signalBus;
             this.supplyModel = supplyModel;
             this.distributionModel = distributionModel;
             this.buildingView = buildingView;
@@ -124,10 +126,7 @@ namespace Controllers.Work
                 return;
 
             distributionModel.UseCarrier();
-
-            var carrier = prefabManager.Instantiate<CarrierView>("CarrierView");
-            carrier.Init(tasks);
-            carrier.OnTasksFinished += () => distributionModel.ReturnCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => distributionModel.ReturnCarrier()));
         }
 
         private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks)

@@ -82,44 +82,71 @@ namespace Views.Road
 
         private void GenerateMesh(Vector3 centerPosition)
         {
-            var cellSize = 4f;
-            var mesh = new Mesh();
-            float halfSize = cellSize / 2f;
-
-            var corners = new Vector3[4];
-            corners[0] = new Vector3(centerPosition.x - halfSize, 0, centerPosition.z - halfSize);
-            corners[1] = new Vector3(centerPosition.x + halfSize, 0, centerPosition.z - halfSize);
-            corners[2] = new Vector3(centerPosition.x - halfSize, 0, centerPosition.z + halfSize);
-            corners[3] = new Vector3(centerPosition.x + halfSize, 0, centerPosition.z + halfSize);
+            var size = 4f;
+            var resolution = 10;
+            var half = size * 0.5f;
+            var step = size / resolution;
 
             var terrain = Terrain.activeTerrain;
-            if (terrain != null)
+            var terrainY = terrain != null ? terrain.transform.position.y : 0f;
+
+            var vertPerLine = resolution + 1;
+            var vertices = new Vector3[vertPerLine * vertPerLine];
+            var uvs = new Vector2[vertices.Length];
+            var triangles = new int[resolution * resolution * 6];
+
+            var v = 0;
+            for (var z = 0; z <= resolution; z++)
             {
-                for (int i = 0; i < corners.Length; i++)
+                for (var x = 0; x <= resolution; x++)
                 {
-                    float height = terrain.SampleHeight(corners[i]) + zFightOffset;
-                    corners[i].y = height;
+                    var worldX = centerPosition.x - half + x * step;
+                    var worldZ = centerPosition.z - half + z * step;
+
+                    var height = 0f;
+                    if (terrain != null)
+                    {
+                        height = terrain.SampleHeight(new Vector3(worldX, 0f, worldZ)) + terrainY + zFightOffset;
+                    }
+
+                    vertices[v] = new Vector3(worldX, height, worldZ);
+                    uvs[v] = new Vector2((float)x / resolution, (float)z / resolution);
+                    v++;
                 }
             }
 
-            mesh.vertices = corners;
-            mesh.triangles = new int[]
+            var t = 0;
+            for (var z = 0; z < resolution; z++)
             {
-                0, 2, 1,
-                2, 3, 1
-            };
+                for (var x = 0; x < resolution; x++)
+                {
+                    var i = z * vertPerLine + x;
 
-            mesh.uv = new Vector2[]
+                    triangles[t++] = i;
+                    triangles[t++] = i + vertPerLine;
+                    triangles[t++] = i + 1;
+
+                    triangles[t++] = i + 1;
+                    triangles[t++] = i + vertPerLine;
+                    triangles[t++] = i + vertPerLine + 1;
+                }
+            }
+
+            var mesh = new Mesh
             {
-                new Vector2(0, 0),
-                new Vector2(1, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 1)
+                vertices = vertices,
+                triangles = triangles,
+                uv = uvs
             };
 
             mesh.RecalculateNormals();
-            GetComponent<MeshFilter>().mesh = mesh;
-            GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
+            mesh.RecalculateBounds();
+
+            var filter = GetComponent<MeshFilter>();
+            filter.mesh = mesh;
+
+            var renderer = GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
             {
                 color = Color.gray
             };

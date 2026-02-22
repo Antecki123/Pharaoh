@@ -1,9 +1,7 @@
 using App.Configs;
 using App.Helpers;
 using App.Signals;
-using Models.Ai;
 using Models.Construction;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -21,7 +19,6 @@ namespace Controllers.Construction
 
         private SignalBus signalBus;
         private PrefabManager prefabManager;
-        private NavigationGraph navigationGraph;
         private ConstructionConfig constructionConfig;
         private ConstructionDataImporter constructionData;
         private ConstructionGrid constructionGrid;
@@ -32,12 +29,11 @@ namespace Controllers.Construction
         private readonly float cellSize = 4f;
         private int rotationSteps;
 
-        public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig,
+        public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionConfig constructionConfig,
             ConstructionDataImporter constructionData, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
-            this.navigationGraph = navigationGraph;
             this.constructionConfig = constructionConfig;
             this.constructionData = constructionData;
             this.constructionGrid = constructionGrid;
@@ -77,19 +73,28 @@ namespace Controllers.Construction
 
             var occupiedCells = CalculateOccupiedTiles(position);
 
-            if (Input.GetMouseButtonDown(0) && constructionGrid.IsValidPlacement(occupiedCells) && IsTerrainFlat(position))
+            if (constructionGrid.IsValidPlacement(occupiedCells) && IsTerrainFlat(position))
             {
-                var buildingId = Guid.NewGuid();
-                constructionGrid.AddOccupant(occupiedCells, buildingDefinition, building);
+                foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
+                    renderer.material.color = Color.lightGreen;
 
-                PlaceBuilding();
+                if (Input.GetMouseButtonDown(0))
+                {
+                    constructionGrid.AddOccupant(occupiedCells, buildingDefinition, building);
+                    PlaceBuilding();
+                }
+            }
+            else
+            {
+                foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
+                    renderer.material.color = Color.softRed;
             }
         }
 
         private void CancelConstruction()
         {
             if (building != null)
-                UnityEngine.Object.Destroy(building.gameObject);
+                Object.Destroy(building.gameObject);
 
             signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
         }
@@ -112,6 +117,9 @@ namespace Controllers.Construction
 
             var h = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
             building.transform.position = new Vector3(worldX, h, worldZ);
+
+            if (building.BuildingFoundation != null)
+                building.BuildingFoundation.CalculateFoundationGround();
         }
 
         private void RotateConstruction()
@@ -129,10 +137,6 @@ namespace Controllers.Construction
                 renderer.material.color = Color.white;
 
             building.PlaceBuilding();
-
-            //if (building.TryGetComponent(out BuildingView buildingView) && buildingView.EntranceTransform != null)
-            //    ConnectEntranceNode(buildingView.EntranceTransform.position);
-
             building.transform.SetParent(constructionsContainer);
 
             building = null;
@@ -202,6 +206,7 @@ namespace Controllers.Construction
             return occupiedTiles;
         }
 
+
         private bool IsTerrainFlat(Vector2Int buildingPosition)
         {
             if (!ConstructionFootprintMasks.ConstructionFootprintMask.ContainsKey(buildingDefinition))
@@ -247,81 +252,5 @@ namespace Controllers.Construction
 
             return heightDifference <= constructionConfig.MaxHeightDiff;
         }
-
-        /*private Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 p)
-        {
-            Vector3 ab = b - a;
-            float t = Vector3.Dot(p - a, ab) / ab.sqrMagnitude;
-            t = Mathf.Clamp01(t);
-            return a + t * ab;
-        }*/
-
-        /*private bool IsAvailableSpace(Vector3 position)
-        {
-            var layer = 1 << 17;
-            var bounds = building.GetComponent<Collider>().bounds;
-            Vector3 halfExtents = bounds.extents;
-
-            Collider[] hits = Physics.OverlapBox(position, halfExtents, building.transform.rotation, layer);
-
-            foreach (var hit in hits)
-            {
-                if (hit != building.GetComponent<Collider>())
-                    return false;
-            }
-
-            return true;
-        }*/
-
-        /*private void BlockBuildingArea(Collider collider)
-        {
-            foreach (var node in navigationGraph.Nodes)
-            {
-                if (node.NodeType == NodeType.Road)
-                    continue;
-
-                var pos = node.Data;
-                if (IsPointInside(collider, pos))
-                {
-                    node.NodeType = NodeType.Building;
-                    node.Neighbors.Clear();
-                }
-            }
-        }*/
-
-        /*private bool IsPointInside(Collider col, Vector3 worldPos)
-        {
-            Vector3 closest = col.ClosestPoint(worldPos);
-            return closest == worldPos;
-        }*/
-
-        /*private void ConnectEntranceNode(Vector3 entrancePos)
-        {
-            var connectRadius = 3f;
-            var entranceNode = new Node<Vector3>(
-                entrancePos,
-                NodeType.Road,
-                (a, b) => Vector3.Distance(a.Data, b.Data),
-                (a, goal) => Vector3.Distance(a.Data, goal.Data)
-            );
-
-            foreach (var node in navigationGraph.Nodes)
-            {
-                if (node.NodeType == NodeType.Building || node.NodeType == NodeType.Block)
-                    continue;
-
-                float distSqr = (node.Data - entrancePos).sqrMagnitude;
-                if (distSqr <= connectRadius * connectRadius)
-                {
-                    if (!entranceNode.Neighbors.Contains(node))
-                        entranceNode.Neighbors.Add(node);
-
-                    if (!node.Neighbors.Contains(entranceNode))
-                        node.Neighbors.Add(entranceNode);
-                }
-            }
-
-            navigationGraph.Nodes.Add(entranceNode);
-        }*/
     }
 }

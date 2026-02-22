@@ -88,13 +88,30 @@ namespace Models.Construction
             },
 
             {
+                BuildingDefinition.WheatFarm, new int[,]
+                {
+                    { 1, 1, 1, 1 },
+                    { 1, 1, 1, 1 },
+                    { 1, 1, 1, 0 },
+                }
+            },
+
+            {
                 BuildingDefinition.LinenFarm, new int[,]
                 {
                     { 1, 1, 1, 1 },
                     { 1, 1, 1, 1 },
-                    { 1, 1, 1, 1 },
-                    { 1, 1, 0, 0 },
-                    { 1, 1, 0, 0 },
+                    { 1, 1, 1, 0 },
+                }
+            },
+
+            {
+                BuildingDefinition.Pasture, new int[,]
+                {
+                    { 1, 1, 1, 1, 1 },
+                    { 1, 1, 1, 1, 1 },
+                    { 1, 1, 1, 1, 0 },
+                    { 1, 1, 1, 1, 0 },
                 }
             },
         };

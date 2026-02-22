@@ -1,4 +1,5 @@
 using Controllers.Construction;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Views.Construction;
@@ -7,6 +8,8 @@ namespace Models.Construction
 {
     public class ConstructionGrid
     {
+        public event Action OnValueChanged;
+
         public IReadOnlyCollection<ConstructionGridData> OccupiedTiles => occupiedTiles;
         public IReadOnlyCollection<Vector2Int> OccupiedTilesWithoutRoads => occupiedTilesWithoutRoads;
 
@@ -28,6 +31,8 @@ namespace Models.Construction
                 if (buildingDefinition != BuildingDefinition.Road)
                     occupiedTilesWithoutRoads.Add(pos);
             }
+
+            OnValueChanged?.Invoke();
         }
 
         public void AddOccupant(Vector2Int pos, BuildingDefinition buildingDefinition, BuildingView buildingView)
@@ -42,11 +47,14 @@ namespace Models.Construction
 
             if (buildingDefinition != BuildingDefinition.Road)
                 occupiedTilesWithoutRoads.Add(pos);
+
+            OnValueChanged?.Invoke();
         }
 
         public void RemoveOccupant(Vector2Int cellToRemove)
         {
 
+            OnValueChanged.Invoke();
         }
 
         public bool IsValidPlacement(List<Vector2Int> cells)

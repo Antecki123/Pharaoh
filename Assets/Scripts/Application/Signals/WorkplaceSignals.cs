@@ -1,6 +1,9 @@
 using Controllers.Work;
 using Models.Work;
+using System;
+using System.Collections.Generic;
 using Views.Construction;
+using Views.Settler.Workers;
 using Zenject;
 
 namespace App.Signals
@@ -13,6 +16,8 @@ namespace App.Signals
             container.DeclareSignal<UnregisterWorkplace>();
             container.DeclareSignal<RegisterSupplyTarget>();
             container.DeclareSignal<UnregisterSupplyTarget>();
+            container.DeclareSignal<SpawnCarrier>();
+            container.DeclareSignal<ReturnCarrier>();
         }
 
         public class RegisterWorkplace
@@ -58,6 +63,29 @@ namespace App.Signals
             public UnregisterSupplyTarget(ISupplyTarget supplyTarget)
             {
                 SupplyTarget = supplyTarget;
+            }
+        }
+
+        public class SpawnCarrier
+        {
+            public Queue<CarrierTask> CarrierTasks { get; private set; }
+
+            public Action OnTasksFinished { get; private set; }
+
+            public SpawnCarrier(Queue<CarrierTask> carrierTasks, Action onTasksFinished)
+            {
+                CarrierTasks = carrierTasks;
+                OnTasksFinished = onTasksFinished;
+            }
+        }
+
+        public class ReturnCarrier
+        {
+            public CarrierView Carrier { get; private set; }
+
+            public ReturnCarrier(CarrierView carrier)
+            {
+                Carrier = carrier;
             }
         }
     }

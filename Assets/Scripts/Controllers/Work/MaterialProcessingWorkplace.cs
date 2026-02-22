@@ -1,4 +1,5 @@
 using App.Helpers;
+using App.Signals;
 using Models.Economy;
 using Models.Work;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Linq;
 using UnityEngine;
 using Views.Construction;
 using Views.Settler.Workers;
+using Zenject;
 
 namespace Controllers.Work
 {
@@ -13,8 +15,8 @@ namespace Controllers.Work
     {
         public WorkplaceModel WorkplaceModel => workplaceModel;
 
-        private PrefabManager prefabManager;
         private SupplyModel supplyModel;
+        private SignalBus signalBus;
         private WorkplaceModel workplaceModel;
         private BuildingView buildingView;
 
@@ -22,10 +24,11 @@ namespace Controllers.Work
         private float checkTimer;
         private float checkSpanInSec = 5f;
 
-        public MaterialProcessingWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceModel workplaceModel, BuildingView buildingView)
+        public MaterialProcessingWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, SignalBus signalBus,
+            WorkplaceModel workplaceModel, BuildingView buildingView)
         {
-            this.prefabManager = prefabManager;
             this.supplyModel = supplyModel;
+            this.signalBus = signalBus;
             this.workplaceModel = workplaceModel;
             this.buildingView = buildingView;
         }
@@ -131,10 +134,7 @@ namespace Controllers.Work
                 return;
 
             workplaceModel.UseCarrier();
-
-            var carrier = prefabManager.Instantiate<CarrierView>("CarrierView");
-            carrier.Init(tasks);
-            carrier.OnTasksFinished += () => workplaceModel.ReturnCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier()));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)
@@ -142,12 +142,12 @@ namespace Controllers.Work
             tasks = default;
 
             var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
-                Vector3.zero,
+                buildingView.transform.position,
                 workplaceModel.ProcessedCommodity.Name,
                 workplaceModel.ProcessedCommodity.Quantity);
 
             var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(
-               Vector3.zero,
+               buildingView.transform.position,
                workplaceModel.RequiredCommodity.Name,
                workplaceModel.RequiredCommodity.Quantity);
 

@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Constructions
   m_GUID: 85f63b23327397e45b42aaa26e3ce22a
   m_SerializeEntries:
+  - m_GUID: 0f523b414e8a94046a3de53a47c78125
+    m_Address: LinenFarm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 12f782102a588d8449f6c9be15295e26
     m_Address: Bazaar
     m_ReadOnly: 0
@@ -30,16 +35,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6dce6a742592f50478ad3f2c8e6473c9
-    m_Address: FarmView
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 87a8dadcd060b9043867d2045d69ce7b
-    m_Address: WheatField
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 88536561ebf43944f9ef5140ce8ab87c
     m_Address: Windmill
     m_ReadOnly: 0
@@ -50,13 +45,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f3fb20e88f73934da8e13f35e75de1b
+    m_Address: WheatFarm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a161a3e8a604c8d4c8e3c4588819a4b5
     m_Address: Granary
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: eff8ba096beae2d489e82f381f1e1499
-    m_Address: LinenField
+  - m_GUID: b7c8ba0ec96b9814fba481fdda8e6e13
+    m_Address: Pasture
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

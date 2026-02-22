@@ -1,5 +1,5 @@
-using Controllers.Work;
 using Models.Economy;
+using Models.Habitation;
 using Models.Work;
 using UnityEngine;
 using Zenject;

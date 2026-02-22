@@ -10,11 +10,11 @@ namespace Views.Ui.Buildings
         [SerializeField] private TMP_Text quantityLabel;
         [SerializeField] private Slider quantitySlider;
 
-        public void RefreshUI(string name, int quantity, int maxQuantity)
+        public void RefreshUI(string name, float quantity, float maxQuantity)
         {
             nameLabel.text = name;
-            quantityLabel.text = $"{quantity}/{maxQuantity}";
-            quantitySlider.value = (float)quantity / maxQuantity;
+            quantityLabel.text = $"{Mathf.FloorToInt(quantity)}/{maxQuantity}";
+            quantitySlider.value = quantity / maxQuantity;
         }
     }
 }

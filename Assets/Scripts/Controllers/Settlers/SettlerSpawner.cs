@@ -31,7 +31,7 @@ namespace Controllers.Settler
             settlersContainer = new GameObject("SettlersContainer").transform;
         }
 
-        public (SettlerView, SettlerModel) SpawnSettler(Vector3 position, Quaternion rotation)
+        public SettlerPresenter SpawnSettler(Vector3 position, Quaternion rotation)
         {
             var settlerView = prefabManager.Instantiate<SettlerView>("SettlerView");
             var gender = GetRandomGender();
@@ -46,7 +46,7 @@ namespace Controllers.Settler
             settlerView.transform.SetParent(settlersContainer);
             settlerView.Init(settlerModel);
 
-            return (settlerView, settlerModel);
+            return new SettlerPresenter(settlerView, settlerModel);
         }
 
         private SettlerGender GetRandomGender()

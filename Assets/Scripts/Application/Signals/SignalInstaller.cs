@@ -9,6 +9,7 @@ namespace App.Signals
             new ApplicationSignals(container);
             new ConstructionSignals(container);
             new SettlersSignals(container);
+            new HabitationSignals(container);
             new WorkplaceSignals(container);
             new BuildingTooltipSignals(container);
             new EnvironmentSignals(container);

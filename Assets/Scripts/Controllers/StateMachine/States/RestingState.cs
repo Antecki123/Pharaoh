@@ -1,4 +1,5 @@
 using Models.Economy;
+using Models.Habitation;
 using Models.Settler;
 using UnityEngine;
 using Views.Construction;

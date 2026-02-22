@@ -1,7 +1,5 @@
-using App.Configs;
 using App.Helpers;
 using App.Signals;
-using Models.Ai;
 using Models.Construction;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,19 +24,15 @@ namespace Controllers.Construction
 
         private SignalBus signalBus;
         private PrefabManager prefabManager;
-        private NavigationGraph navigationGraph;
-        private ConstructionConfig constructionConfig;
         private ConstructionGrid constructionGrid;
 
         private Transform roadContainer;
         private readonly float cellSize = 4f;
 
-        public RoadBuilderRectangular(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig, ConstructionGrid constructionGrid)
+        public RoadBuilderRectangular(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
-            this.navigationGraph = navigationGraph;
-            this.constructionConfig = constructionConfig;
             this.constructionGrid = constructionGrid;
 
             mainCamera = Camera.main;

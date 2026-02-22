@@ -19,8 +19,13 @@ namespace Views.Ui.Buildings
             this.buildingTransform = buildingTransform;
             this.storageModel = storageModel;
 
+            this.storageModel.OnValueChanged += RefreshUI;
             RefreshUI();
-            gameObject.SetActive(true);
+        }
+
+        private void OnDisable()
+        {
+            storageModel.OnValueChanged -= RefreshUI;
         }
 
         private void RefreshUI()

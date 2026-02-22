@@ -1,4 +1,5 @@
 using Models.Economy;
+using Models.Habitation;
 using TMPro;
 using UnityEngine;
 using Zenject;

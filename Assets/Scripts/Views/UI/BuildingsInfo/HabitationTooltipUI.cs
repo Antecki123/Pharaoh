@@ -1,4 +1,5 @@
-using Models.Economy;
+using Models.Habitation;
+using Models.Helpers;
 using TMPro;
 using UnityEngine;
 
@@ -8,10 +9,10 @@ namespace Views.Ui.Buildings
     {
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text residentsCountLabel;
-        [Header("Commodity")]
-        [SerializeField] private CommodityElementUI foodCommodityElement;
-        [SerializeField] private CommodityElementUI beerCommodityElement;
-        [SerializeField] private CommodityElementUI clothesCommodityElement;
+        [SerializeField] private HabitationRequirmentsTooltipUI requirmentsPanel;
+        [Space]
+        [SerializeField] private GameObject upgradePanel;
+        [SerializeField] private GameObject downgradePanel;
 
         private HabitatModel habitatModel;
 
@@ -20,18 +21,42 @@ namespace Views.Ui.Buildings
             this.buildingTransform = buildingTransform;
             this.habitatModel = habitatModel;
 
-            gameObject.SetActive(true);
+            this.habitatModel.OnValueChanged += RefreshUI;
             RefreshUI();
+
+            requirmentsPanel.LoadRequirements(habitatModel);
+        }
+
+        private void OnDisable()
+        {
+            habitatModel.OnValueChanged -= RefreshUI;
         }
 
         private void RefreshUI()
         {
-            nameLabel.text = habitatModel.Name;
+            nameLabel.text = $"{habitatModel.Name} ({habitatModel.CurrentLevel})";
             residentsCountLabel.text = $"Residents: {habitatModel.Residents.Count}/{habitatModel.MaxResidents}";
 
-            foodCommodityElement.RefreshUI(habitatModel.Storage[0].Name.ToString(), habitatModel.Storage[0].Quantity, habitatModel.Storage[0].MaxQuantity);
-            beerCommodityElement.RefreshUI(habitatModel.Storage[1].Name.ToString(), habitatModel.Storage[1].Quantity, habitatModel.Storage[1].MaxQuantity);
-            clothesCommodityElement.RefreshUI(habitatModel.Storage[2].Name.ToString(), habitatModel.Storage[2].Quantity, habitatModel.Storage[2].MaxQuantity);
+            BuildingStateChanging(habitatModel.LevelChangeState);
+        }
+
+        private void BuildingStateChanging(LevelChangeState changeState)
+        {
+            if (changeState == LevelChangeState.Upgrading)
+            {
+                upgradePanel.SetActive(true);
+                downgradePanel.SetActive(false);
+            }
+            else if (changeState == LevelChangeState.Downgrading)
+            {
+                upgradePanel.SetActive(false);
+                downgradePanel.SetActive(true);
+            }
+            else
+            {
+                upgradePanel.SetActive(false);
+                downgradePanel.SetActive(false);
+            }
         }
     }
 }

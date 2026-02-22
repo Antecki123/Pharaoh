@@ -5,11 +5,16 @@ namespace Views.Construction
 {
     public class BuildingView : MonoBehaviour, IInteractable
     {
+        public BuildingFoundationView BuildingFoundation;
+
         protected bool isPlaced;
 
         public virtual void PlaceBuilding()
         {
             isPlaced = true;
+
+            if (BuildingFoundation != null)
+                BuildingFoundation.GenerateFoundationObjects();
         }
 
         public virtual void DestroyBuilding()
@@ -24,7 +29,7 @@ namespace Views.Construction
                 var renderers = GetComponentsInChildren<MeshRenderer>();
                 foreach (var renderer in renderers)
                 {
-                    renderer.material.color = state ? Color.cyan : Color.white;
+                    renderer.material.color = state ? Color.lightGray : Color.white;
                 }
             }
         }

@@ -75,7 +75,10 @@ namespace Views.Ui.GameInterfaces
                             BuildingDefinition.Windmill,
                             BuildingDefinition.Bakery,
                             BuildingDefinition.Granary,
-                            BuildingDefinition.Warehouse
+                            BuildingDefinition.Warehouse,
+                            BuildingDefinition.WheatFarm,
+                            BuildingDefinition.LinenFarm,
+                            BuildingDefinition.Pasture
                         };
                         break;
                     case BuildingType.Leasure:

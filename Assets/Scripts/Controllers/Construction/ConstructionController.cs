@@ -19,16 +19,13 @@ namespace Controllers.Construction
 
         private RoadBuilderRectangular.Factory roadRectangularFactory;
         private RoadBuilder.Factory roadFactory;
-        private FarmBuilder.Factory farmFactory;
         private ConstructionBuilder<BuildingView>.Factory constructionFactory;
 
-        public ConstructionController(SignalBus signalBus, RoadBuilder.Factory roadFactory, RoadBuilderRectangular.Factory roadRectangularFactory, FarmBuilder.Factory farmFactory,
-            ConstructionBuilder<BuildingView>.Factory constructionFactory)
+        public ConstructionController(SignalBus signalBus, RoadBuilder.Factory roadFactory, RoadBuilderRectangular.Factory roadRectangularFactory, ConstructionBuilder<BuildingView>.Factory constructionFactory)
         {
             this.signalBus = signalBus;
             this.roadFactory = roadFactory;
             this.roadRectangularFactory = roadRectangularFactory;
-            this.farmFactory = farmFactory;
             this.constructionFactory = constructionFactory;
 
             constructionsContainer = new GameObject("ConstructionsContainer").transform;
@@ -45,13 +42,6 @@ namespace Controllers.Construction
                 return () => builder;
             }
 
-            Func<IConstruction> BuildFarm(BuildingDefinition def)
-            {
-                var builder = farmFactory.Create();
-                builder.Setup(def, constructionsContainer);
-                return () => builder;
-            }
-
             Func<IConstruction> Build<T>(BuildingDefinition def) where T : BuildingView
             {
                 var builder = constructionFactory.Create();
@@ -63,9 +53,6 @@ namespace Controllers.Construction
             {
                 { BuildingDefinition.None, () => null },
                 { BuildingDefinition.Road, BuildRoad() },
-                { BuildingDefinition.WheatField, BuildFarm(BuildingDefinition.WheatFarm) },
-                { BuildingDefinition.LinenField, BuildFarm(BuildingDefinition.LinenFarm) },
-                { BuildingDefinition.Pasture, BuildFarm(BuildingDefinition.Pasture) },
                 { BuildingDefinition.Cottage, Build<CottageView>(BuildingDefinition.Cottage) },
                 { BuildingDefinition.House, Build<HouseView>(BuildingDefinition.House) },
                 { BuildingDefinition.Granary, Build<GranaryView>(BuildingDefinition.Granary) },
@@ -73,6 +60,9 @@ namespace Controllers.Construction
                 { BuildingDefinition.Bakery, Build<BakeryView>(BuildingDefinition.Bakery) },
                 { BuildingDefinition.Bazaar, Build<BazaarView>(BuildingDefinition.Bazaar) },
                 { BuildingDefinition.Warehouse, Build<WarehouseView>(BuildingDefinition.Warehouse) },
+                { BuildingDefinition.WheatFarm, Build<WarehouseView>(BuildingDefinition.WheatFarm) },
+                { BuildingDefinition.LinenFarm, Build<WarehouseView>(BuildingDefinition.LinenFarm) },
+                { BuildingDefinition.Pasture, Build<WarehouseView>(BuildingDefinition.Pasture) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
@@ -100,9 +90,6 @@ namespace Controllers.Construction
         Cottage,
         House,
         Residence,
-        [Obsolete] FarmersHut,
-        WheatField,
-        LinenField,
         Granary,
         Windmill,
         Bakery,
@@ -110,6 +97,8 @@ namespace Controllers.Construction
         Warehouse,
         WheatFarm,
         LinenFarm,
-        Pasture
+        Pasture,
+        IrrigationDitch,
+        ShadufStation
     }
 }

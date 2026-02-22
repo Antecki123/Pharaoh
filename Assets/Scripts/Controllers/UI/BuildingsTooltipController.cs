@@ -52,6 +52,7 @@ namespace Controllers.UI
 
             var tooltip = prefabManager.Instantiate("HabitationTooltipUI").GetComponent<HabitationTooltipUI>();
             tooltip.Init(signal.Transform, signal.Model);
+            tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
 
             tooltip.transform.SetParent(mainCanvas.transform);
@@ -63,6 +64,7 @@ namespace Controllers.UI
 
             var tooltip = prefabManager.Instantiate("ProcessingWorkplaceTooltipUI").GetComponent<ProcessingWorkplaceTooltipUI>();
             tooltip.Init(signal.Transform, signal.Model);
+            tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
 
             tooltip.transform.SetParent(mainCanvas.transform);
@@ -74,6 +76,7 @@ namespace Controllers.UI
 
             var tooltip = prefabManager.Instantiate("StorageTooltipUI").GetComponent<StorageTooltipUI>();
             tooltip.Init(signal.Transform, signal.Model);
+            tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
 
             tooltip.transform.SetParent(mainCanvas.transform);
@@ -85,6 +88,7 @@ namespace Controllers.UI
 
             var tooltip = prefabManager.Instantiate("DistributionPointTooltipUI").GetComponent<DistributionPointTooltipUI>();
             tooltip.Init(signal.Transform, signal.Model);
+            tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
 
             tooltip.transform.SetParent(mainCanvas.transform);
@@ -96,6 +100,7 @@ namespace Controllers.UI
 
             var tooltip = prefabManager.Instantiate("FarmTooltipUI").GetComponent<FarmTooltipUI>();
             tooltip.Init(signal.Transform, signal.Model);
+            tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
 
             tooltip.transform.SetParent(mainCanvas.transform);

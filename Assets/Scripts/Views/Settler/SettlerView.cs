@@ -25,7 +25,6 @@ namespace Views.Settler
     public class SettlerView : MonoBehaviour
     {
         public SettlerModel SettlerModel => settlerModel;
-
         public NpcMovementHandler MovementHandler => movementHandler;
 
         [Space] public PlayerViewDebug viewDebug;

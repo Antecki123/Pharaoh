@@ -3,10 +3,11 @@ Cottage;4;8
 House;5;8
 Residence;5;8
 FarmersHut;3,5;5
-WheatField;5;8
-LinenField;5;8
 Granary;9;13
 Windmill;5;8
 Bakery;5;8
 Bazaar;5;8
 Warehouse;9;13
+WheatFarm;9;13
+LinenFarm;9;13
+Pasture;9;13

@@ -1,5 +1,6 @@
 using Controllers.Work;
 using Models.Economy;
+using Models.Habitation;
 using Views.Construction;
 
 namespace Models.Settler

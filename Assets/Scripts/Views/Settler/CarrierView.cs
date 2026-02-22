@@ -1,3 +1,4 @@
+using App.Signals;
 using Models.Ai;
 using Models.Construction;
 using Models.Economy;
@@ -14,79 +15,62 @@ namespace Views.Settler.Workers
     {
         public event Action OnTasksFinished;
 
+        public NpcMovementHandler MovementHandler => movementHandler;
+        public float MovementSpeed => movementSpeed;
+
         private Animator animator;
-        private NavigationGraph navigationGraph;
-        private ConstructionGrid constructionGrid;
+        private SignalBus signalBus;
 
         private Queue<CarrierTask> carrierTasks = new Queue<CarrierTask>();
         private CarrierTask currentTask;
         private CommodityModel carriedCommodity;
 
         private NpcMovementHandler movementHandler;
-        private float movementSpeed = 5f;
+        private float movementSpeed;
+        private float baseMovementSpeed = 2.5f;
 
         [Inject]
-        public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
+        public void Constructor(SignalBus signalBus, NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
         {
-            this.navigationGraph = navigationGraph;
-            this.constructionGrid = constructionGrid;
+            this.signalBus = signalBus;
 
+            movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid);
             animator = GetComponentInChildren<Animator>();
         }
 
         public void Init(Queue<CarrierTask> carrierTasks)
         {
             this.carrierTasks = carrierTasks;
-
-            movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid);
-
             StartNextTask();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             OnTasksFinished?.Invoke();
         }
 
-        private void Update()
+        public void Tick()
         {
             animator.SetBool("CarryingDelivery", carriedCommodity != null);
-            var currentSpeed = carriedCommodity != null ? movementSpeed / 2 : movementSpeed;
+            movementSpeed = carriedCommodity != null ? baseMovementSpeed / 2 : baseMovementSpeed;
+        }
 
-            if (movementHandler.Waypoints.Count == 0 || currentTask == null)
-                return;
-
-            var nextPos = movementHandler.NextPosition;
-            transform.position = Vector3.MoveTowards(transform.position, nextPos, currentSpeed * Time.deltaTime);
-
-            var direction = (nextPos - transform.position).normalized;
-            if (direction.sqrMagnitude > 0.0001f)
+        public void FinishTask()
+        {
+            if (carriedCommodity != null && currentTask.Target != null)
             {
-                transform.forward = Vector3.Lerp(transform.forward, direction, Time.deltaTime * 15f);
+                currentTask.Target.DeliverCommodity(carriedCommodity);
+                carriedCommodity = null;
             }
 
-            if (Vector3.Distance(transform.position, nextPos) <= 0.1f)
-            {
-                movementHandler.CurrentIndex++;
-
-                if (movementHandler.CurrentIndex >= movementHandler.Waypoints.Count)
-                {
-                    if (carriedCommodity != null && currentTask.Target != null)
-                    {
-                        currentTask.Target.DeliverCommodity(carriedCommodity);
-                        carriedCommodity = null;
-                    }
-
-                    StartNextTask();
-                }
-            }
+            StartNextTask();
         }
 
         private void StartNextTask()
         {
             if (carrierTasks.Count == 0)
             {
-                Destroy(gameObject);
+                signalBus.Fire(new WorkplaceSignals.ReturnCarrier(this));
                 return;
             }
 

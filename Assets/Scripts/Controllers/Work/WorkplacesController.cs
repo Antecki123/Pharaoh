@@ -41,22 +41,22 @@ namespace Controllers.Work
             }
         }
 
-        public void RegisterWorkplace(WorkplaceSignals.RegisterWorkplace signal)
+        private void RegisterWorkplace(WorkplaceSignals.RegisterWorkplace signal)
         {
             employmentModel.AddWorkplace(signal.Workplace, signal.BuildingView);
         }
 
-        public void UnregisterWorkplace(WorkplaceSignals.UnregisterWorkplace signal)
+        private void UnregisterWorkplace(WorkplaceSignals.UnregisterWorkplace signal)
         {
             employmentModel.RemoveWorkplace(signal.Workplace);
         }
 
-        public void RegisterSupplyTarget(WorkplaceSignals.RegisterSupplyTarget signal)
+        private void RegisterSupplyTarget(WorkplaceSignals.RegisterSupplyTarget signal)
         {
             supplyModel.AddSupplyTarget(signal.SupplyTarget, signal.SupplyType);
         }
 
-        public void UnregisterSupplyTarget(WorkplaceSignals.UnregisterSupplyTarget signal)
+        private void UnregisterSupplyTarget(WorkplaceSignals.UnregisterSupplyTarget signal)
         {
             supplyModel.RemoveSupplyTarget(signal.SupplyTarget);
         }
