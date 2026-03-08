@@ -29,7 +29,7 @@ namespace Controllers.Habitation
             {
                 var habitatModel = habitat.Key;
                 foreach (var requirement in habitatModel.HabitationRequirements)
-                    requirement.Decay(habitatModel.Residents.Count);
+                    requirement.Decay(habitatModel.Residents.Count, Time.deltaTime);
 
                 if (habitatModel.LevelChangeState == Models.Helpers.LevelChangeState.None)
                 {
@@ -59,12 +59,12 @@ namespace Controllers.Habitation
                 return;
 
             var requirementsForLevel = habitatModel.HabitationRequirements
-                .Where(r => r.Level == habitatModel.CurrentLevel)
+                .Where(r => r.RequiredLevel == habitatModel.CurrentLevel)
                 .ToList();
 
             var allRequirementsMet = requirementsForLevel
                 .Any() && requirementsForLevel
-                .All(r => r.Value > 75);
+                .All(r => r.CurrentValue > 75);
 
             if (habitatModel.Residents.Count == habitatModel.MaxResidents && allRequirementsMet)
                 habitatModel.SetUpgradeTimer(Time.deltaTime);
@@ -78,11 +78,11 @@ namespace Controllers.Habitation
                 return;
 
             var requirementsForLevel = habitatModel.HabitationRequirements
-                .Where(r => r.Level >= habitatModel.CurrentLevel)
+                .Where(r => r.RequiredLevel >= habitatModel.CurrentLevel)
                 .ToList();
 
             var allRequirementsFailed = requirementsForLevel
-                .All(r => r.Value <= 0);
+                .All(r => r.CurrentValue <= 0);
 
             if (allRequirementsFailed)
                 habitatModel.SetDowngradeTimer(Time.deltaTime);

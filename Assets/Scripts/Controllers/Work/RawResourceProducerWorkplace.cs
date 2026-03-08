@@ -1,5 +1,6 @@
 using App.Signals;
 using Models.Economy;
+using Models.Helpers;
 using Models.Work;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,9 +20,8 @@ namespace Controllers.Work
         private WorkplaceModel workplaceModel;
         private BuildingView buildingView;
 
+        private Timer checkTimer;
         private float progress = 0f;
-        private float checkTimer;
-        private float checkSpanInSec = 5f;
 
         public RawResourceProducerWorkplace(SignalBus signalBus, SupplyModel supplyModel, WorkplaceModel workplaceModel, BuildingView buildingView)
         {
@@ -29,14 +29,16 @@ namespace Controllers.Work
             this.supplyModel = supplyModel;
             this.workplaceModel = workplaceModel;
             this.buildingView = buildingView;
+
+            checkTimer = new Timer(3f);
         }
 
         public void Work()
         {
-            checkTimer -= Time.deltaTime;
-            if (checkTimer < 0)
+            checkTimer.Tick(Time.deltaTime);
+            if (checkTimer.IsFinished)
             {
-                checkTimer = checkSpanInSec;
+                checkTimer.Reset();
 
                 if (workplaceModel.IsAnyCommodityToTake())
                     ScheduleTransport();

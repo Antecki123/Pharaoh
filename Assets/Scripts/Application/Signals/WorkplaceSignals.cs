@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Views.Construction;
 using Views.Settler.Workers;
 using Zenject;
+using static UnityEngine.UI.Image;
 
 namespace App.Signals
 {
@@ -18,6 +19,8 @@ namespace App.Signals
             container.DeclareSignal<UnregisterSupplyTarget>();
             container.DeclareSignal<SpawnCarrier>();
             container.DeclareSignal<ReturnCarrier>();
+            container.DeclareSignal<SpawnServiceAgent>();
+            container.DeclareSignal<ReturnServiceAgent>();
         }
 
         public class RegisterWorkplace
@@ -86,6 +89,29 @@ namespace App.Signals
             public ReturnCarrier(CarrierView carrier)
             {
                 Carrier = carrier;
+            }
+        }
+
+        public class SpawnServiceAgent
+        {
+            public BuildingView Origin { get; private set; }
+
+            public Action OnAgentReturn { get; private set; }
+
+            public SpawnServiceAgent(BuildingView origin, Action onAgentReturn)
+            {
+                Origin = origin;
+                OnAgentReturn = onAgentReturn;
+            }
+        }
+
+        public class ReturnServiceAgent
+        {
+            public ServiceAgentView Agent { get; private set; }
+
+            public ReturnServiceAgent(ServiceAgentView agent)
+            {
+                Agent = agent;
             }
         }
     }

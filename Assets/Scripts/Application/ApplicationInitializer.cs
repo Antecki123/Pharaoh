@@ -25,6 +25,7 @@ namespace App.Registrators
             {
                 "SettlerView",
                 "CarrierView",
+                "ServiceAgentView",
                 "Bazaar",
                 "Bakery",
                 "Cottage",
@@ -35,6 +36,7 @@ namespace App.Registrators
                 "House",
                 "Granary",
                 "Warehouse",
+                "Well",
 
                 // UI ELEMENTS
                 "ProcessingWorkplaceTooltipUI",

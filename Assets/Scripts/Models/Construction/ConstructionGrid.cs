@@ -53,7 +53,6 @@ namespace Models.Construction
 
         public void RemoveOccupant(Vector2Int cellToRemove)
         {
-
             OnValueChanged.Invoke();
         }
 
@@ -84,11 +83,7 @@ namespace Models.Construction
                     pos + Vector2Int.up,
                     pos + Vector2Int.down,
                     pos + Vector2Int.left,
-                    pos + Vector2Int.right,
-                    //pos + new Vector2Int(1, 1),
-                    //pos + new Vector2Int(1, -1),
-                    //pos + new Vector2Int(-1, 1),
-                    //pos + new Vector2Int(-1, -1)
+                    pos + Vector2Int.right
                 };
 
                 foreach (var neighbourPos in neighbours)
@@ -116,11 +111,7 @@ namespace Models.Construction
                     pos + Vector2Int.up,
                     pos + Vector2Int.down,
                     pos + Vector2Int.left,
-                    pos + Vector2Int.right,
-                    //pos + new Vector2Int(1, 1),
-                    //pos + new Vector2Int(1, -1),
-                    //pos + new Vector2Int(-1, 1),
-                    //pos + new Vector2Int(-1, -1)
+                    pos + Vector2Int.right
                 };
 
                 foreach (var neighbourPos in neighbours)

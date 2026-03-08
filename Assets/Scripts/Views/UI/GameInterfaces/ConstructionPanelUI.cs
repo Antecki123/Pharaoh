@@ -86,6 +86,7 @@ namespace Views.Ui.GameInterfaces
                     case BuildingType.Municipal:
                         buildings = new List<BuildingDefinition>()
                         {
+                            BuildingDefinition.Well,
                             BuildingDefinition.Bazaar
                         };
                         break;

@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace Models.Habitation
 {
@@ -7,31 +6,70 @@ namespace Models.Habitation
     {
         public event Action OnValueChanged;
 
-        public HabitationRequirementDefinition RequirementDefinition { get; private set; }
+        public float ValuePercent => (CurrentValue / MaxValue) * 100f;
+        public float CurrentValue => currentValue;
 
-        public int Level { get; private set; }
+        public HabitationRequirementDefinition RequirementDefinition => requirementDefinition;
+        public int RequiredLevel => requiredLevel;
+        public float MaxValue => maxValue;
 
-        public float Value { get; private set; } = 100f;
+        private readonly HabitationRequirementDefinition requirementDefinition;
+        private readonly int requiredLevel;
+        private readonly float maxValue;
+        private readonly float decayTime;
 
-        public float DecayTime { get; private set; } = 0.1f;
+        private float currentValue;
 
-        public HabitationRequirement(HabitationRequirementDefinition requirementDefinition, int level)
+        public HabitationRequirement(HabitationRequirementDefinition requirementDefinition, int requiredLevel, float maxValue = 100,
+            float decayTime = 0.1f)
         {
-            RequirementDefinition = requirementDefinition;
-            Level = level;
+            this.requirementDefinition = requirementDefinition;
+            this.requiredLevel = requiredLevel;
+            this.maxValue = maxValue;
+            this.decayTime = decayTime;
+
+            currentValue = maxValue;
         }
 
-        public void Decay(float residentsCount)
+        public void Decay(float residentsCount, float deltaTime)
         {
-            if (Value > 0)
+            if (currentValue > 0)
             {
-                Value -= DecayTime * residentsCount * Time.deltaTime;
-                OnValueChanged?.Invoke();
+                currentValue -= decayTime * residentsCount * deltaTime;
 
-                if (Value < 0)
-                    Value = 0;
+                if (currentValue < 0)
+                    currentValue = 0;
+
+                OnValueChanged?.Invoke();
             }
         }
+
+        public float AddWithResidual(float value)
+        {
+            var residual = 0f;
+
+            currentValue += value;
+            if (currentValue > maxValue)
+            {
+                residual = currentValue - maxValue;
+                currentValue = maxValue;
+            }
+
+            OnValueChanged?.Invoke();
+
+            return residual;
+        }
+    }
+
+    public interface IServiceReceiver
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="habitationRequirementDefinition"></param>
+        /// <param name="value"></param>
+        /// <returns>The method returns the change if the value delivered to the recipient exceeds the maximum value.</returns>
+        public float SatisfyResidentNeeds(HabitationRequirementDefinition requirementDefinition, float value);
     }
 
     public enum HabitationRequirementDefinition

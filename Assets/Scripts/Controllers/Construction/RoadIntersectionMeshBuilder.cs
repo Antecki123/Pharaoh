@@ -50,8 +50,6 @@ namespace Views.Road
                 {
                     color = Color.gray
                 };
-
-                navigationGraph.Intersections.Add(position);
             }
         }
 

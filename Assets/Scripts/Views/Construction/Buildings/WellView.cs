@@ -11,7 +11,7 @@ using Zenject;
 namespace Views.Construction
 {
     [SelectionBase]
-    public class BazaarView : BuildingView
+    public class WellView : BuildingView
     {
         private SignalBus signalBus;
         private SupplyModel supplyModel;
@@ -33,7 +33,7 @@ namespace Views.Construction
             SetupWorkplace();
 
             signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(workplace, this));
-            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.DistributionPoint));
+            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.Workplace));
         }
 
         public override void DestroyBuilding()
@@ -56,16 +56,11 @@ namespace Views.Construction
 
         private void SetupWorkplace()
         {
-            var buildingDefinition = BuildingDefinition.Bazaar;
+            var buildingDefinition = BuildingDefinition.Well;
             var economyData = economyImporter.EconomyData[buildingDefinition];
-            var storageModel = new StorageModel(new List<CommodityModel>()
-            {
-                new CommodityModel() { Name = CommodityName.Food, MaxQuantity = 25 },
-                new CommodityModel() { Name = CommodityName.Beer, MaxQuantity = 25 },
-                new CommodityModel() { Name = CommodityName.Clothes, MaxQuantity = 25 }
-            });
+            var storageModel = new StorageModel(new List<CommodityModel>());
 
-            var requirementDefinition = HabitationRequirementDefinition.Food;
+            var requirementDefinition = HabitationRequirementDefinition.Water;
             var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, requirementDefinition);
             workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, this);
         }

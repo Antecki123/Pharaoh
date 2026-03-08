@@ -60,9 +60,10 @@ namespace Controllers.Construction
                 { BuildingDefinition.Bakery, Build<BakeryView>(BuildingDefinition.Bakery) },
                 { BuildingDefinition.Bazaar, Build<BazaarView>(BuildingDefinition.Bazaar) },
                 { BuildingDefinition.Warehouse, Build<WarehouseView>(BuildingDefinition.Warehouse) },
-                { BuildingDefinition.WheatFarm, Build<WarehouseView>(BuildingDefinition.WheatFarm) },
-                { BuildingDefinition.LinenFarm, Build<WarehouseView>(BuildingDefinition.LinenFarm) },
+                { BuildingDefinition.WheatFarm, Build<WheatFarmView>(BuildingDefinition.WheatFarm) },
+                { BuildingDefinition.LinenFarm, Build<LinenFarmView>(BuildingDefinition.LinenFarm) },
                 { BuildingDefinition.Pasture, Build<WarehouseView>(BuildingDefinition.Pasture) },
+                { BuildingDefinition.Well, Build<WellView>(BuildingDefinition.Well) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
@@ -99,6 +100,7 @@ namespace Controllers.Construction
         LinenFarm,
         Pasture,
         IrrigationDitch,
-        ShadufStation
+        ShadufStation,
+        Well
     }
 }

@@ -40,11 +40,11 @@ namespace Views.Ui.Buildings
             for (int i = 0; i < commodityElements.Count; i++)
             {
                 var requirement = habitatModel.HabitationRequirements[i];
-                var isActive = habitatModel.CurrentLevel >= requirement.Level;
+                var isActive = habitatModel.CurrentLevel >= requirement.RequiredLevel;
                 commodityElements[i].gameObject.SetActive(isActive);
 
                 if (isActive)
-                    commodityElements[i].RefreshUI(requirement.RequirementDefinition.ToString(), requirement.Value, 100);
+                    commodityElements[i].RefreshUI(requirement.RequirementDefinition.ToString(), requirement.CurrentValue, requirement.MaxValue);
             }
         }
     }

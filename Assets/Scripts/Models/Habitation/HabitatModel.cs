@@ -47,15 +47,15 @@ namespace Models.Habitation
 
             habitationRequirements = new List<HabitationRequirement>()
             {
-                new(HabitationRequirementDefinition.Water, 1),
-                new(HabitationRequirementDefinition.Food, 1),
+                new(HabitationRequirementDefinition.Water, 1, 10, 0.05f),
+                new(HabitationRequirementDefinition.Food, 1, 50),
                 new(HabitationRequirementDefinition.Tavern, 1),
-                new(HabitationRequirementDefinition.Clothes, 2),
-                new(HabitationRequirementDefinition.Pottery, 2),
-                new(HabitationRequirementDefinition.Tool, 2),
+                new(HabitationRequirementDefinition.Clothes, 2, 50),
+                new(HabitationRequirementDefinition.Pottery, 2, 30),
+                new(HabitationRequirementDefinition.Tool, 2, 20),
                 new(HabitationRequirementDefinition.Entertainment_1, 2),
                 new(HabitationRequirementDefinition.Arts, 3),
-                new(HabitationRequirementDefinition.Papyrus, 3),
+                new(HabitationRequirementDefinition.Papyrus, 3, 50),
                 new(HabitationRequirementDefinition.Entertainment_2, 3),
             };
         }
@@ -120,9 +120,8 @@ namespace Models.Habitation
 
             if (downgradeTimer.IsFinished)
             {
-                downgradeTimer.Reset();
                 levelChangeState = LevelChangeState.Downgrading;
-
+                downgradeTimer.Reset();
                 OnValueChanged?.Invoke();
             }
         }
@@ -144,6 +143,19 @@ namespace Models.Habitation
                 levelChangeTimer.Reset();
                 OnValueChanged?.Invoke();
             }
+        }
+
+        public float SatisfyResidentNeeds(HabitationRequirementDefinition requirementDefinition, float value)
+        {
+            foreach (var requirement in habitationRequirements)
+            {
+                if (requirement.RequirementDefinition == requirementDefinition)
+                {
+                    return requirement.AddWithResidual(value);
+                }
+            }
+
+            return 0f;
         }
     }
 }

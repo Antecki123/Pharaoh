@@ -1,8 +1,7 @@
-using App.Helpers;
 using App.Signals;
 using Models.Economy;
+using Models.Helpers;
 using Models.Work;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Views.Construction;
@@ -14,32 +13,23 @@ namespace Controllers.Work
     public class DistributionPointWorkplace : IWorkplace, ISupplyTarget
     {
         public DistributionPointModel DistributionModel => distributionModel;
-        public event Action<CommodityModel> OnCreateMarketStall;
 
-        private SignalBus signalBus;
-        private SupplyModel supplyModel;
-        private DistributionPointModel distributionModel;
-        private BuildingView buildingView;
+        private readonly SignalBus signalBus;
+        private readonly SupplyModel supplyModel;
+        private readonly DistributionPointModel distributionModel;
+        private readonly BuildingView buildingView;
 
-        private float checkTimer;
-        private float checkSpanInSec = 5f;
+        private Timer resourceRefreshTimer;
 
-        private float consumptionTimer;
-        private float consumptionTimeSpan = 2f;
-
-        public DistributionPointWorkplace(SignalBus signalBus, SupplyModel supplyModel, DistributionPointModel distributionModel, BuildingView buildingView)
+        public DistributionPointWorkplace(SignalBus signalBus, SupplyModel supplyModel, DistributionPointModel distributionModel,
+            BuildingView buildingView)
         {
             this.signalBus = signalBus;
             this.supplyModel = supplyModel;
             this.distributionModel = distributionModel;
             this.buildingView = buildingView;
 
-            // DEBUG
-            var stallModel = new MarketStallModel(distributionModel.StorageModel.Storage[0])
-            {
-                IsAvailable = true
-            };
-            distributionModel.AddStall(stallModel);
+            resourceRefreshTimer = new Timer(5f);
         }
 
         public BuildingView GetBuildingView()
@@ -79,41 +69,35 @@ namespace Controllers.Work
 
         public void Work()
         {
-            checkTimer -= Time.deltaTime;
-            if (checkTimer < 0)
+            resourceRefreshTimer.Tick(Time.deltaTime);
+
+            if (!resourceRefreshTimer.IsFinished)
+                return;
+
+            if (distributionModel.DistributedCommodity == null)
             {
-                checkTimer = checkSpanInSec;
-
-                foreach (var stall in distributionModel.MarketStalls)
-                {
-                    if (!stall.IsAvailable)
-                        return;
-
-                    if (stall.Commodity.Quantity < stall.Commodity.MaxQuantity * .25f)
-                    {
-                        var quantity = stall.Commodity.MaxQuantity - stall.Commodity.Quantity;
-                        ScheduleTransport(new CommodityModel() { Name = stall.Commodity.Name, Quantity = quantity });
-                    }
-                }
+                DistributeResources();
             }
-
-            consumptionTimer -= Time.deltaTime;
-            if (consumptionTimer < 0)
+            else
             {
-                consumptionTimer = consumptionTimeSpan;
-
-                foreach (var stall in distributionModel.MarketStalls)
-                {
-                    if (!stall.IsAvailable)
-                        return;
-
-                    distributionModel.StorageModel.RemoveCommodity(new CommodityModel()
-                    {
-                        Name = stall.Commodity.Name,
-                        Quantity = 1
-                    });
-                }
+                if (distributionModel.DistributedCommodity.Quantity > 0)
+                    DistributeResources();
+                else
+                    ScheduleTransport(distributionModel.DistributedCommodity);
             }
+        }
+
+        private void DistributeResources()
+        {
+            if (distributionModel.ServiceAgentsCount == 0)
+                return;
+
+            distributionModel.UseServiceAgent();
+            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(buildingView, () =>
+            {
+                resourceRefreshTimer.Reset();
+                distributionModel.ReturnServiceAgent();
+            }));
         }
 
         private void ScheduleTransport(CommodityModel commodity)

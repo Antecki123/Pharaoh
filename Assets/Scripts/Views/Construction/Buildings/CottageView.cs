@@ -7,7 +7,7 @@ using Zenject;
 namespace Views.Construction
 {
     [SelectionBase]
-    public class CottageView : BuildingView
+    public class CottageView : BuildingView, IServiceReceiver
     {
         private SignalBus signalBus;
         private HabitatModel habitatModel;
@@ -50,6 +50,11 @@ namespace Views.Construction
             {
                 signalBus.Fire(new BuildingTooltipSignals.OpenHabitationTooltip(transform, habitatModel));
             }
+        }
+
+        public float SatisfyResidentNeeds(HabitationRequirementDefinition requirementDefinition, float value)
+        {
+            return habitatModel.SatisfyResidentNeeds(requirementDefinition, value);
         }
     }
 }

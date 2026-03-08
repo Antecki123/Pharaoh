@@ -114,6 +114,13 @@ namespace Models.Construction
                     { 1, 1, 1, 1, 0 },
                 }
             },
+
+            {
+                BuildingDefinition.Well, new int[,]
+                {
+                    { 1 }
+                }
+            },
         };
     }
 }

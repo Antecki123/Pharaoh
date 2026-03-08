@@ -1,4 +1,5 @@
 using App.Signals;
+using Controllers.Ai;
 using Models.Ai;
 using Models.Construction;
 using Models.Economy;
@@ -16,7 +17,6 @@ namespace Views.Settler.Workers
         public event Action OnTasksFinished;
 
         public NpcMovementHandler MovementHandler => movementHandler;
-        public float MovementSpeed => movementSpeed;
 
         private Animator animator;
         private SignalBus signalBus;
@@ -26,15 +26,14 @@ namespace Views.Settler.Workers
         private CommodityModel carriedCommodity;
 
         private NpcMovementHandler movementHandler;
-        private float movementSpeed;
-        private float baseMovementSpeed = 2.5f;
+        private readonly float baseMovementSpeed = 2.2f;
 
         [Inject]
         public void Constructor(SignalBus signalBus, NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
 
-            movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid);
+            movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid, baseMovementSpeed);
             animator = GetComponentInChildren<Animator>();
         }
 
@@ -44,15 +43,10 @@ namespace Views.Settler.Workers
             StartNextTask();
         }
 
-        private void OnDisable()
-        {
-            OnTasksFinished?.Invoke();
-        }
-
         public void Tick()
         {
             animator.SetBool("CarryingDelivery", carriedCommodity != null);
-            movementSpeed = carriedCommodity != null ? baseMovementSpeed / 2 : baseMovementSpeed;
+            movementHandler.ModifySpeed(carriedCommodity != null ? baseMovementSpeed / 2 : baseMovementSpeed);
         }
 
         public void FinishTask()
@@ -63,17 +57,22 @@ namespace Views.Settler.Workers
                 carriedCommodity = null;
             }
 
-            StartNextTask();
+            if (carrierTasks.Count == 0)
+            {
+                OnTasksFinished?.Invoke();
+                OnTasksFinished = null;
+
+                signalBus.Fire(new WorkplaceSignals.ReturnCarrier(this));
+                return;
+            }
+            else
+            {
+                StartNextTask();
+            }
         }
 
         private void StartNextTask()
         {
-            if (carrierTasks.Count == 0)
-            {
-                signalBus.Fire(new WorkplaceSignals.ReturnCarrier(this));
-                return;
-            }
-
             currentTask = carrierTasks.Dequeue();
             carriedCommodity = null;
 

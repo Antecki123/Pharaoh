@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54e66b34f04062b45bf48ab0e5868fe2
+    m_Address: ServiceAgentView
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ecfbc1e269a548a499089d94289542cc
     m_Address: CarrierView
     m_ReadOnly: 0

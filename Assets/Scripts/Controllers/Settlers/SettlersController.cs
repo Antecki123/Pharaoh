@@ -1,5 +1,6 @@
 using App.Helpers;
 using App.Signals;
+using Controllers.Ai;
 using Controllers.Work;
 using Models.Economy;
 using Models.Habitation;
@@ -215,7 +216,7 @@ namespace Controllers.Settler
             {
                 transforms[i] = settlersToMove[i].transform;
                 targetPositionsArray[i] = (float3)settlersToMove[i].MovementHandler.NextPosition;
-                movementSpeedsArray[i] = settlersToMove[i].SettlerModel.SettlerDefinition.MovementSpeed;
+                movementSpeedsArray[i] = settlersToMove[i].MovementHandler.MovementSpeed;
             }
 
             settlerMovementArray = new TransformAccessArray(transforms);

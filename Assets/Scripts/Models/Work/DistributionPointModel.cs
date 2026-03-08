@@ -1,9 +1,9 @@
 using Controllers.Construction;
 using Controllers.Work;
 using Models.Economy;
+using Models.Habitation;
 using System;
 using System.Collections.Generic;
-using Views.Construction;
 
 namespace Models.Work
 {
@@ -19,22 +19,26 @@ namespace Models.Work
 
         public int CarriersCount { get; private set; } = 1;
 
+        public int ServiceAgentsCount { get; private set; } = 1;
+
         public StorageModel StorageModel { get; private set; }
 
-        public IReadOnlyList<MarketStallModel> MarketStalls => marketStalls;
+        public CommodityModel DistributedCommodity { get; private set; }
+
+        public HabitationRequirementDefinition HabitationRequirementDefinition { get; private set; }
 
         public IReadOnlyList<IEmployee> Workers => workers;
 
-        private List<MarketStallModel> marketStalls = new List<MarketStallModel>();
-
         private List<IEmployee> workers = new List<IEmployee>();
 
-        public DistributionPointModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData, StorageModel storageModel)
+        public DistributionPointModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData, StorageModel storageModel,
+            HabitationRequirementDefinition habitationRequirementDefinition)
         {
             Name = buildingDefinition.ToString();
             MinimumWorkersCount = economyData.MinimumWorkersCount;
             MaxWorkersCount = economyData.MaxWorkersCount;
             StorageModel = storageModel;
+            HabitationRequirementDefinition = habitationRequirementDefinition;
 
             StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();
         }
@@ -63,21 +67,21 @@ namespace Models.Work
             OnValueChanged?.Invoke();
         }
 
-        public void AddStall(MarketStallModel marketStall)
+        public void UseServiceAgent()
         {
-            marketStalls.Add(marketStall);
+            ServiceAgentsCount--;
             OnValueChanged?.Invoke();
         }
 
-        public void RemoveStall(MarketStallModel marketStall)
+        public void ReturnServiceAgent()
         {
-            marketStalls.Remove(marketStall);
+            ServiceAgentsCount++;
             OnValueChanged?.Invoke();
         }
 
         public bool HasAvailableSpot()
         {
-            return workers.Count < MaxWorkersCount ;
+            return workers.Count < MaxWorkersCount;
         }
 
         public ICollection<IEmployee> GetWorkers()
