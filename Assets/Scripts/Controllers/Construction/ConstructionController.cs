@@ -76,6 +76,8 @@ namespace Controllers.Construction
 
         private void SetConstruction(ConstructionSignals.ConstructionMode signal)
         {
+            currentConstruction?.Dispose();
+
             if (constructionFactories.TryGetValue(signal.Building, out var factory))
             {
                 currentConstruction = factory?.Invoke();

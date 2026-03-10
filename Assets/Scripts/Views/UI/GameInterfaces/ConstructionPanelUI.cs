@@ -1,3 +1,4 @@
+using App.Signals;
 using Controllers.Construction;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace Views.Ui.GameInterfaces
         [Space]
         [SerializeField] private Button roadsButton;
         [SerializeField] private Button housingButton;
+        [SerializeField] private Button farmingButton;
         [SerializeField] private Button industryButton;
         [SerializeField] private Button leasureButton;
         [SerializeField] private Button municipalButton;
@@ -20,15 +22,22 @@ namespace Views.Ui.GameInterfaces
         [SerializeField] private RectTransform buildingButtonsContainer;
         [SerializeField] private BuildingButtonUI buildingButtonPrefab;
 
-        [Inject] private SignalBus signalBus;
+        [Inject] private readonly SignalBus signalBus;
 
         private BuildingType? currentOpenPanel = null;
-        private List<BuildingButtonUI> activeBUttons = new List<BuildingButtonUI>();
+        private List<BuildingButtonUI> activeButtons = new List<BuildingButtonUI>();
 
         private void OnEnable()
         {
-            roadsButton.onClick.AddListener(() => OpenPanel(BuildingType.Roads));
+            roadsButton.onClick.AddListener(() =>
+            {
+                ClearTabs();
+                availableBuildingsPanel.gameObject.SetActive(false);
+                signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Road));
+            });
+
             housingButton.onClick.AddListener(() => OpenPanel(BuildingType.Housing));
+            farmingButton.onClick.AddListener(() => OpenPanel(BuildingType.Farming));
             industryButton.onClick.AddListener(() => OpenPanel(BuildingType.Industry));
             leasureButton.onClick.AddListener(() => OpenPanel(BuildingType.Leasure));
             municipalButton.onClick.AddListener(() => OpenPanel(BuildingType.Municipal));
@@ -41,6 +50,7 @@ namespace Views.Ui.GameInterfaces
         {
             roadsButton.onClick.RemoveAllListeners();
             housingButton.onClick.RemoveAllListeners();
+            farmingButton.onClick.RemoveAllListeners();
             industryButton.onClick.RemoveAllListeners();
             leasureButton.onClick.RemoveAllListeners();
             municipalButton.onClick.RemoveAllListeners();
@@ -56,33 +66,37 @@ namespace Views.Ui.GameInterfaces
                 var buildings = new List<BuildingDefinition>();
                 switch (buildingType)
                 {
-                    case BuildingType.Roads:
-                        buildings = new List<BuildingDefinition>()
-                        {
-                            BuildingDefinition.Road
-                        };
-                        break;
                     case BuildingType.Housing:
                         buildings = new List<BuildingDefinition>()
                         {
                             BuildingDefinition.Cottage,
-                            BuildingDefinition.House
+                            BuildingDefinition.House,
+                            BuildingDefinition.Residence
                         };
                         break;
+
+                    case BuildingType.Farming:
+                        buildings = new List<BuildingDefinition>()
+                        {
+                            BuildingDefinition.WheatFarm,
+                            BuildingDefinition.LinenFarm,
+                            BuildingDefinition.Pasture
+                        };
+                        break;
+
                     case BuildingType.Industry:
                         buildings = new List<BuildingDefinition>()
                         {
                             BuildingDefinition.Windmill,
                             BuildingDefinition.Bakery,
                             BuildingDefinition.Granary,
-                            BuildingDefinition.Warehouse,
-                            BuildingDefinition.WheatFarm,
-                            BuildingDefinition.LinenFarm,
-                            BuildingDefinition.Pasture
+                            BuildingDefinition.Warehouse
                         };
                         break;
+
                     case BuildingType.Leasure:
                         break;
+
                     case BuildingType.Municipal:
                         buildings = new List<BuildingDefinition>()
                         {
@@ -90,8 +104,10 @@ namespace Views.Ui.GameInterfaces
                             BuildingDefinition.Bazaar
                         };
                         break;
+
                     case BuildingType.Decorates:
                         break;
+
                     default:
                         break;
                 }
@@ -104,13 +120,13 @@ namespace Views.Ui.GameInterfaces
                 currentOpenPanel = null;
                 availableBuildingsPanel.gameObject.SetActive(false);
             }
+
+            signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
         }
 
         private void LoadAvailableBuldings(List<BuildingDefinition> buildings)
         {
-            foreach (var button in activeBUttons)
-                Destroy(button.gameObject);
-            activeBUttons.Clear();
+            ClearTabs();
 
             foreach (var building in buildings)
             {
@@ -118,15 +134,23 @@ namespace Views.Ui.GameInterfaces
                 buildingButton.transform.SetParent(buildingButtonsContainer);
                 buildingButton.InitializeButton(signalBus, building);
 
-                activeBUttons.Add(buildingButton);
+                activeButtons.Add(buildingButton);
             }
+        }
+
+        private void ClearTabs()
+        {
+            foreach (var button in activeButtons)
+                Destroy(button.gameObject);
+
+            activeButtons.Clear();
         }
     }
 
     public enum BuildingType
     {
-        Roads,
         Housing,
+        Farming,
         Industry,
         Leasure,
         Municipal,

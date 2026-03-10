@@ -5,6 +5,7 @@ using Models.Construction;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Views.Construction;
 using Zenject;
 
@@ -57,7 +58,7 @@ namespace Controllers.Construction
 
         public void Tick()
         {
-            if (Input.GetMouseButtonDown(1))
+            if (Input.GetMouseButtonUp(1))
             {
                 if (building != null)
                 {
@@ -78,7 +79,7 @@ namespace Controllers.Construction
                 foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
                     renderer.material.color = Color.lightGreen;
 
-                if (Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonUp(0) && !IsUIHit())
                 {
                     constructionGrid.AddOccupant(occupiedCells, buildingDefinition, building);
                     PlaceBuilding();
@@ -91,11 +92,14 @@ namespace Controllers.Construction
             }
         }
 
-        private void CancelConstruction()
+        public void Dispose()
         {
             if (building != null)
                 Object.Destroy(building.gameObject);
+        }
 
+        private void CancelConstruction()
+        {
             signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
         }
 
@@ -161,6 +165,19 @@ namespace Controllers.Construction
             return true;
         }
 
+        private bool IsUIHit()
+        {
+            var eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Input.mousePosition
+            };
+
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            return results.Count > 0;
+        }
+
         private List<Vector2Int> CalculateOccupiedTiles(Vector2Int buildingPosition)
         {
             var occupiedTiles = new List<Vector2Int>();
@@ -205,7 +222,6 @@ namespace Controllers.Construction
             }
             return occupiedTiles;
         }
-
 
         private bool IsTerrainFlat(Vector2Int buildingPosition)
         {

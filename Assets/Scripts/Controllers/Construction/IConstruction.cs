@@ -5,5 +5,7 @@ namespace Controllers.Construction
         public void Initialize();
 
         public void Tick();
+
+        public void Dispose();
     }
 }

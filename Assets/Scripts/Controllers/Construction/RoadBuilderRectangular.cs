@@ -4,6 +4,7 @@ using Models.Construction;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Views.Road;
 using Zenject;
 
@@ -119,6 +120,16 @@ namespace Controllers.Construction
             }
         }
 
+        public void Dispose()
+        {
+            var lineRenderer = roadPreview.GetComponent<LineRenderer>();
+            lineRenderer.positionCount = 0;
+
+            startPosition = null;
+            endPosition = null;
+            currentRoadPath.Clear();
+        }
+
         private void ConfirmRoadConstruction()
         {
             var cellOffset = 0.5f * cellSize;
@@ -152,7 +163,7 @@ namespace Controllers.Construction
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             var layerMask = 1 << 16;
 
-            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
+            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask) || IsUIHit())
             {
                 cell = default;
                 return false;
@@ -163,6 +174,19 @@ namespace Controllers.Construction
 
             cell = new Vector2Int(gridX, gridZ);
             return true;
+        }
+
+        private bool IsUIHit()
+        {
+            var eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Input.mousePosition
+            };
+
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            return results.Count > 0;
         }
     }
 

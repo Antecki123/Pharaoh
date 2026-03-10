@@ -135,7 +135,7 @@ namespace Controllers.Construction
             }
         }
 
-        private void CancelConstruction()
+        public void Dispose()
         {
             startPosition = null;
             endPosition = null;
@@ -149,7 +149,10 @@ namespace Controllers.Construction
 
             if (pointer != null)
                 UnityEngine.Object.Destroy(pointer);
+        }
 
+        private void CancelConstruction()
+        {
             signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
         }
 
