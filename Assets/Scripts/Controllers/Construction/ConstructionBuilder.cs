@@ -21,7 +21,6 @@ namespace Controllers.Construction
         private SignalBus signalBus;
         private PrefabManager prefabManager;
         private ConstructionConfig constructionConfig;
-        private ConstructionDataImporter constructionData;
         private ConstructionGrid constructionGrid;
 
         private Transform constructionsContainer;
@@ -31,12 +30,11 @@ namespace Controllers.Construction
         private int rotationSteps;
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionConfig constructionConfig,
-            ConstructionDataImporter constructionData, ConstructionGrid constructionGrid)
+            ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.constructionConfig = constructionConfig;
-            this.constructionData = constructionData;
             this.constructionGrid = constructionGrid;
 
             mainCamera = Camera.main;

@@ -89,6 +89,8 @@ namespace Views.Ui.GameInterfaces
                         {
                             BuildingDefinition.Windmill,
                             BuildingDefinition.Bakery,
+                            BuildingDefinition.Brewery,
+                            BuildingDefinition.WeavingMill,
                             BuildingDefinition.Granary,
                             BuildingDefinition.Warehouse
                         };

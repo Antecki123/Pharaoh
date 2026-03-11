@@ -121,6 +121,23 @@ namespace Models.Construction
                     { 1 }
                 }
             },
+
+            {
+                BuildingDefinition.Brewery, new int[,]
+                {
+                    { 1, 1, 1 },
+                    { 1, 1, 1 },
+                    { 1, 1, 1 }
+                }
+            },
+
+            {
+                BuildingDefinition.WeavingMill, new int[,]
+                {
+                    { 1, 1 },
+                    { 1, 1 }
+                }
+            },
         };
     }
 }

@@ -11,7 +11,7 @@ using Zenject;
 namespace Views.Construction
 {
     [SelectionBase]
-    public class WindmillView : BuildingView
+    public class BreweryView : BuildingView
     {
         private SignalBus signalBus;
         private PrefabManager prefabManager;
@@ -58,12 +58,12 @@ namespace Views.Construction
 
         private void SetupWorkplace()
         {
-            var buildingDefinition = BuildingDefinition.Windmill;
+            var buildingDefinition = BuildingDefinition.Brewery;
             var economyData = economyImporter.EconomyData[buildingDefinition];
             var storage = new StorageModel(new List<CommodityModel>()
             {
                 new CommodityModel() { Name = CommodityName.Wheat, MaxQuantity = 1 },
-                new CommodityModel() { Name = CommodityName.Flour, MaxQuantity = 10 }
+                new CommodityModel() { Name = CommodityName.Beer, MaxQuantity = 10 }
             });
 
             var workplaceModel = new WorkplaceModel(buildingDefinition, economyData, storage);
