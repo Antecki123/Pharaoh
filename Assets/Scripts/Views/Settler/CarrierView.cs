@@ -26,7 +26,7 @@ namespace Views.Settler.Workers
         private CommodityModel carriedCommodity;
 
         private NpcMovementHandler movementHandler;
-        private readonly float baseMovementSpeed = 2.2f;
+        private readonly float baseMovementSpeed = 1.0f;
 
         [Inject]
         public void Constructor(SignalBus signalBus, NavigationGraph navigationGraph, ConstructionGrid constructionGrid)

@@ -39,7 +39,7 @@ namespace Models.Ai
 
             foreach (var node in nodes)
             {
-                var connectionRange = 4f;
+                var connectionRange = 1.5f;
                 float dist = Vector3.Distance(newNode.Data, node.Data);
                 if (dist <= connectionRange && node != newNode)
                 {

@@ -26,7 +26,6 @@ namespace Controllers.Construction
         private Transform constructionsContainer;
         private Camera mainCamera;
 
-        private readonly float cellSize = 4f;
         private int rotationSteps;
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionConfig constructionConfig,
@@ -114,8 +113,8 @@ namespace Controllers.Construction
             float offsetX = (rotatedWidth % 2 == 1) ? 0.5f : 0f;
             float offsetZ = (rotatedHeight % 2 == 1) ? 0.5f : 0f;
 
-            float worldX = (position.x + offsetX) * cellSize;
-            float worldZ = (position.y + offsetZ) * cellSize;
+            float worldX = position.x + offsetX;
+            float worldZ = position.y + offsetZ;
 
             var h = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
             building.transform.position = new Vector3(worldX, h, worldZ);
@@ -156,8 +155,8 @@ namespace Controllers.Construction
                 return false;
             }
 
-            int gridX = Mathf.FloorToInt(hit.point.x / cellSize);
-            int gridZ = Mathf.FloorToInt(hit.point.z / cellSize);
+            int gridX = Mathf.FloorToInt(hit.point.x);
+            int gridZ = Mathf.FloorToInt(hit.point.z);
 
             cell = new Vector2Int(gridX, gridZ);
             return true;
@@ -251,8 +250,8 @@ namespace Controllers.Construction
                 {
                     for (int sx = 0; sx < samplesPerTile; sx++)
                     {
-                        float sampleX = tile.x * cellSize + (sx / (float)(samplesPerTile - 1)) * cellSize;
-                        float sampleZ = tile.y * cellSize + (sy / (float)(samplesPerTile - 1)) * cellSize;
+                        float sampleX = tile.x + (sx / (float)(samplesPerTile - 1));
+                        float sampleZ = tile.y + (sy / (float)(samplesPerTile - 1));
 
                         float h = Terrain.activeTerrain.SampleHeight(new Vector3(sampleX, 0, sampleZ));
                         heights.Add(h);

@@ -28,7 +28,6 @@ namespace Controllers.Construction
         private ConstructionGrid constructionGrid;
 
         private Transform roadContainer;
-        private readonly float cellSize = 4f;
 
         public RoadBuilderRectangular(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid)
         {
@@ -43,13 +42,14 @@ namespace Controllers.Construction
         public void Setup(Transform roadContainer)
         {
             this.roadContainer = roadContainer;
-            roadPreview = new GameObject("RoadPreview");
-            roadPreview.AddComponent<LineRenderer>();
         }
 
         public void Initialize()
         {
-
+            roadPreview = new GameObject("RoadPreview");
+            var lineRenderer = roadPreview.AddComponent<LineRenderer>();
+            lineRenderer.startWidth = .2f;
+            lineRenderer.endWidth = .2f;
         }
 
         public void Tick()
@@ -81,9 +81,9 @@ namespace Controllers.Construction
             {
                 if (startPosition == null)
                 {
-                    var cellOffset = 0.5f * cellSize;
-                    var worldX = currentCell.x * cellSize + cellOffset;
-                    var worldZ = currentCell.y * cellSize + cellOffset;
+                    var cellOffset = 0.5f;
+                    var worldX = currentCell.x + cellOffset;
+                    var worldZ = currentCell.y + cellOffset;
                     var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
                     startPosition = new Vector3(worldX, height, worldZ);
                 }
@@ -98,7 +98,7 @@ namespace Controllers.Construction
 
             if (startPosition != null && endPosition == null)
             {
-                var startPos = new Vector2Int(Mathf.FloorToInt(startPosition.Value.x / cellSize), Mathf.FloorToInt(startPosition.Value.z / cellSize));
+                var startPos = new Vector2Int(Mathf.FloorToInt(startPosition.Value.x), Mathf.FloorToInt(startPosition.Value.z));
                 currentRoadPath = roadPathfinder.FindRoadPath(startPos, currentCell);
             }
 
@@ -107,9 +107,9 @@ namespace Controllers.Construction
                 var roadPoints = new List<Vector3>();
                 foreach (var point in currentRoadPath)
                 {
-                    var cellOffset = 0.5f * cellSize;
-                    var worldX = point.x * cellSize + cellOffset;
-                    var worldZ = point.y * cellSize + cellOffset;
+                    var cellOffset = 0.5f;
+                    var worldX = point.x + cellOffset;
+                    var worldZ = point.y + cellOffset;
                     var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
                     roadPoints.Add(new Vector3(worldX, height, worldZ));
                 }
@@ -122,8 +122,7 @@ namespace Controllers.Construction
 
         public void Dispose()
         {
-            var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-            lineRenderer.positionCount = 0;
+            Object.Destroy(roadPreview);
 
             startPosition = null;
             endPosition = null;
@@ -132,14 +131,14 @@ namespace Controllers.Construction
 
         private void ConfirmRoadConstruction()
         {
-            var cellOffset = 0.5f * cellSize;
+            var cellOffset = 0.5f;
 
             foreach (var gridPosition in currentRoadPath)
             {
                 var routePrefab = Resources.Load<RoadView>("Prefabs/RoadView");
                 var roadView = prefabManager.InstantiateWithInject<RoadView>(routePrefab.gameObject);
-                var worldX = gridPosition.x * cellSize + cellOffset;
-                var worldZ = gridPosition.y * cellSize + cellOffset;
+                var worldX = gridPosition.x + cellOffset;
+                var worldZ = gridPosition.y + cellOffset;
                 var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
 
                 roadView.Init(new Vector3(worldX, height, worldZ));
@@ -169,8 +168,8 @@ namespace Controllers.Construction
                 return false;
             }
 
-            int gridX = Mathf.FloorToInt(hit.point.x / cellSize);
-            int gridZ = Mathf.FloorToInt(hit.point.z / cellSize);
+            int gridX = Mathf.FloorToInt(hit.point.x);
+            int gridZ = Mathf.FloorToInt(hit.point.z);
 
             cell = new Vector2Int(gridX, gridZ);
             return true;

@@ -12,8 +12,7 @@ namespace App.Debug
         private ConstructionGrid constructionGrid;
         private IrrigationModel irrigationModel;
 
-        private readonly int size = 500;
-        private readonly float cellSize = 4f;
+        private readonly int size = 250;
 
         [Inject]
         public void Constructor(ConstructionGrid constructionGrid)
@@ -27,9 +26,9 @@ namespace App.Debug
         {
             foreach (var tile in constructionGrid.OccupiedTiles)
             {
-                var offset = cellSize * 0.5f;
-                var worldX = tile.Position.x * cellSize + offset;
-                var worldZ = tile.Position.y * cellSize + offset;
+                var offset = 0.5f;
+                var worldX = tile.Position.x + offset;
+                var worldZ = tile.Position.y + offset;
                 var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
 
                 var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -59,20 +58,20 @@ namespace App.Debug
             var mesh = new Mesh();
             mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 
-            int cells = Mathf.FloorToInt(size / cellSize);
+            int cells = Mathf.FloorToInt(size);
 
             var vertices = new List<Vector3>(cells * cells * 4);
             var indices = new List<int>(cells * cells * 8);
 
-            float offset = cellSize * 0.5f;
+            float offset = 0.5f;
             float heightOffset = 0.05f;
 
             for (int y = 0; y < cells; y++)
             {
                 for (int x = 0; x < cells; x++)
                 {
-                    float centerX = x * cellSize + offset;
-                    float centerZ = y * cellSize + offset;
+                    float centerX = x + offset;
+                    float centerZ = y + offset;
 
                     Vector3 bl = new(
                         centerX - offset,

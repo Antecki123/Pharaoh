@@ -88,8 +88,6 @@ namespace Controllers
         private void Scroll()
         {
             var scrollInput = Input.GetAxis("Mouse ScrollWheel");
-            var minY = 15f;
-            var maxY = 80f;
 
             if (Mathf.Abs(scrollInput) > 0.01f)
                 scrollVelocity += -scrollInput * cameraConfig.scrollSpeed;
@@ -97,7 +95,7 @@ namespace Controllers
             if (Mathf.Abs(scrollVelocity) > 0.001f)
             {
                 var newPos = mainCamera.transform.position + new Vector3(0f, scrollVelocity * Time.deltaTime, 0f);
-                newPos.y = Mathf.Clamp(newPos.y, minY, maxY);
+                newPos.y = Mathf.Clamp(newPos.y, cameraConfig.minZoom, cameraConfig.maxZoom);
                 mainCamera.transform.position = newPos;
             }
 

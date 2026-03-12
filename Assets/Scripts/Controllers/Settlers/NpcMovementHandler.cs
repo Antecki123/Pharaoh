@@ -34,7 +34,7 @@ namespace Controllers.Ai
             this.movementSpeed = movementSpeed;
         }
 
-        public bool CalculateRoute(BuildingView origin, BuildingView target)
+        public bool CalculateRoute(BuildingView origin, BuildingView target, bool addOffset = true)
         {
             if (!constructionGrid.HasRoadConnection(origin) || !constructionGrid.HasRoadConnection(target))
                 return false;
@@ -56,6 +56,18 @@ namespace Controllers.Ai
                 Debug.LogWarning($"[D*Lite] Cannot find a path between {startNode.Data} and {goalNode.Data}.");
 
             waypoints = path.ConvertAll(p => new Vector3(p.Data.x, p.Data.y, p.Data.z));
+
+            if (addOffset)
+            {
+                var offset = new Vector3(
+                    UnityEngine.Random.Range(-.4f, .4f),
+                    0f,
+                    UnityEngine.Random.Range(-.4f, .4f)
+                );
+
+                for (int i = 0; i < waypoints.Count; i++)
+                    waypoints[i] += offset;
+            }
 
             return waypoints.Count > 0;
         }

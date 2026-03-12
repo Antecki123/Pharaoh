@@ -16,5 +16,7 @@ namespace App.Configs
         [Header("Camera scroll")]
         public float scrollSpeed = 50f;
         public float scrollDamping = 15f;
+        public float minZoom = 15f;
+        public float maxZoom = 60f;
     }
 }

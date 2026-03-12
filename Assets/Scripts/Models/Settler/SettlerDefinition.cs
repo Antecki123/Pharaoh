@@ -12,7 +12,7 @@ namespace Models.Settler
 
         public SettlerGender Gender { get; private set; }
 
-        public float MovementSpeed { get; private set; } = 2.2f;
+        public float MovementSpeed { get; private set; } = 0.6f;
 
         public SettlerDefinition(Guid id, string name, int birthYear, SettlerGender gender)
         {

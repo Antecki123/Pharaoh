@@ -32,7 +32,7 @@ namespace Views.Settler.Workers
 
         private Node<Vector3> previousNode;
         private NpcMovementHandler movementHandler;
-        private readonly float baseMovementSpeed = 1.8f;
+        private readonly float baseMovementSpeed = 1.0f;
 
         private Dictionary<Node<Vector3>, int> visitCounts = new Dictionary<Node<Vector3>, int>();
 
@@ -68,7 +68,7 @@ namespace Views.Settler.Workers
 
         public void Tick()
         {
-            movementHandler.ModifySpeed(remainingCapacity > 0 ? baseMovementSpeed / 2 : baseMovementSpeed);
+            movementHandler.ModifySpeed(remainingCapacity > 0 ? baseMovementSpeed / 1.25f : baseMovementSpeed);
         }
 
         public void ReturnToOrigin()
