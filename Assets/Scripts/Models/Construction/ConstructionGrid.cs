@@ -12,9 +12,11 @@ namespace Models.Construction
 
         public IReadOnlyCollection<ConstructionGridData> OccupiedTiles => occupiedTiles;
         public IReadOnlyCollection<Vector2Int> OccupiedTilesWithoutRoads => occupiedTilesWithoutRoads;
+        public IReadOnlyCollection<Vector2Int> RoadsTiles => roadsTiles;
 
         private HashSet<ConstructionGridData> occupiedTiles = new HashSet<ConstructionGridData>();
         private HashSet<Vector2Int> occupiedTilesWithoutRoads = new HashSet<Vector2Int>();
+        private HashSet<Vector2Int> roadsTiles = new HashSet<Vector2Int>();
 
         public void AddOccupant(List<Vector2Int> cells, BuildingDefinition buildingDefinition, BuildingView buildingView)
         {
@@ -30,6 +32,8 @@ namespace Models.Construction
 
                 if (buildingDefinition != BuildingDefinition.Road)
                     occupiedTilesWithoutRoads.Add(pos);
+                else
+                    roadsTiles.Add(pos);
             }
 
             OnValueChanged?.Invoke();
@@ -47,12 +51,20 @@ namespace Models.Construction
 
             if (buildingDefinition != BuildingDefinition.Road)
                 occupiedTilesWithoutRoads.Add(pos);
+            else
+                roadsTiles.Add(pos);
 
             OnValueChanged?.Invoke();
         }
 
         public void RemoveOccupant(Vector2Int cellToRemove)
         {
+            if (occupiedTilesWithoutRoads.Contains(cellToRemove))
+                occupiedTilesWithoutRoads.Remove(cellToRemove);
+
+            if (roadsTiles.Contains(cellToRemove))
+                roadsTiles.Remove(cellToRemove);
+
             OnValueChanged.Invoke();
         }
 
@@ -98,8 +110,9 @@ namespace Models.Construction
             return false;
         }
 
-        public Vector2Int GetConnectedRoadTile(BuildingView buildingView)
+        public List<Vector2Int> GetAllConnectedRoadTiles(BuildingView buildingView)
         {
+            var roadTiles = new List<Vector2Int>();
             foreach (var tile in occupiedTiles)
             {
                 if (tile.BuildingView != buildingView)
@@ -122,14 +135,17 @@ namespace Models.Construction
                         continue;
 
                     if (neighbourTile.BuildingDefinition == BuildingDefinition.Road)
-                        return neighbourPos;
+                    {
+                        if (!roadTiles.Contains(neighbourPos))
+                            roadTiles.Add(neighbourPos);
+                    }
                 }
             }
 
-            return default;
+            return roadTiles;
         }
 
-        private ConstructionGridData GetTileByPosition(Vector2Int position)
+        public ConstructionGridData GetTileByPosition(Vector2Int position)
         {
             foreach (var tile in occupiedTiles)
             {

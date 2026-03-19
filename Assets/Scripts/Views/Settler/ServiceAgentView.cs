@@ -27,14 +27,17 @@ namespace Views.Settler.Workers
 
         private BuildingView assignedBuilding;
         private HabitationRequirementDefinition habitationRequirement;
+        private HashSet<Vector2Int> availableTiles;
+
         private float remainingCapacity = 100f;
         private bool isReturning;
 
-        private Node<Vector3> previousNode;
         private NpcMovementHandler movementHandler;
-        private readonly float baseMovementSpeed = 1.0f;
+        private Node<Vector3> previousNode;
+        private float baseMovementSpeed = 1.0f;
 
         private Dictionary<Node<Vector3>, int> visitCounts = new Dictionary<Node<Vector3>, int>();
+        private Vector3? lastVisitedTile;
 
         [Inject]
         public void Constructor(SignalBus signalBus, NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
@@ -46,9 +49,11 @@ namespace Views.Settler.Workers
             movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid, baseMovementSpeed);
         }
 
-        public void Init(BuildingView assignedBuilding)
+        public void Init(ServiceAgentPayload agentPayload)
         {
-            this.assignedBuilding = assignedBuilding;
+            assignedBuilding = agentPayload.Origin;
+            habitationRequirement = agentPayload.HabitationRequirementDefinition;
+            availableTiles = agentPayload.AvailableTiles;
 
             visitCounts.Clear();
             remainingCapacity = 100f;
@@ -60,7 +65,10 @@ namespace Views.Settler.Workers
                 return;
             }
 
-            var originPosition = navigationGraph.GetClosestNode(assignedBuilding.transform.position);
+            var connectedRoadTiles = constructionGrid.GetAllConnectedRoadTiles(assignedBuilding);
+            var randomConnectedTile = connectedRoadTiles[UnityEngine.Random.Range(0, connectedRoadTiles.Count)];
+            var originPosition = navigationGraph.GetClosestNode(new Vector3(randomConnectedTile.x, 0, randomConnectedTile.y));
+
             transform.position = originPosition.Data;
 
             CalculateNextPosition();
@@ -69,13 +77,16 @@ namespace Views.Settler.Workers
         public void Tick()
         {
             movementHandler.ModifySpeed(remainingCapacity > 0 ? baseMovementSpeed / 1.25f : baseMovementSpeed);
+            SatisfyResident();
         }
 
         public void ReturnToOrigin()
         {
             isReturning = true;
 
-            var closestNode = navigationGraph.GetClosestNode(assignedBuilding.transform.position);
+            var connectedRoadTiles = constructionGrid.GetAllConnectedRoadTiles(assignedBuilding);
+            var randomConnectedTile = connectedRoadTiles[UnityEngine.Random.Range(0, connectedRoadTiles.Count)];
+            var closestNode = navigationGraph.GetClosestNode(new Vector3(randomConnectedTile.x, 0, randomConnectedTile.y));
             var calculationResult = movementHandler.CalculateRoute(previousNode.Data, closestNode.Data);
 
             if (!calculationResult)
@@ -141,7 +152,7 @@ namespace Views.Settler.Workers
                 var visitPenalty = 1f / (1f + visits);
                 var weight = directionWeight * visitPenalty;
 
-                if (weight <= 0f)
+                if (weight <= 0f || !availableTiles.Contains(new Vector2Int((int)neighbor.Data.x, (int)neighbor.Data.z)))
                     continue;
 
                 candidates.Add((neighbor, weight));
@@ -163,14 +174,52 @@ namespace Views.Settler.Workers
             return candidates[^1].node;
         }
 
-        private void OnTriggerEnter(Collider other)
+        private void SatisfyResident()
         {
-            if (remainingCapacity > 0 && other.TryGetComponent(out IServiceReceiver serviceReceiver))
+            var currentTile = movementHandler.NextPosition;
+            if (currentTile != lastVisitedTile)
             {
+                lastVisitedTile = currentTile;
+
                 var baseServiceValue = 10f;
-                var residual = serviceReceiver.SatisfyResidentNeeds(habitationRequirement, baseServiceValue);
-                remainingCapacity -= baseServiceValue - residual;
+                var directions = new[]
+                {
+                    Vector2Int.left,
+                    Vector2Int.right,
+                    Vector2Int.up,
+                    Vector2Int.down,
+                };
+
+                var current = new Vector2Int((int)currentTile.x, (int)currentTile.z);
+
+                foreach (var dir in directions)
+                {
+                    if (remainingCapacity <= 0)
+                        break;
+
+                    var tilePosition = current + dir;
+                    var tile = constructionGrid.GetTileByPosition(tilePosition);
+
+                    var buildingView = tile?.BuildingView;
+                    if (buildingView == null)
+                        continue;
+
+                    if (buildingView.TryGetComponent(out IServiceReceiver serviceReceiver))
+                    {
+                        var residual = serviceReceiver.SatisfyResidentNeeds(habitationRequirement, baseServiceValue);
+                        remainingCapacity -= baseServiceValue - residual;
+                    }
+                }
             }
         }
+    }
+
+    public class ServiceAgentPayload
+    {
+        public BuildingView Origin { get; set; }
+
+        public HabitationRequirementDefinition HabitationRequirementDefinition { get; set; }
+
+        public HashSet<Vector2Int> AvailableTiles { get; set; }
     }
 }

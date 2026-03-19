@@ -4,6 +4,7 @@ using Models.Economy;
 using Models.Habitation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Models.Work
 {
@@ -38,6 +39,9 @@ namespace Models.Work
             MinimumWorkersCount = economyData.MinimumWorkersCount;
             MaxWorkersCount = economyData.MaxWorkersCount;
             StorageModel = storageModel;
+            DistributedCommodity = economyData.RequiredCommodity == null
+                ? null
+                : StorageModel.Storage.FirstOrDefault(c => c.Name == economyData.RequiredCommodity.Value);
             HabitationRequirementDefinition = habitationRequirementDefinition;
 
             StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();

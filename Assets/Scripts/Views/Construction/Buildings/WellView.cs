@@ -1,6 +1,7 @@
 using App.Signals;
 using Controllers.Construction;
 using Controllers.Work;
+using Models.Construction;
 using Models.Economy;
 using Models.Habitation;
 using Models.Work;
@@ -16,15 +17,18 @@ namespace Views.Construction
         private SignalBus signalBus;
         private SupplyModel supplyModel;
         private WorkplaceEconomyImporter economyImporter;
+        private ConstructionGrid constructionGrid;
 
         private DistributionPointWorkplace workplace;
+        private int influenceDistance = 10;
 
         [Inject]
-        public void Constructor(SignalBus signalBus, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter)
+        public void Constructor(SignalBus signalBus, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.supplyModel = supplyModel;
             this.economyImporter = economyImporter;
+            this.constructionGrid = constructionGrid;
         }
 
         public override void PlaceBuilding()
@@ -62,7 +66,20 @@ namespace Views.Construction
 
             var requirementDefinition = HabitationRequirementDefinition.Water;
             var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, requirementDefinition);
-            workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, this);
+            workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, constructionGrid, this, influenceDistance);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            foreach (var tile in workplace.InfluencedTiles)
+            {
+                Gizmos.color = Color.forestGreen;
+                var x = tile.x + .5f;
+                var z = tile.y + .5f;
+                var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+
+                Gizmos.DrawWireSphere(new Vector3(x, h, z), .2f);
+            }
         }
     }
 }

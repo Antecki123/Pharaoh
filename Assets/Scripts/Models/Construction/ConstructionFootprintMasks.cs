@@ -138,6 +138,15 @@ namespace Models.Construction
                     { 1, 1 }
                 }
             },
+
+            {
+                BuildingDefinition.Tavern, new int[,]
+                {
+                    { 1, 1, 1 },
+                    { 1, 1, 1 },
+                    { 1, 1, 1 }
+                }
+            },
         };
     }
 }

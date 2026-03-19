@@ -18,23 +18,6 @@ namespace App.Debug
         public void Constructor(ConstructionGrid constructionGrid)
         {
             this.constructionGrid = constructionGrid;
-
-            //constructionGrid.OnValueChanged += ConstructionGrid_OnValueChanged;
-        }
-
-        private void ConstructionGrid_OnValueChanged()
-        {
-            foreach (var tile in constructionGrid.OccupiedTiles)
-            {
-                var offset = 0.5f;
-                var worldX = tile.Position.x + offset;
-                var worldZ = tile.Position.y + offset;
-                var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
-
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.transform.localScale = new Vector3(3.9f, 0.1f, 3.9f);
-                go.transform.position = new Vector3(worldX, height, worldZ);
-            }
         }
 
         private void Start()
@@ -112,6 +95,29 @@ namespace App.Debug
             mesh.RecalculateBounds();
 
             meshFilter.mesh = mesh;
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            foreach (var tile in constructionGrid.RoadsTiles)
+            {
+                Gizmos.color = Color.darkGray;
+                var x = tile.x + .5f;
+                var z = tile.y + .5f;
+                var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+
+                Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+            }
+
+            foreach (var tile in constructionGrid.OccupiedTilesWithoutRoads)
+            {
+                Gizmos.color = Color.darkRed;
+                var x = tile.x + .5f;
+                var z = tile.y + .5f;
+                var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+
+                Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+            }
         }
     }
 }

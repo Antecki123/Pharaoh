@@ -1,3 +1,4 @@
+using Controllers.Work;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,20 @@ namespace Models.Economy
         public StorageModel(List<CommodityModel> storage)
         {
             this.storage = storage;
+        }
+
+        public StorageModel(List<StorageEconomyData> storageData)
+        {
+            foreach (var data in storageData)
+            {
+                var commodity = new CommodityModel()
+                {
+                    Name = data.Name,
+                    Quantity = data.Quantity,
+                    MaxQuantity = data.MaxQuantity,
+                };
+                storage.Add(commodity);
+            }
         }
 
         public void AddCommodity(CommodityModel commodity)

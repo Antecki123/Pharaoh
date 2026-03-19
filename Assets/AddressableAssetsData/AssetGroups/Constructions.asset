@@ -55,6 +55,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9510b6328e2efe14cb6bbc5a4c24c162
+    m_Address: Tavern
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9f3fb20e88f73934da8e13f35e75de1b
     m_Address: WheatFarm
     m_ReadOnly: 0

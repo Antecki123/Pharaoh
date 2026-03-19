@@ -64,8 +64,9 @@ namespace Controllers.Construction
                 { BuildingDefinition.LinenFarm, Build<LinenFarmView>(BuildingDefinition.LinenFarm) },
                 { BuildingDefinition.Pasture, Build<WarehouseView>(BuildingDefinition.Pasture) },
                 { BuildingDefinition.Well, Build<WellView>(BuildingDefinition.Well) },
-                { BuildingDefinition.Brewery, Build<WellView>(BuildingDefinition.Brewery) },
-                { BuildingDefinition.WeavingMill, Build<WellView>(BuildingDefinition.WeavingMill) },
+                { BuildingDefinition.Brewery, Build<BreweryView>(BuildingDefinition.Brewery) },
+                { BuildingDefinition.WeavingMill, Build<WeavingMillView>(BuildingDefinition.WeavingMill) },
+                { BuildingDefinition.Tavern, Build<TavernView>(BuildingDefinition.Tavern) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
@@ -108,5 +109,6 @@ namespace Controllers.Construction
         Well,
         Brewery,
         WeavingMill,
+        Tavern
     }
 }

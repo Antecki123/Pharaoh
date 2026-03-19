@@ -1,4 +1,5 @@
 using Controllers.Work;
+using Models.Habitation;
 using Models.Work;
 using System;
 using System.Collections.Generic;
@@ -94,13 +95,13 @@ namespace App.Signals
 
         public class SpawnServiceAgent
         {
-            public BuildingView Origin { get; private set; }
+            public ServiceAgentPayload ServiceAgentPayload { get; private set; }
 
             public Action OnAgentReturn { get; private set; }
 
-            public SpawnServiceAgent(BuildingView origin, Action onAgentReturn)
+            public SpawnServiceAgent(ServiceAgentPayload serviceAgentPayload, Action onAgentReturn)
             {
-                Origin = origin;
+                ServiceAgentPayload = serviceAgentPayload;
                 OnAgentReturn = onAgentReturn;
             }
         }

@@ -103,7 +103,8 @@ namespace Views.Ui.GameInterfaces
                         buildings = new List<BuildingDefinition>()
                         {
                             BuildingDefinition.Well,
-                            BuildingDefinition.Bazaar
+                            BuildingDefinition.Bazaar,
+                            BuildingDefinition.Tavern,
                         };
                         break;
 

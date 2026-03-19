@@ -39,6 +39,7 @@ namespace App.Registrators
                 "Well",
                 "Brewery",
                 "WeavingMill",
+                "Tavern",
 
                 // UI ELEMENTS
                 "ProcessingWorkplaceTooltipUI",

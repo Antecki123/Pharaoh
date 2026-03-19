@@ -18,3 +18,5 @@ MonoBehaviour:
   rotationDamping: 20
   scrollSpeed: 600
   scrollDamping: 15
+  minZoom: 8
+  maxZoom: 60

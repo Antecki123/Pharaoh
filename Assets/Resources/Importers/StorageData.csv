@@ -1,0 +1,9 @@
+BuildingDefinition;Name;Quantity;MaxQuantity
+Windmill;Wheat;0;1
+Windmill;Flour;0;10
+Bakery;Flour;0;1
+Bakery;Bread;0;10
+Tavern;Beer;5;30
+Bazaar;Food;0;25
+Bazaar;Beer;0;25
+Bazaar;Clothes;0;25
