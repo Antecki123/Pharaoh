@@ -24,7 +24,9 @@ namespace Models.Work
 
         public float ProcessingProgress { get; private set; }
 
-        public int CarriersCount { get; private set; } = 1;
+        public int CarriersCount { get; private set; }
+
+        public int InfluenceRange { get; private set; }
 
         public StorageModel StorageModel { get; private set; }
 
@@ -45,6 +47,7 @@ namespace Models.Work
             MinimumWorkersCount = economyData.MinimumWorkersCount;
             MaxWorkersCount = economyData.MaxWorkersCount;
             CarriersCount = economyData.CarriersCount;
+            InfluenceRange = economyData.InfluenceRange;
             StorageModel = storageModel;
 
             StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();

@@ -49,7 +49,8 @@ namespace Controllers.Work
                     ProcessingTime = float.TryParse(text[5], out float processingTime) ? processingTime : default,
                     MinimumWorkersCount = int.TryParse(text[6], out int minimumWorkersCount) ? minimumWorkersCount : default,
                     MaxWorkersCount = int.TryParse(text[7], out int maxWorkersCount) ? maxWorkersCount : default,
-                    CarriersCount = int.TryParse(text[8], out int carriersCount) ? carriersCount : default
+                    CarriersCount = int.TryParse(text[8], out int carriersCount) ? carriersCount : default,
+                    InfluenceRange = int.TryParse(text[9], out int influenceRange) ? influenceRange : default
                 };
 
                 economyData.Add(definition, data);
@@ -104,6 +105,8 @@ namespace Controllers.Work
         public int MaxWorkersCount { get; set; }
 
         public int CarriersCount { get; set; }
+
+        public int InfluenceRange { get; set; }
     }
 
     public class StorageEconomyData

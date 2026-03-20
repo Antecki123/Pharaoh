@@ -19,7 +19,6 @@ namespace Views.Construction
         private ConstructionGrid constructionGrid;
 
         private DistributionPointWorkplace workplace;
-        private int influenceDistance = 15;
 
         [Inject]
         public void Constructor(SignalBus signalBus, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter, ConstructionGrid constructionGrid)
@@ -65,7 +64,8 @@ namespace Views.Construction
 
             var requirementDefinition = HabitationRequirementDefinition.Tavern;
             var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, requirementDefinition);
-            workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, constructionGrid, this, influenceDistance);
+            workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, constructionGrid, this,
+                economyData.InfluenceRange);
         }
 
         private void OnDrawGizmosSelected()
