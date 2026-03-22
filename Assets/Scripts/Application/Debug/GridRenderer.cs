@@ -9,8 +9,15 @@ namespace App.Debug
 {
     public class GridRenderer : MonoBehaviour
     {
+        public bool showGrid;
+        public bool showRoadsOccupation;
+        public bool showBuildingsOccupation;
+        public bool showIrrigation;
+
         private ConstructionGrid constructionGrid;
         private IrrigationModel irrigationModel;
+
+        private MeshRenderer gridRenderer;
 
         private readonly int size = 250;
 
@@ -23,12 +30,13 @@ namespace App.Debug
         private void Start()
         {
             CreateGridLineRenderer((x, z) => Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z)));
+            gridRenderer.enabled = showGrid;
         }
 
-        public void CreateGridLineRenderer(Func<float, float, float> terrainHeightFunc, Material sharedMaterial = null)
+        private void CreateGridLineRenderer(Func<float, float, float> terrainHeightFunc, Material sharedMaterial = null)
         {
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            var meshRenderer = gameObject.AddComponent<MeshRenderer>();
+            gridRenderer = gameObject.AddComponent<MeshRenderer>();
 
             if (sharedMaterial == null)
             {
@@ -36,7 +44,7 @@ namespace App.Debug
                 sharedMaterial.color = Color.crimson;
             }
 
-            meshRenderer.material = sharedMaterial;
+            gridRenderer.material = sharedMaterial;
 
             var mesh = new Mesh();
             mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -97,26 +105,54 @@ namespace App.Debug
             meshFilter.mesh = mesh;
         }
 
-        private void OnDrawGizmosSelected()
+        public void ShowGrid(bool isOn)
         {
-            foreach (var tile in constructionGrid.RoadsTiles)
-            {
-                Gizmos.color = Color.darkGray;
-                var x = tile.x + .5f;
-                var z = tile.y + .5f;
-                var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+            showGrid = isOn;
+            gridRenderer.enabled = showGrid;
+        }
 
-                Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+        private void OnDrawGizmos()
+        {
+            if (!Application.isPlaying)
+                return;
+
+            if (showRoadsOccupation)
+            {
+                foreach (var tile in constructionGrid.RoadsTiles)
+                {
+                    Gizmos.color = Color.darkGray;
+                    var x = tile.x + .5f;
+                    var z = tile.y + .5f;
+                    var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+
+                    Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+                }
             }
 
-            foreach (var tile in constructionGrid.OccupiedTilesWithoutRoads)
+            if (showBuildingsOccupation)
             {
-                Gizmos.color = Color.darkRed;
-                var x = tile.x + .5f;
-                var z = tile.y + .5f;
-                var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+                foreach (var tile in constructionGrid.OccupiedTilesWithoutRoads)
+                {
+                    Gizmos.color = Color.darkRed;
+                    var x = tile.x + .5f;
+                    var z = tile.y + .5f;
+                    var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
 
-                Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+                    Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+                }
+            }
+
+            if (showIrrigation)
+            {
+                foreach (var tile in irrigationModel.IrrigationTiles)
+                {
+                    Gizmos.color = Color.deepSkyBlue;
+                    var x = tile.Position.x + .5f;
+                    var z = tile.Position.y + .5f;
+                    var h = Terrain.activeTerrain.SampleHeight(new Vector3(x, 0, z));
+
+                    Gizmos.DrawSphere(new Vector3(x, h, z), .15f);
+                }
             }
         }
     }

@@ -7,7 +7,7 @@ namespace Models.Environment
     {
         public IReadOnlyCollection<IrrigationData> IrrigationTiles => irrigationTiles;
 
-        public HashSet<IrrigationData> irrigationTiles = new HashSet<IrrigationData>();
+        private HashSet<IrrigationData> irrigationTiles = new HashSet<IrrigationData>();
 
         public void AddIrrigationSource(Vector2Int tilePosition, int range)
         {

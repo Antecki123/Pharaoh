@@ -21,7 +21,7 @@ namespace Controllers.Construction
         private Camera mainCamera;
         private RoadPathfinder roadPathfinder;
 
-        private GameObject roadPreview;
+        private LineRenderer roadPreview;
 
         private SignalBus signalBus;
         private PrefabManager prefabManager;
@@ -46,10 +46,11 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
-            roadPreview = new GameObject("RoadPreview");
-            var lineRenderer = roadPreview.AddComponent<LineRenderer>();
-            lineRenderer.startWidth = .2f;
-            lineRenderer.endWidth = .2f;
+            var roadPreviewObject = new GameObject("RoadPreview");
+            roadPreview = roadPreviewObject.AddComponent<LineRenderer>();
+            roadPreview.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            roadPreview.startWidth = .5f;
+            roadPreview.endWidth = .5f;
         }
 
         public void Tick()
@@ -62,23 +63,28 @@ namespace Controllers.Construction
                     endPosition = null;
                     currentRoadPath.Clear();
 
-                    var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-                    lineRenderer.positionCount = 0;
+                    roadPreview.positionCount = 0;
                 }
                 else
                 {
                     CancelConstruction();
 
-                    var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-                    lineRenderer.positionCount = 0;
+                    roadPreview.positionCount = 0;
                 }
             }
 
             if (!GetGridCell(out Vector2Int currentCell))
                 return;
 
+            roadPreview.material.color = constructionGrid.IsValidPlacement(currentCell, true)
+                ? Color.darkOliveGreen
+                : Color.indianRed;
+
             if (Input.GetMouseButtonDown(0))
             {
+                if (!constructionGrid.IsValidPlacement(currentCell, true))
+                    return;
+
                 if (startPosition == null)
                 {
                     var cellOffset = 0.5f;
@@ -89,10 +95,11 @@ namespace Controllers.Construction
                 }
                 else
                 {
-                    ConfirmRoadConstruction();
+                    if (!constructionGrid.IsValidPlacement(currentCell, true))
+                        return;
 
-                    var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-                    lineRenderer.positionCount = 0;
+                    ConfirmRoadConstruction();
+                    roadPreview.positionCount = 0;
                 }
             }
 
@@ -114,15 +121,14 @@ namespace Controllers.Construction
                     roadPoints.Add(new Vector3(worldX, height, worldZ));
                 }
 
-                var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-                lineRenderer.positionCount = currentRoadPath.Count;
-                lineRenderer.SetPositions(roadPoints.ToArray());
+                roadPreview.positionCount = currentRoadPath.Count;
+                roadPreview.SetPositions(roadPoints.ToArray());
             }
         }
 
         public void Dispose()
         {
-            Object.Destroy(roadPreview);
+            Object.Destroy(roadPreview.gameObject);
 
             startPosition = null;
             endPosition = null;

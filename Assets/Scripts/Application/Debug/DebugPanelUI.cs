@@ -20,9 +20,11 @@ namespace App.Debug
         [Space]
         [SerializeField] private Button navigationButton;
         [SerializeField] private Button settlersButton;
+        [SerializeField] private Button constructionButton;
         [Space]
         [SerializeField] private GameObject navigationScrollList;
         [SerializeField] private SettlersDebugListUI settlersScrollList;
+        [SerializeField] private ConstructionDebugListUI constructionScrollList;
 
         [Inject] private GameConfig gameConfig;
         private DebugLogger debugLogger;
@@ -59,8 +61,9 @@ namespace App.Debug
             {
                 Application.logMessageReceived += HandleLog;
 
-                navigationButton.onClick.AddListener(() => ExpandNavigationList(navigationScrollList));
-                settlersButton.onClick.AddListener(() => ExpandNavigationList(settlersScrollList.gameObject));
+                navigationButton.onClick.AddListener(() => ExpandDropdown(navigationScrollList));
+                settlersButton.onClick.AddListener(() => ExpandDropdown(settlersScrollList.gameObject));
+                constructionButton.onClick.AddListener(() => ExpandDropdown(constructionScrollList.gameObject));
             }
             else
             {
@@ -68,9 +71,11 @@ namespace App.Debug
 
                 navigationButton.onClick.RemoveAllListeners();
                 settlersButton.onClick.RemoveAllListeners();
+                constructionButton.onClick.RemoveAllListeners();
 
                 navigationScrollList.SetActive(false);
                 settlersScrollList.gameObject.SetActive(false);
+                constructionScrollList.gameObject.SetActive(false);
             }
         }
 
@@ -79,12 +84,13 @@ namespace App.Debug
             _ = debugLogger.AddMessage(condition, DateTime.Now);
         }
 
-        private void ExpandNavigationList(GameObject openedList)
+        private void ExpandDropdown(GameObject openedList)
         {
             var shouldBeActive = !openedList.activeSelf;
 
             navigationScrollList.SetActive(false);
             settlersScrollList.gameObject.SetActive(false);
+            constructionScrollList.gameObject.SetActive(false);
 
             openedList.SetActive(shouldBeActive);
         }

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f95ae51b46b79b04fbcc5b68aaca6819, type: 3}
   m_Name: EnvironmentConfig
   m_EditorClassIdentifier: Assembly-CSharp::App.Configs.EnvironmentConfig
-  <RiverRiseMinHeight>k__BackingField: 3
-  <RiverRiseMaxHeight>k__BackingField: 6
+  <RiverRiseMinHeight>k__BackingField: 1.5
+  <RiverRiseMaxHeight>k__BackingField: 2.5
   <RiverFallMinHeight>k__BackingField: 0.5
-  <RiverFallMaxHeight>k__BackingField: 2.5
+  <RiverFallMaxHeight>k__BackingField: 1.5
   <MonthRealTimeDuration>k__BackingField: 50

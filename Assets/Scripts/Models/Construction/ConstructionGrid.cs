@@ -82,6 +82,22 @@ namespace Models.Construction
             return true;
         }
 
+        public bool IsValidPlacement(Vector2Int tileToCheck, bool excludeRoadTiles = false)
+        {
+            foreach (var tile in occupiedTiles)
+            {
+                if (tile.Position != tileToCheck)
+                    continue;
+
+                if (excludeRoadTiles && tile.BuildingDefinition == BuildingDefinition.Road)
+                    continue;
+
+                return false;
+            }
+
+            return true;
+        }
+
         public bool HasRoadConnection(BuildingView buildingView)
         {
             foreach (var tile in occupiedTiles)
