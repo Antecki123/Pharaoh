@@ -29,14 +29,16 @@ namespace Views.Settler
 
         private NavigationGraph navigationGraph;
         private ConstructionGrid constructionGrid;
+        private StrategyFactory strategyFactory;
 
         public SettlerState SettlerState = SettlerState.Idle;
 
         [Inject]
-        public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
+        public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid, StrategyFactory strategyFactory)
         {
             this.navigationGraph = navigationGraph;
             this.constructionGrid = constructionGrid;
+            this.strategyFactory = strategyFactory;
         }
 
         public void Init(SettlerModel settlerModel)
@@ -48,8 +50,7 @@ namespace Views.Settler
 
         public void InitAiStrategy()
         {
-            var strategyFactory = new StrategyFactory(this);
-            strategy = strategyFactory.GetStrategy(StrategyDefinition.Settler);
+            strategy = strategyFactory.GetStrategy(this, StrategyDefinition.Settler);
         }
 
         public void Tick()

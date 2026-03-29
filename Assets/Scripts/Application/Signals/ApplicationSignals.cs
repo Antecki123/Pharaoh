@@ -1,3 +1,4 @@
+using Controllers.SceneManagment;
 using Zenject;
 
 namespace App.Signals
@@ -6,7 +7,30 @@ namespace App.Signals
     {
         public ApplicationSignals(DiContainer container)
         {
+            container.DeclareSignal<LoadSceneRequest>();
+            container.DeclareSignal<GameSceneLoaded>();
+        }
 
+        public class LoadSceneRequest
+        {
+            public string TargetScene { get; private set; }
+
+            public string[] SceneAssets { get; private set; }
+
+            public LoadSceneRequest(string targetScene)
+            {
+                TargetScene = targetScene;
+            }
+        }
+
+        public class GameSceneLoaded
+        {
+            public SceneName SceneName { get; private set; }
+
+            public GameSceneLoaded(SceneName sceneName)
+            {
+                SceneName = sceneName;
+            }
         }
     }
 }

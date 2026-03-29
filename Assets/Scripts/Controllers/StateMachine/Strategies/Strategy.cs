@@ -1,5 +1,6 @@
 using System;
 using Views.Settler;
+using Zenject;
 
 namespace Controllers.Ai.Strategy
 {
@@ -21,19 +22,22 @@ namespace Controllers.Ai.Strategy
 
     public class StrategyFactory
     {
-        private readonly SettlerView settlerView;
+        private SettlerStrategy.Factory settlerStrategy;
+        private ImmigrantStrategy.Factory immigrantStrategy;
 
-        public StrategyFactory(SettlerView settlerView)
+        [Inject]
+        public void Constructor(SettlerStrategy.Factory settlerStrategy, ImmigrantStrategy.Factory immigrantStrategy)
         {
-            this.settlerView = settlerView;
+            this.settlerStrategy = settlerStrategy;
+            this.immigrantStrategy = immigrantStrategy;
         }
 
-        public Strategy GetStrategy(StrategyDefinition strategyDefinition)
+        public Strategy GetStrategy(SettlerView settlerView, StrategyDefinition strategyDefinition)
         {
             return strategyDefinition switch
             {
-                StrategyDefinition.Immigrant => new ImmigrantStrategy(settlerView),
-                StrategyDefinition.Settler => new SettlerStrategy(settlerView),
+                StrategyDefinition.Immigrant => immigrantStrategy.Create(settlerView),
+                StrategyDefinition.Settler => settlerStrategy.Create(settlerView),
                 _ => throw new ArgumentException($"Unknown strategy type: {strategyDefinition}")
             };
         }

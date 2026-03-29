@@ -48,7 +48,7 @@ namespace Controllers.Construction
         {
             var roadPreviewObject = new GameObject("RoadPreview");
             roadPreview = roadPreviewObject.AddComponent<LineRenderer>();
-            roadPreview.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            roadPreview.material = new Material(Resources.Load<Material>("Materials/baseMaterial"));
             roadPreview.startWidth = .5f;
             roadPreview.endWidth = .5f;
         }
@@ -165,6 +165,9 @@ namespace Controllers.Construction
 
         private bool GetGridCell(out Vector2Int cell)
         {
+            if (mainCamera == null)
+                mainCamera = Camera.main;
+
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             var layerMask = 1 << 16;
 

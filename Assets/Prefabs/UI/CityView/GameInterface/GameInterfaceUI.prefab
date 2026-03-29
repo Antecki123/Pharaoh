@@ -689,6 +689,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CityUpperInfoPanelUI
       objectReference: {fileID: 0}
+    - target: {fileID: 4507052000592769890, guid: bb2c1c31fe46754479871e4c50b96f1f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5974225375587990569, guid: bb2c1c31fe46754479871e4c50b96f1f, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

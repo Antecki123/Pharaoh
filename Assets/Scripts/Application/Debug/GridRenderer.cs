@@ -40,7 +40,7 @@ namespace App.Debug
 
             if (sharedMaterial == null)
             {
-                sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                sharedMaterial = new Material(Resources.Load<Material>("Materials/baseMaterial"));
                 sharedMaterial.color = Color.crimson;
             }
 

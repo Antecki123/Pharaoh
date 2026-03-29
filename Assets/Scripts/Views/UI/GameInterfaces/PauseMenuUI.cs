@@ -1,5 +1,7 @@
+using App.Signals;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 namespace Views.Ui.GameInterfaces
 {
@@ -9,11 +11,14 @@ namespace Views.Ui.GameInterfaces
         [SerializeField] private Button optionsButton;
         [SerializeField] private Button quitButton;
 
+        [Inject] private SignalBus signalBus;
+
         private void OnEnable()
         {
             Time.timeScale = 0;
 
             resumeButton.onClick.AddListener(OnResumeButtonClick);
+            quitButton.onClick.AddListener(() => signalBus.Fire(new ApplicationSignals.LoadSceneRequest("MainMenu")));
         }
 
         private void OnDisable()

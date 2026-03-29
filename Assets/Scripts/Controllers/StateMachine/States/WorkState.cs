@@ -9,15 +9,17 @@ namespace Controllers.Ai.Strategy
 {
     public class WorkState : IState
     {
+        public class Factory : PlaceholderFactory<SettlerView, WorkState> { }
+
         private readonly SettlerView settlerView;
         private readonly EmploymentModel employmentModel;
 
         private BuildingView locationOfNeedFulfillment;
 
-        public WorkState(SettlerView settlerView)
+        public WorkState(SettlerView settlerView, EmploymentModel employmentModel)
         {
             this.settlerView = settlerView;
-            employmentModel = ProjectContext.Instance.Container.Resolve<EmploymentModel>();
+            this.employmentModel = employmentModel;
         }
 
         public void OnEnter()

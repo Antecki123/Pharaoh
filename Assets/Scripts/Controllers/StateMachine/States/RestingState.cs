@@ -1,4 +1,3 @@
-using Models.Economy;
 using Models.Habitation;
 using Models.Settler;
 using UnityEngine;
@@ -10,15 +9,17 @@ namespace Controllers.Ai.Strategy
 {
     public class RestingState : IState
     {
+        public class Factory : PlaceholderFactory<SettlerView, RestingState> { }
+
         private readonly SettlerView settlerView;
         private readonly HabitationModel habitationModel;
 
         private BuildingView locationOfNeedFulfillment;
 
-        public RestingState(SettlerView settlerView)
+        public RestingState(SettlerView settlerView, HabitationModel habitationModel)
         {
             this.settlerView = settlerView;
-            habitationModel = ProjectContext.Instance.Container.Resolve<HabitationModel>();
+            this.habitationModel = habitationModel;
         }
 
         public void OnEnter()

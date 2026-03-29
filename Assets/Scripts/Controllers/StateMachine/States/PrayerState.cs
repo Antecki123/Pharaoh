@@ -1,11 +1,17 @@
 using Models.Settler;
+using Views.Construction;
 using Views.Settler;
+using Zenject;
 
 namespace Controllers.Ai.Strategy
 {
     public class PrayerState : IState
     {
+        public class Factory : PlaceholderFactory<SettlerView, PrayerState> { }
+
         private readonly SettlerView settlerView;
+
+        private BuildingView locationOfNeedFulfillment;
 
         public PrayerState(SettlerView settlerView)
         {

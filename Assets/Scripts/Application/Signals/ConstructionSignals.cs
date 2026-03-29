@@ -12,7 +12,7 @@ namespace App.Signals
 
         public class ConstructionMode
         {
-            public BuildingDefinition Building {  get; private set; }
+            public BuildingDefinition Building { get; private set; }
 
             public ConstructionMode(BuildingDefinition building)
             {

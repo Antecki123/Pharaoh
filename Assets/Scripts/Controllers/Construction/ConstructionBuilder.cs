@@ -146,6 +146,9 @@ namespace Controllers.Construction
 
         private bool GetGridCell(out Vector2Int cell)
         {
+            if (mainCamera == null)
+                mainCamera = Camera.main;
+
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             var layerMask = 1 << 16;
 

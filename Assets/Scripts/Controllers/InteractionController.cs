@@ -18,7 +18,7 @@ namespace Controllers
         public void Tick()
         {
             if (mainCamera == null)
-                return;
+                mainCamera = Camera.main;
 
             TryGetObjectToSelect();
             TryInteractWithObject();

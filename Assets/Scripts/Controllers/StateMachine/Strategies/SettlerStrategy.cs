@@ -1,18 +1,28 @@
 using Views.Settler;
+using Zenject;
 
 namespace Controllers.Ai.Strategy
 {
     public class SettlerStrategy : Strategy
     {
-        public SettlerStrategy(SettlerView settler)
+        public class Factory : PlaceholderFactory<SettlerView, SettlerStrategy> { }
+
+        private readonly RestingState resting;
+        private readonly WorkState working;
+        private readonly LeisureState leasure;
+        private readonly PrayerState pray;
+        private readonly HealingState healing;
+
+        public SettlerStrategy(SettlerView settler, RestingState.Factory restingFactory, WorkState.Factory workFactory, LeisureState.Factory leasureFactory,
+            PrayerState.Factory prayFactory, HealingState.Factory healingFactory)
         {
             aiBrain = new AiBrain();
 
-            var resting = new RestingState(settler);
-            var working = new WorkState(settler);
-            //var leasure = new LeisureState(settler);
-            //var pray = new PrayerState(settler);
-            //var healing = new HealingState();
+            resting = restingFactory.Create(settler);
+            working = workFactory.Create(settler);
+            leasure = leasureFactory.Create(settler);
+            pray = prayFactory.Create(settler);
+            healing = healingFactory.Create(settler);
 
             AddAnyTransition(resting, () => settler.SettlerModel.SettlerNeeds.Rest.Value <= 0 && settler.SettlerState == SettlerState.Idle && settler.SettlerModel.Habitation != null);
             AddAnyTransition(working, () => settler.SettlerModel.SettlerNeeds.Work.Value <= 0 && settler.SettlerState == SettlerState.Idle && settler.SettlerModel.Workplace != null);

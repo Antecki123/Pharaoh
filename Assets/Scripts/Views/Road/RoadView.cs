@@ -75,10 +75,10 @@ namespace Views.Road
 
             mesh.RecalculateNormals();
             GetComponent<MeshFilter>().mesh = mesh;
-            GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
-            {
-                color = Color.gray
-            };
+
+            var meshMaterial = new Material(Resources.Load<Material>("Materials/baseMaterial"));
+            meshMaterial.color = Color.gray;
+            GetComponent<MeshRenderer>().material = meshMaterial;
         }
 
         private void GenerateMesh(Vector3 centerPosition)
@@ -142,11 +142,9 @@ namespace Views.Road
             var filter = GetComponent<MeshFilter>();
             filter.mesh = mesh;
 
-            var renderer = GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
-            {
-                color = Color.gray
-            };
+            var meshMaterial = new Material(Resources.Load<Material>("Materials/baseMaterial"));
+            meshMaterial.color = Color.gray;
+            GetComponent<MeshRenderer>().material = meshMaterial;
         }
 
         private void GenerateNavigationNodes(Vector3 center, int resolution = 1)

@@ -25,6 +25,9 @@ namespace Views.Ui.Buildings
 
         private void Update()
         {
+            if (mainCamera == null)
+                mainCamera = Camera.main;
+
             var buildingPos = buildingTransform.position + worldOffset;
             var screenPos = mainCamera.WorldToScreenPoint(buildingPos);
 
