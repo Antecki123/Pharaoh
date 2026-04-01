@@ -8,11 +8,17 @@ namespace Models.Gameplay
     [CreateAssetMenu(fileName = "ScenarioData", menuName = "Game Configs/ScenarioData")]
     public class ScenarioData : ScriptableObject
     {
+        public int Chapter;
+
+        public int Mission;
+
         public string ScenarioName;
 
         public int BaseGold;
 
         [HideInInspector] public List<BuildingAvailibility> AvailableBuildings;
+
+        [SerializeReference] public List<Objective> Objectives;
     }
 
     [Serializable]

@@ -13,11 +13,9 @@ namespace App.Signals
 
         public class LoadSceneRequest
         {
-            public string TargetScene { get; private set; }
+            public SceneName TargetScene { get; private set; }
 
-            public string[] SceneAssets { get; private set; }
-
-            public LoadSceneRequest(string targetScene)
+            public LoadSceneRequest(SceneName targetScene)
             {
                 TargetScene = targetScene;
             }

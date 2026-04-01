@@ -1,4 +1,5 @@
 using App.Signals;
+using Controllers.SceneManagment;
 using Controllers.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,7 +27,7 @@ namespace Views.Ui.Frontend
             returnButton.onClick.AddListener(() => frontendManager.OpenPanel(FrontendPanel.MainMenuPanel));
             campaignGameButton.onClick.AddListener(() =>
             {
-                signalBus.Fire(new ApplicationSignals.LoadSceneRequest("Scenario01"));
+                signalBus.Fire(new ApplicationSignals.LoadSceneRequest(SceneName.ScenarioC01M01));
             });
         }
 

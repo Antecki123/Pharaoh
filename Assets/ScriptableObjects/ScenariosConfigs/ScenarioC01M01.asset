@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ddc7b79b381356547bdb4d1f56de2ff0, type: 3}
-  m_Name: Scenario01
+  m_Name: ScenarioC01M01
   m_EditorClassIdentifier: Assembly-CSharp::Models.Gameplay.ScenarioData
-  ScenarioName: Scenario01
-  BaseGold: 0
+  Chapter: 1
+  Mission: 1
+  ScenarioName: ScenarioC01M01
+  BaseGold: 20000
   AvailableBuildings:
   - buildingDefinition: 1
     isAvailable: 0
@@ -36,18 +38,32 @@ MonoBehaviour:
   - buildingDefinition: 10
     isAvailable: 1
   - buildingDefinition: 11
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 12
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 13
     isAvailable: 0
   - buildingDefinition: 14
     isAvailable: 0
   - buildingDefinition: 15
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 16
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 17
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 18
-    isAvailable: 1
+    isAvailable: 0
+  Objectives:
+  - rid: 4604107804892201043
+  - rid: 4604107804892201044
+  references:
+    version: 2
+    RefIds:
+    - rid: 4604107804892201043
+      type: {class: ReachPopulationObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
+      data:
+        PopulationCount: 100
+    - rid: 4604107804892201044
+      type: {class: GatherGoldObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
+      data:
+        CurrencyAmount: 500

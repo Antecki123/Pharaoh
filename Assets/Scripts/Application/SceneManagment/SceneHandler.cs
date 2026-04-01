@@ -19,12 +19,24 @@ namespace Controllers.SceneManagment
         private readonly SignalBus signalBus;
         private readonly PrefabManager prefabManager;
         private readonly ScenarioRepository scenarioRepository;
+        private readonly ScenarioModel scenarioModel;
 
-        public SceneHandler(SignalBus signalBus, PrefabManager prefabManager, ScenarioRepository scenarioRepository)
+        private Dictionary<SceneName, Progression> sceneProgressionData = new Dictionary<SceneName, Progression>()
+        {
+            { SceneName.MainMenu, new Progression(0, 0) },
+            { SceneName.ScenarioC01M01, new Progression(1, 1) },
+            { SceneName.ScenarioC01M02, new Progression(1, 2) },
+            { SceneName.ScenarioC01M03, new Progression(1, 3) },
+            { SceneName.ScenarioC01M04, new Progression(1, 4) },
+            { SceneName.ScenarioC01M05, new Progression(1, 5) }
+        };
+
+        public SceneHandler(SignalBus signalBus, PrefabManager prefabManager, ScenarioRepository scenarioRepository, ScenarioModel scenarioModel)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.scenarioRepository = scenarioRepository;
+            this.scenarioModel = scenarioModel;
 
             SceneManager.sceneLoaded += (scene, loadMode) =>
             {
@@ -46,6 +58,12 @@ namespace Controllers.SceneManagment
         private void OnLoadSceneRequest(ApplicationSignals.LoadSceneRequest signal)
         {
             LoadScene(signal).Forget(Debug.LogException);
+
+            var currentScenario = scenarioRepository.Scenarios.FirstOrDefault(
+                x => x.Chapter == sceneProgressionData[signal.TargetScene].Chapter
+                && x.Mission == sceneProgressionData[signal.TargetScene].Mission);
+
+            scenarioModel.SetupScenario(currentScenario);
         }
 
         private async UniTask LoadScene(ApplicationSignals.LoadSceneRequest signal)
@@ -59,15 +77,15 @@ namespace Controllers.SceneManagment
                 await SceneManager.UnloadSceneAsync(oldScene);
             }
 
-            await LoadPrefabs(signal.TargetScene);
+            await LoadPrefabs(signal.TargetScene.ToString());
             await LoadUiElements();
 
             Scene newScene;
 
-            if (IsAddressableScene(signal.TargetScene))
+            if (IsAddressableScene(signal.TargetScene.ToString()))
             {
                 var handle = Addressables.LoadSceneAsync(
-                    signal.TargetScene,
+                    signal.TargetScene.ToString(),
                     LoadSceneMode.Additive,
                     activateOnLoad: false
                 );
@@ -78,7 +96,7 @@ namespace Controllers.SceneManagment
             }
             else
             {
-                var loadOp = SceneManager.LoadSceneAsync(signal.TargetScene, LoadSceneMode.Additive);
+                var loadOp = SceneManager.LoadSceneAsync(signal.TargetScene.ToString(), LoadSceneMode.Additive);
                 loadOp.allowSceneActivation = false;
 
                 while (loadOp.progress < 0.9f)
@@ -89,7 +107,7 @@ namespace Controllers.SceneManagment
                 loadOp.allowSceneActivation = true;
                 await loadOp;
 
-                newScene = SceneManager.GetSceneByName(signal.TargetScene);
+                newScene = SceneManager.GetSceneByName(signal.TargetScene.ToString());
             }
 
             SceneManager.SetActiveScene(newScene);
@@ -142,18 +160,29 @@ namespace Controllers.SceneManagment
 
         private bool IsAddressableScene(string sceneName)
         {
-            return scenarioRepository.Scenarios.Any(x => x.ScenarioName == sceneName);
+            return scenarioRepository.Scenarios.Any(x => x.name == sceneName);
+        }
+
+        public struct Progression
+        {
+            public int Chapter;
+            public int Mission;
+
+            public Progression(int chapter, int mission)
+            {
+                Chapter = chapter;
+                Mission = mission;
+            }
         }
     }
 
     public enum SceneName
     {
         MainMenu,
-        LoadingScene,
-        Scenario01,
-        Scenario02,
-        Scenario03,
-        Scenario04,
-        Scenario05,
+        ScenarioC01M01,
+        ScenarioC01M02,
+        ScenarioC01M03,
+        ScenarioC01M04,
+        ScenarioC01M05,
     }
 }

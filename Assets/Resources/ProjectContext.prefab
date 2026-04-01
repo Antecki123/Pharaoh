@@ -79,6 +79,5 @@ MonoBehaviour:
   constructionConfig: {fileID: 11400000, guid: 752f1b79132ace046b8445e9a14146c8, type: 2}
   environmentConfig: {fileID: 11400000, guid: a723d85874bce864fbf39572d7615a54, type: 2}
   scenariosData:
-  - {fileID: 11400000, guid: daad2b3561d46354c95a5f3268dee998, type: 2}
-  - {fileID: 11400000, guid: 18b2a4d24a303fe46a42946fa6ee0c4a, type: 2}
+  - {fileID: 11400000, guid: 010fe28ec864e084b8807ac508eab98e, type: 2}
   mainCanvas: {fileID: 3319954459163991371, guid: 49f38b0a1b9a9f74a8b4f06923782aac, type: 3}

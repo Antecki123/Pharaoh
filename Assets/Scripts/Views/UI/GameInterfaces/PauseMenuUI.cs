@@ -1,4 +1,5 @@
 using App.Signals;
+using Controllers.SceneManagment;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -18,7 +19,7 @@ namespace Views.Ui.GameInterfaces
             Time.timeScale = 0;
 
             resumeButton.onClick.AddListener(OnResumeButtonClick);
-            quitButton.onClick.AddListener(() => signalBus.Fire(new ApplicationSignals.LoadSceneRequest("MainMenu")));
+            quitButton.onClick.AddListener(() => signalBus.Fire(new ApplicationSignals.LoadSceneRequest(SceneName.MainMenu)));
         }
 
         private void OnDisable()

@@ -2,7 +2,6 @@ using App.Configs;
 using App.Helpers;
 using App.Signals;
 using Controllers.Construction;
-using Controllers.Gameplay;
 using Controllers.SceneManagment;
 using Controllers.Settler;
 using Controllers.Work;
@@ -41,6 +40,9 @@ namespace App.Registrators
             Container.Bind<WorkplaceEconomyImporter>().AsSingle();
             Container.Bind<ScenarioRepository>().AsSingle().WithArguments(scenariosData);
 
+            // MODELS
+            Container.Bind<ScenarioModel>().AsSingle();
+
             // CONFIGS
             Container.Bind<GameConfig>().FromScriptableObject(gameConfig).AsSingle();
             Container.Bind<CameraConfig>().FromScriptableObject(cameraConfig).AsSingle();
@@ -53,7 +55,6 @@ namespace App.Registrators
             // CONTROLLERS
             Container.Bind<PrefabManager>().AsSingle();
             Container.Bind(typeof(SceneHandler), typeof(IInitializable), typeof(IDisposable)).To<SceneHandler>().AsSingle().NonLazy();
-            Container.Bind(typeof(GameController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<GameController>().AsSingle().NonLazy();
 
             Container.Instantiate<ApplicationInitializer>();
         }

@@ -2,6 +2,7 @@ using Controllers;
 using Controllers.Ai.Strategy;
 using Controllers.Construction;
 using Controllers.Environment;
+using Controllers.Gameplay;
 using Controllers.Habitation;
 using Controllers.Settler;
 using Controllers.UI;
@@ -10,6 +11,7 @@ using Models.Ai;
 using Models.Construction;
 using Models.Economy;
 using Models.Environment;
+using Models.Gameplay;
 using Models.Habitation;
 using Models.Work;
 using System;
@@ -34,8 +36,11 @@ namespace App.Registrators
             Container.Bind<ConstructionGrid>().AsSingle();
             Container.Bind<DateModel>().AsSingle();
             Container.Bind<IrrigationModel>().AsSingle();
+            Container.Bind<ObjectivesModel>().AsSingle();
 
             // CONTROLLERS
+            Container.Bind(typeof(ScenarioController), typeof(IInitializable), typeof(ITickable)).To<ScenarioController>().AsSingle().NonLazy();
+            Container.Bind(typeof(ObjectivesController), typeof(IInitializable), typeof(ITickable)).To<ObjectivesController>().AsSingle().NonLazy();
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<SettlersController>().AsSingle().NonLazy();
             Container.Bind(typeof(WorkersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<WorkersController>().AsSingle().NonLazy();
             Container.Bind(typeof(WorkplacesController), typeof(IInitializable), typeof(ITickable)).To<WorkplacesController>().AsSingle().NonLazy();
@@ -58,6 +63,11 @@ namespace App.Registrators
             Container.BindFactory<SettlerView, LeisureState, LeisureState.Factory>().AsTransient();
             Container.BindFactory<SettlerView, PrayerState, PrayerState.Factory>().AsTransient();
             Container.BindFactory<SettlerView, HealingState, HealingState.Factory>().AsTransient();
+
+            Container.BindFactory<ReachPopulationObjectiveDefinition, ReachPopulationObjective, ReachPopulationObjective.Factory>().AsTransient();
+            Container.BindFactory<GatherGoldObjectiveDefinition, GatherGoldObjective, GatherGoldObjective.Factory>().AsTransient();
+            Container.BindFactory<GatherCommodityObjectiveDefinition, GatherCommodityObjective, GatherCommodityObjective.Factory>().AsTransient();
+            Container.BindFactory<BuildBuildingObjectiveDefinition, BuildBuildingObjective, BuildBuildingObjective.Factory>().AsTransient();
 
             contextHolder.Container = Container;
         }
