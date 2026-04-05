@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddc7b79b381356547bdb4d1f56de2ff0, type: 3}
+  m_Name: ScenarioC01M02
+  m_EditorClassIdentifier: Assembly-CSharp::Models.Gameplay.ScenarioData
+  Scenario: 1
+  Mission: 2
+  ScenarioName: ScenarioC01M02
+  BaseGold: 3000
+  AvailableBuildings:
+  - buildingDefinition: 1
+    isAvailable: 0
+  - buildingDefinition: 2
+    isAvailable: 1
+  - buildingDefinition: 3
+    isAvailable: 0
+  - buildingDefinition: 4
+    isAvailable: 0
+  - buildingDefinition: 5
+    isAvailable: 1
+  - buildingDefinition: 6
+    isAvailable: 1
+  - buildingDefinition: 7
+    isAvailable: 1
+  - buildingDefinition: 8
+    isAvailable: 1
+  - buildingDefinition: 9
+    isAvailable: 1
+  - buildingDefinition: 10
+    isAvailable: 1
+  - buildingDefinition: 11
+    isAvailable: 1
+  - buildingDefinition: 12
+    isAvailable: 0
+  - buildingDefinition: 13
+    isAvailable: 0
+  - buildingDefinition: 14
+    isAvailable: 0
+  - buildingDefinition: 15
+    isAvailable: 1
+  - buildingDefinition: 16
+    isAvailable: 1
+  - buildingDefinition: 17
+    isAvailable: 1
+  - buildingDefinition: 18
+    isAvailable: 1
+  Objectives:
+  - rid: 4473933744833298432
+  - rid: 4473933744833298433
+  references:
+    version: 2
+    RefIds:
+    - rid: 4473933744833298432
+      type: {class: GatherCommodityObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
+      data:
+        CommodityName: 68
+        CommodityCount: 200
+    - rid: 4473933744833298433
+      type: {class: ReachPopulationObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
+      data:
+        PopulationCount: 300

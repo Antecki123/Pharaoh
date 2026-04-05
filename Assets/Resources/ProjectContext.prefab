@@ -80,4 +80,6 @@ MonoBehaviour:
   environmentConfig: {fileID: 11400000, guid: a723d85874bce864fbf39572d7615a54, type: 2}
   scenariosData:
   - {fileID: 11400000, guid: 010fe28ec864e084b8807ac508eab98e, type: 2}
+  - {fileID: 11400000, guid: 6c81ae2297a452548b1591b93b326893, type: 2}
+  - {fileID: 11400000, guid: aef82aaf8b9981c499f3a56b84fd3afb, type: 2}
   mainCanvas: {fileID: 3319954459163991371, guid: 49f38b0a1b9a9f74a8b4f06923782aac, type: 3}

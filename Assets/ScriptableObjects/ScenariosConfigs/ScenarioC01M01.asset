@@ -12,17 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddc7b79b381356547bdb4d1f56de2ff0, type: 3}
   m_Name: ScenarioC01M01
   m_EditorClassIdentifier: Assembly-CSharp::Models.Gameplay.ScenarioData
-  Chapter: 1
+  Scenario: 1
   Mission: 1
   ScenarioName: ScenarioC01M01
-  BaseGold: 20000
+  BaseGold: 2000
   AvailableBuildings:
   - buildingDefinition: 1
     isAvailable: 0
   - buildingDefinition: 2
     isAvailable: 1
   - buildingDefinition: 3
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 4
     isAvailable: 0
   - buildingDefinition: 5
@@ -46,7 +46,7 @@ MonoBehaviour:
   - buildingDefinition: 14
     isAvailable: 0
   - buildingDefinition: 15
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 16
     isAvailable: 0
   - buildingDefinition: 17
@@ -66,4 +66,4 @@ MonoBehaviour:
     - rid: 4604107804892201044
       type: {class: GatherGoldObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
       data:
-        CurrencyAmount: 500
+        CurrencyAmount: 10000

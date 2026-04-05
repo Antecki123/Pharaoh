@@ -1,8 +1,10 @@
 using Models.Economy;
+using System;
 using Zenject;
 
 namespace Models.Gameplay
 {
+
     public class GatherGoldObjective : IObjective
     {
         public class Factory : PlaceholderFactory<GatherGoldObjectiveDefinition, GatherGoldObjective> { }
@@ -30,6 +32,7 @@ namespace Models.Gameplay
         }
     }
 
+    [Serializable]
     public class GatherGoldObjectiveDefinition : Objective
     {
         public override string Name => "GatherGoldObjective";

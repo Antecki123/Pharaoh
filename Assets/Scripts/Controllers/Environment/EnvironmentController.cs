@@ -50,6 +50,8 @@ namespace Controllers.Environment
                 {
                     dateModel.CurrentMonth = 1;
                     dateModel.CurrentYear++;
+                    if (dateModel.CurrentYear == 0)
+                        dateModel.CurrentYear = 1;
                 }
 
                 //signalBus.Fire(new EnvironmentSignals.DateChanged(currentMonth, currentYear));

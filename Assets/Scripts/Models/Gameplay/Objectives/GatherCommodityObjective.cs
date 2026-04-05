@@ -1,4 +1,5 @@
 using Models.Economy;
+using System;
 using Zenject;
 
 namespace Models.Gameplay
@@ -29,6 +30,7 @@ namespace Models.Gameplay
         }
     }
 
+    [Serializable]
     public class GatherCommodityObjectiveDefinition : Objective
     {
         public override string Name => "GatherCommodityObjective";

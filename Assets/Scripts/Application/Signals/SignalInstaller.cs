@@ -7,6 +7,7 @@ namespace App.Signals
         public SignalInstaller(DiContainer container)
         {
             new ApplicationSignals(container);
+            new GameControlSignals(container);
             new ConstructionSignals(container);
             new SettlersSignals(container);
             new HabitationSignals(container);

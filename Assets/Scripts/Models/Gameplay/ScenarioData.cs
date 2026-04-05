@@ -1,4 +1,5 @@
 using Controllers.Construction;
+using Controllers.SceneManagment;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,7 +9,7 @@ namespace Models.Gameplay
     [CreateAssetMenu(fileName = "ScenarioData", menuName = "Game Configs/ScenarioData")]
     public class ScenarioData : ScriptableObject
     {
-        public int Chapter;
+        public SceneName Scenario;
 
         public int Mission;
 

@@ -1,6 +1,8 @@
 using App.Signals;
 using Controllers.Construction;
+using Models.Gameplay;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -23,6 +25,7 @@ namespace Views.Ui.GameInterfaces
         [SerializeField] private BuildingButtonUI buildingButtonPrefab;
 
         [Inject] private readonly SignalBus signalBus;
+        [Inject] private readonly ScenarioModel scenarioModel;
 
         private BuildingType? currentOpenPanel = null;
         private List<BuildingButtonUI> activeButtons = new List<BuildingButtonUI>();
@@ -133,6 +136,9 @@ namespace Views.Ui.GameInterfaces
 
             foreach (var building in buildings)
             {
+                if (!scenarioModel.Scenario.AvailableBuildings.FirstOrDefault(x => x.buildingDefinition == building).isAvailable)
+                    return;
+
                 var buildingButton = Instantiate(buildingButtonPrefab);
                 buildingButton.transform.SetParent(buildingButtonsContainer);
                 buildingButton.InitializeButton(signalBus, building);

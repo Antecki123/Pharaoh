@@ -34,6 +34,9 @@ namespace App.Debug
 
         private void Awake()
         {
+#if !DEBUG || !UNITY_EDITOR
+            Destroy(gameObject);
+#endif
             debugLogger = new DebugLogger(3f);
             debugLogger.OnRefresh += (log) => debugText.text = log;
 

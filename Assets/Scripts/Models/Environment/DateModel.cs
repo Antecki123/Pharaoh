@@ -3,7 +3,7 @@ namespace Models.Environment
     public class DateModel
     {
         public int CurrentMonth { get; set; } = 1;
-        public int CurrentYear { get; set; } = 1;
+        public int CurrentYear { get; set; } = -2981;
     }
 
     public enum MonthName

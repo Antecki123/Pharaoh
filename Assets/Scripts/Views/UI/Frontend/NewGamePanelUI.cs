@@ -1,9 +1,6 @@
-using App.Signals;
-using Controllers.SceneManagment;
 using Controllers.UI;
 using UnityEngine;
 using UnityEngine.UI;
-using Zenject;
 
 namespace Views.Ui.Frontend
 {
@@ -12,8 +9,6 @@ namespace Views.Ui.Frontend
         [SerializeField] private Button campaignGameButton;
         [SerializeField] private Button customGameButton;
         [SerializeField] private Button returnButton;
-
-        [Inject] private SignalBus signalBus;
 
         private FrontendManager frontendManager;
 
@@ -24,17 +19,16 @@ namespace Views.Ui.Frontend
 
         private void OnEnable()
         {
+            campaignGameButton.onClick.AddListener(() => frontendManager.OpenPanel(FrontendPanel.CampainPanel));
+            //customGameButton.onClick.AddListener();
             returnButton.onClick.AddListener(() => frontendManager.OpenPanel(FrontendPanel.MainMenuPanel));
-            campaignGameButton.onClick.AddListener(() =>
-            {
-                signalBus.Fire(new ApplicationSignals.LoadSceneRequest(SceneName.ScenarioC01M01));
-            });
         }
 
         private void OnDisable()
         {
-            returnButton.onClick.RemoveAllListeners();
+            campaignGameButton.onClick.RemoveAllListeners();
             customGameButton.onClick.RemoveAllListeners();
+            returnButton.onClick.RemoveAllListeners();
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Models.Economy
         public event Action OnValueChanged;
 
         public int Settlers { get; private set; } = 0;
-        public int Currency { get; private set; } = 1000;
+        public int Currency { get; private set; } = 0;
 
         public void AddCurrency(int value)
         {

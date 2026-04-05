@@ -39,7 +39,7 @@ namespace App.Registrators
             Container.Bind<ObjectivesModel>().AsSingle();
 
             // CONTROLLERS
-            Container.Bind(typeof(ScenarioController), typeof(IInitializable), typeof(ITickable)).To<ScenarioController>().AsSingle().NonLazy();
+            Container.Bind(typeof(ScenarioController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<ScenarioController>().AsSingle().NonLazy();
             Container.Bind(typeof(ObjectivesController), typeof(IInitializable), typeof(ITickable)).To<ObjectivesController>().AsSingle().NonLazy();
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<SettlersController>().AsSingle().NonLazy();
             Container.Bind(typeof(WorkersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<WorkersController>().AsSingle().NonLazy();

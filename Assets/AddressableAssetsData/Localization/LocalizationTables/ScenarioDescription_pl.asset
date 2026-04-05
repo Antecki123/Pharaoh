@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: ScenarioDescription_pl
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: pl
+  m_SharedData: {fileID: 11400000, guid: b783b7b8c8aa986409ae84045d1db087, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 182679101440
+    m_Localized: "Stoisz u progu wielkiego zadania. Jako m\u0142ody przyw\xF3dca
+      otrzyma\u0142e\u015B od swoich zwierzchnik\xF3w misj\u0119, kt\xF3ra zadecyduje
+      o przysz\u0142o\u015Bci powstaj\u0105cego kr\xF3lestwa. Przed Tob\u0105 rozci\u0105ga
+      si\u0119 nieokie\u0142znana dolina \u2013 ziemia pe\u0142na mo\u017Cliwo\u015Bci,
+      ale i wyzwa\u0144. Twoim celem jest odnale\u017A\u0107 miejsce, kt\xF3re stanie
+      si\u0119 domem dla Twojego ludu.\n\nWs\u0142uchaj si\u0119 w rytm rzeki, obserwuj
+      \u017Cyzn\u0105 gleb\u0119 i wybierz teren, kt\xF3ry zapewni przetrwanie pierwszym
+      osadnikom. To tutaj powstan\u0105 fundamenty przysz\u0142ego miasta \u2013
+      zal\u0105\u017Cek pot\u0119gi, kt\xF3ra mo\u017Ce przetrwa\u0107 pokolenia.\n\nTwoje
+      decyzje zdecyduj\u0105 o losie ludzi, kt\xF3rzy Ci zaufali. Czy poprowadzisz
+      ich ku dobrobytowi, czy skazujesz na walk\u0119 o przetrwanie? Czas rozpocz\u0105\u0107
+      budow\u0119."
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

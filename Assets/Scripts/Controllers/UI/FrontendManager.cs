@@ -11,6 +11,7 @@ namespace Controllers.UI
         [SerializeField] private NewGamePanelUI newGamePanel;
         [SerializeField] private SettingsPanelUI settingsPanel;
         [SerializeField] private CreditsPanelUI creditsPanel;
+        [SerializeField] private CampainPanelUI campainPanel;
 
         private Dictionary<FrontendPanel, GameObject> panels = new Dictionary<FrontendPanel, GameObject>();
 
@@ -21,12 +22,14 @@ namespace Controllers.UI
             panels.Add(FrontendPanel.NewGamePanel, newGamePanel.gameObject);
             panels.Add(FrontendPanel.SettingsPanel, settingsPanel.gameObject);
             panels.Add(FrontendPanel.CreditsPanel, creditsPanel.gameObject);
+            panels.Add(FrontendPanel.CampainPanel, campainPanel.gameObject);
 
             splashScreen.Init(this);
             mainMenu.Init(this);
             newGamePanel.Init(this);
             settingsPanel.Init(this);
             creditsPanel.Init(this);
+            campainPanel.Init(this);
         }
 
         public void OpenPanel(FrontendPanel panelToOpen)
@@ -43,5 +46,6 @@ namespace Controllers.UI
         NewGamePanel,
         SettingsPanel,
         CreditsPanel,
+        CampainPanel
     }
 }

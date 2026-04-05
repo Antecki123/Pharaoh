@@ -1,4 +1,5 @@
 using Models.Economy;
+using System;
 using Zenject;
 
 namespace Models.Gameplay
@@ -30,6 +31,7 @@ namespace Models.Gameplay
         }
     }
 
+    [Serializable]
     public class ReachPopulationObjectiveDefinition : Objective
     {
         public override string Name => "ReachPopulationObjective";

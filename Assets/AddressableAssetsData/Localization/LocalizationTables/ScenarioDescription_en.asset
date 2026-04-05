@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: ScenarioDescription_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: b783b7b8c8aa986409ae84045d1db087, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 182679101440
+    m_Localized: "You stand at the threshold of a great task. As a young leader,
+      you have been entrusted with a mission that will shape the future of a rising
+      kingdom. Before you stretches an untamed valley \u2014 a land full of opportunity,
+      but also of challenges. Your goal is to find a place that will become a home
+      for your people.\n\nListen to the rhythm of the river, observe the fertile
+      soil, and choose land that will ensure the survival of your first settlers.
+      Here, the foundations of a future city will be laid \u2014 the beginning of
+      a power that may endure for generations.\n\nYour decisions will determine the
+      fate of those who have placed their trust in you. Will you lead them to prosperity,
+      or condemn them to struggle for survival? It is time to begin building."
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

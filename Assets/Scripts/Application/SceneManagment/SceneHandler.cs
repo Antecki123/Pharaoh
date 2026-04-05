@@ -21,14 +21,12 @@ namespace Controllers.SceneManagment
         private readonly ScenarioRepository scenarioRepository;
         private readonly ScenarioModel scenarioModel;
 
-        private Dictionary<SceneName, Progression> sceneProgressionData = new Dictionary<SceneName, Progression>()
+        private readonly Dictionary<SceneName, SceneLoadType> sceneLoadingMethod = new()
         {
-            { SceneName.MainMenu, new Progression(0, 0) },
-            { SceneName.ScenarioC01M01, new Progression(1, 1) },
-            { SceneName.ScenarioC01M02, new Progression(1, 2) },
-            { SceneName.ScenarioC01M03, new Progression(1, 3) },
-            { SceneName.ScenarioC01M04, new Progression(1, 4) },
-            { SceneName.ScenarioC01M05, new Progression(1, 5) }
+            { SceneName.MainMenu, SceneLoadType.Build },
+            { SceneName.Chapter01, SceneLoadType.Addressable },
+            { SceneName.Chapter02, SceneLoadType.Addressable },
+            { SceneName.Chapter03, SceneLoadType.Addressable },
         };
 
         public SceneHandler(SignalBus signalBus, PrefabManager prefabManager, ScenarioRepository scenarioRepository, ScenarioModel scenarioModel)
@@ -57,13 +55,12 @@ namespace Controllers.SceneManagment
 
         private void OnLoadSceneRequest(ApplicationSignals.LoadSceneRequest signal)
         {
-            LoadScene(signal).Forget(Debug.LogException);
-
             var currentScenario = scenarioRepository.Scenarios.FirstOrDefault(
-                x => x.Chapter == sceneProgressionData[signal.TargetScene].Chapter
-                && x.Mission == sceneProgressionData[signal.TargetScene].Mission);
-
+                x => x.Scenario == signal.TargetScene
+                && x.Mission == 1);
             scenarioModel.SetupScenario(currentScenario);
+
+            LoadScene(signal).Forget(Debug.LogException);
         }
 
         private async UniTask LoadScene(ApplicationSignals.LoadSceneRequest signal)
@@ -77,12 +74,12 @@ namespace Controllers.SceneManagment
                 await SceneManager.UnloadSceneAsync(oldScene);
             }
 
-            await LoadPrefabs(signal.TargetScene.ToString());
+            await LoadPrefabs();
             await LoadUiElements();
 
             Scene newScene;
 
-            if (IsAddressableScene(signal.TargetScene.ToString()))
+            if (IsAddressableScene(signal.TargetScene))
             {
                 var handle = Addressables.LoadSceneAsync(
                     signal.TargetScene.ToString(),
@@ -119,14 +116,12 @@ namespace Controllers.SceneManagment
             }
         }
 
-        private async UniTask LoadPrefabs(string sceneName)
+        private async UniTask LoadPrefabs()
         {
-            var scenario = scenarioRepository.Scenarios.FirstOrDefault(x => x.ScenarioName == sceneName);
-
-            if (scenario == null)
+            if (scenarioModel.Scenario == null)
                 return;
 
-            var assetsToLoad = scenario.AvailableBuildings.Where(x => x.isAvailable).ToList();
+            var assetsToLoad = scenarioModel.Scenario.AvailableBuildings.Where(x => x.isAvailable).ToList();
 
             for (int i = 0; i < assetsToLoad.Count; i++)
             {
@@ -158,31 +153,23 @@ namespace Controllers.SceneManagment
             }
         }
 
-        private bool IsAddressableScene(string sceneName)
+        private bool IsAddressableScene(SceneName sceneName)
         {
-            return scenarioRepository.Scenarios.Any(x => x.name == sceneName);
-        }
-
-        public struct Progression
-        {
-            public int Chapter;
-            public int Mission;
-
-            public Progression(int chapter, int mission)
-            {
-                Chapter = chapter;
-                Mission = mission;
-            }
+            return sceneLoadingMethod[sceneName] == SceneLoadType.Addressable;
         }
     }
 
     public enum SceneName
     {
         MainMenu,
-        ScenarioC01M01,
-        ScenarioC01M02,
-        ScenarioC01M03,
-        ScenarioC01M04,
-        ScenarioC01M05,
+        Chapter01,
+        Chapter02,
+        Chapter03
+    }
+
+    public enum SceneLoadType
+    {
+        Build,
+        Addressable
     }
 }
