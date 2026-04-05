@@ -7,14 +7,14 @@ TerrainLayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: DarkSand
-  m_DiffuseTexture: {fileID: 2800000, guid: f2eb214b2ddc6174b8d03a28f8ca715c, type: 3}
-  m_NormalMapTexture: {fileID: 2800000, guid: 1f5643fc3ad48b0408e5b98eb3bdbd83, type: 3}
+  m_DiffuseTexture: {fileID: 2800000, guid: bca4fedb5a424e040ba3f05ca9fca1fe, type: 3}
+  m_NormalMapTexture: {fileID: 2800000, guid: d01bfef8410e7824a85ae141a975069a, type: 3}
   m_MaskMapTexture: {fileID: 0}
-  m_TileSize: {x: 4, y: 4}
+  m_TileSize: {x: 1, y: 1}
   m_TileOffset: {x: 0, y: 0}
   m_Specular: {r: 0, g: 0, b: 0, a: 0}
   m_Metallic: 0
-  m_Smoothness: 0.341
+  m_Smoothness: 0
   m_NormalScale: 1
   m_DiffuseRemapMin: {x: 0, y: 0, z: 0, w: 0}
   m_DiffuseRemapMax: {x: 1, y: 1, z: 1, w: 1}
