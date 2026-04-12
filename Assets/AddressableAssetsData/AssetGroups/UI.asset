@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 993d2d5a50aba9946ac986abe3fcd9dd
+    m_Address: WarningPanelUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cc25bedf3ee3a9c4895476dfd867ca41
     m_Address: DistributionPointTooltipUI
     m_ReadOnly: 0

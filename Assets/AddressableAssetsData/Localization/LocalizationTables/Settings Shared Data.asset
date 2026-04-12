@@ -1,0 +1,152 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Settings Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Settings
+  m_TableCollectionNameGuidString: 9f72eb378c17c164eb77e5f3a3b6ab30
+  m_Entries:
+  - m_Id: 110641930240
+    m_Key: LanguageLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 373549293568
+    m_Key: MasterVolumeLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 435964731392
+    m_Key: SubtitlesLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13718331449344
+    m_Key: ResolutionLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13736098521088
+    m_Key: FullScreenModeLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13752468889600
+    m_Key: VSyncLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13760379346944
+    m_Key: GraphicQualityLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13774166024192
+    m_Key: AntiAliasingLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13793690509312
+    m_Key: AnisotropicFilteringLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13804012691456
+    m_Key: ShadowQualityLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26173107462144
+    m_Key: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26215222468608
+    m_Key: Polish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 40696182857728
+    m_Key: On
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48100945551360
+    m_Key: Off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48171934146560
+    m_Key: Low
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48199587192832
+    m_Key: Medium
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48249243557888
+    m_Key: High
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48264179474432
+    m_Key: UltraHigh
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48399886180352
+    m_Key: HardOnly
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48426331267072
+    m_Key: All
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48622138155008
+    m_Key: Disable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48674982191104
+    m_Key: Enable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48813088038912
+    m_Key: ForceEnable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48914133016576
+    m_Key: Graphics
+    m_Metadata:
+      m_Items: []
+  - m_Id: 49092772618240
+    m_Key: Audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 49144811347968
+    m_Key: General
+    m_Metadata:
+      m_Items: []
+  - m_Id: 49197579886592
+    m_Key: Controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1014398986870784
+    m_Key: SpeechVolumeLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1014616486699008
+    m_Key: EffectsVolumeLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1014666784792576
+    m_Key: SubtitlesSizeLabel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1017653410258944
+    m_Key: Return
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 4473933918748541003
+  references:
+    version: 2
+    RefIds:
+    - rid: 4473933918748541003
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1775752082827

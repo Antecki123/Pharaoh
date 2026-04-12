@@ -1,10 +1,12 @@
 using App.Configs;
 using App.Helpers;
 using App.Signals;
+using Controllers.Application;
 using Controllers.Construction;
 using Controllers.SceneManagment;
 using Controllers.Settler;
 using Controllers.Work;
+using Models.Application;
 using Models.Gameplay;
 using System;
 using System.Collections.Generic;
@@ -41,6 +43,7 @@ namespace App.Registrators
             Container.Bind<ScenarioRepository>().AsSingle().WithArguments(scenariosData);
 
             // MODELS
+            Container.Bind<SettingsModel>().AsSingle();
             Container.Bind<ScenarioModel>().AsSingle();
 
             // CONFIGS
@@ -55,8 +58,9 @@ namespace App.Registrators
             // CONTROLLERS
             Container.Bind<PrefabManager>().AsSingle();
             Container.Bind(typeof(SceneHandler), typeof(IInitializable), typeof(IDisposable)).To<SceneHandler>().AsSingle().NonLazy();
+            Container.Bind(typeof(GameSettingsController), typeof(IInitializable), typeof(IDisposable)).To<GameSettingsController>().AsSingle().NonLazy();
 
-            Container.Instantiate<ApplicationInitializer>();
+            Container.Bind(typeof(ApplicationInitializer), typeof(IInitializable)).To<ApplicationInitializer>().AsSingle().NonLazy();
         }
     }
 }

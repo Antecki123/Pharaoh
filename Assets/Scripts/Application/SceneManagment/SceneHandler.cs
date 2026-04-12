@@ -143,7 +143,8 @@ namespace Controllers.SceneManagment
                 "HabitationTooltipUI",
                 "StorageTooltipUI",
                 "DistributionPointTooltipUI",
-                "FarmTooltipUI"
+                "FarmTooltipUI",
+                "WarningPanelUI"
             };
 
             for (int i = 0; i < assetsKeys.Count; i++)

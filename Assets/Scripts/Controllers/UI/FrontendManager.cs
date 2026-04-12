@@ -23,7 +23,10 @@ namespace Controllers.UI
             panels.Add(FrontendPanel.SettingsPanel, settingsPanel.gameObject);
             panels.Add(FrontendPanel.CreditsPanel, creditsPanel.gameObject);
             panels.Add(FrontendPanel.CampainPanel, campainPanel.gameObject);
+        }
 
+        private void Start()
+        {
             splashScreen.Init(this);
             mainMenu.Init(this);
             newGamePanel.Init(this);

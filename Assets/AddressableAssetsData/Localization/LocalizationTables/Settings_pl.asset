@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Settings_pl
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: pl
+  m_SharedData: {fileID: 11400000, guid: 9f72eb378c17c164eb77e5f3a3b6ab30, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 110641930240
+    m_Localized: "J\u0119zyk"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 373549293568
+    m_Localized: "G\u0142o\u015Bno\u015B\u0107"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 435964731392
+    m_Localized: Napisy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13752468889600
+    m_Localized: VSync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13736098521088
+    m_Localized: Tryb obrazu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13718331449344
+    m_Localized: "Rozdzielczo\u015B\u0107"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13760379346944
+    m_Localized: "Jako\u015B\u0107 grafiki"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13774166024192
+    m_Localized: Anti aliasing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13793690509312
+    m_Localized: Filtrowanie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13804012691456
+    m_Localized: "Jako\u015B\u0107 cieni"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26173107462144
+    m_Localized: Angielski
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26215222468608
+    m_Localized: Polski
+    m_Metadata:
+      m_Items: []
+  - m_Id: 40696182857728
+    m_Localized: "W\u0142\u0105czone"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48100945551360
+    m_Localized: "Wy\u0142\u0105czone"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48171934146560
+    m_Localized: Niskie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48199587192832
+    m_Localized: "\u015Arednie"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48249243557888
+    m_Localized: Wysokie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48264179474432
+    m_Localized: Ultra
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48426331267072
+    m_Localized: Wszystkie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48399886180352
+    m_Localized: Twarde
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48813088038912
+    m_Localized: "Wymu\u015B w\u0142\u0105czone"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48674982191104
+    m_Localized: "W\u0142\u0105czone"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48622138155008
+    m_Localized: "Wy\u0142\u0105czone"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 48914133016576
+    m_Localized: Grafika
+    m_Metadata:
+      m_Items: []
+  - m_Id: 49092772618240
+    m_Localized: "D\u017Awi\u0119k"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 49144811347968
+    m_Localized: "Og\xF3lne"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 49197579886592
+    m_Localized: Sterowanie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1014666784792576
+    m_Localized: "Wielko\u015B\u0107 napis\xF3w"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1014616486699008
+    m_Localized: "G\u0142o\u015Bno\u015B\u0107 efekt\xF3w"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1014398986870784
+    m_Localized: "G\u0142o\u015Bno\u015B\u0107 mowy"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1017653410258944
+    m_Localized: "Wr\xF3\u0107"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []
