@@ -137,7 +137,7 @@ namespace Views.Ui.GameInterfaces
             foreach (var building in buildings)
             {
                 if (!scenarioModel.Scenario.AvailableBuildings.FirstOrDefault(x => x.buildingDefinition == building).isAvailable)
-                    return;
+                    continue;
 
                 var buildingButton = Instantiate(buildingButtonPrefab);
                 buildingButton.transform.SetParent(buildingButtonsContainer);

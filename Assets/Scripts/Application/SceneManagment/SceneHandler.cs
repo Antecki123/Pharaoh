@@ -38,8 +38,8 @@ namespace Controllers.SceneManagment
 
             SceneManager.sceneLoaded += (scene, loadMode) =>
             {
-                Enum.TryParse(scene.name, out SceneName sceneName);
-                signalBus.Fire(new ApplicationSignals.GameSceneLoaded(sceneName));
+                if (Enum.TryParse(scene.name, out SceneName sceneName))
+                    signalBus.Fire(new ApplicationSignals.GameSceneLoaded(sceneName));
             };
         }
 

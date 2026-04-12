@@ -36,8 +36,8 @@ namespace App.Registrators
 
         private void OnSceneLoaded(ApplicationSignals.GameSceneLoaded signal)
         {
-            if (signal.SceneName != SceneName.MainMenu)
-                return;
+            if (signal.SceneName == SceneName.MainMenu)
+                signalBus.Fire(new ApplicationSignals.GameInitialized());
         }
 
         private async UniTask LoadUiElements()
