@@ -38,6 +38,18 @@ MonoBehaviour:
     m_Localized: Credits
     m_Metadata:
       m_Items: []
+  - m_Id: 3988836976025600
+    m_Localized: "Calibrating the universe\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3988842537672704
+    m_Localized: "Loading high-quality pixels\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4059843787087872
+    m_Localized: "Loading easter eggs\u2026"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

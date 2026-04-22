@@ -1,6 +1,7 @@
 using Controllers.SceneManagment;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.UI;
 using Zenject;
 
@@ -28,7 +29,7 @@ namespace Views.Ui.Frontend
             discriptionLabel.gameObject.SetActive(true);
             loadingProgressSlider.gameObject.SetActive(true);
 
-            discriptionLabel.text = discription;
+            discriptionLabel.text = new LocalizedString("MainMenu", discription).GetLocalizedString();;
             loadingProgressSlider.value = value;
         }
     }

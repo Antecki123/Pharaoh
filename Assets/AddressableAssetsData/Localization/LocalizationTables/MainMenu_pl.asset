@@ -38,6 +38,18 @@ MonoBehaviour:
     m_Localized: Nowa gra
     m_Metadata:
       m_Items: []
+  - m_Id: 3988836976025600
+    m_Localized: "Kalibracja wszech\u015Bwiata\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3988842537672704
+    m_Localized: "\u0141adowanie pikseli wysokiej jako\u015Bci\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4059843787087872
+    m_Localized: "\u0141adowanie easter egg\xF3w\u2026"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
