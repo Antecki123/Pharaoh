@@ -23,6 +23,10 @@ namespace Controllers
         public void Initialize()
         {
             mainCamera = Camera.main;
+
+            xRotation = mainCamera.transform.eulerAngles.x;
+            yRotation = mainCamera.transform.eulerAngles.y;
+            targetRotation = mainCamera.transform.rotation;
         }
 
         public void LateTick()
@@ -69,20 +73,21 @@ namespace Controllers
         {
             if (Input.GetMouseButton(2))
             {
-                var mouseX = Input.GetAxis("Mouse X") * cameraConfig.sensitivity * Time.deltaTime;
-                var mouseY = Input.GetAxis("Mouse Y") * cameraConfig.sensitivity * Time.deltaTime;
+                var mouseX = Input.GetAxis("Mouse X") * cameraConfig.sensitivity;
+                var mouseY = Input.GetAxis("Mouse Y") * cameraConfig.sensitivity;
 
-                if (mouseX == 0 && mouseY == 0)
-                    return;
+                if (mouseX != 0 || mouseY != 0)
+                {
+                    yRotation += mouseX;
+                    xRotation -= mouseY;
+                    xRotation = Mathf.Clamp(xRotation, 10f, 70f);
 
-                yRotation += mouseX;
-                xRotation -= mouseY;
-                xRotation = Mathf.Clamp(xRotation, 20f, 90f);
+                    targetRotation = Quaternion.Euler(xRotation, yRotation, 0f);
+                }
 
-                targetRotation = Quaternion.Euler(xRotation, yRotation, 0f);
+                var t = 1f - Mathf.Exp(-cameraConfig.rotationDamping * Time.deltaTime);
+                mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, targetRotation, t);
             }
-
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, targetRotation, Time.deltaTime * cameraConfig.rotationDamping);
         }
 
         private void Scroll()

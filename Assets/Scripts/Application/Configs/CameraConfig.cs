@@ -10,7 +10,7 @@ namespace App.Configs
         public float acceleration = 10f;
 
         [Header("Camera rotation")]
-        public float sensitivity = 600f;
+        public float sensitivity = 6f;
         public float rotationDamping = 20f;
 
         [Header("Camera scroll")]

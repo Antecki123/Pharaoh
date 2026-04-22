@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movementSpeed: 40
   acceleration: 20
-  sensitivity: 600
+  sensitivity: 6
   rotationDamping: 20
   scrollSpeed: 600
   scrollDamping: 15
