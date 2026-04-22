@@ -10,13 +10,17 @@ namespace Models.Construction
     {
         public event Action OnValueChanged;
 
-        public IReadOnlyCollection<ConstructionGridData> OccupiedTiles => occupiedTiles;
-        public IReadOnlyCollection<Vector2Int> OccupiedTilesWithoutRoads => occupiedTilesWithoutRoads;
-        public IReadOnlyCollection<Vector2Int> RoadsTiles => roadsTiles;
+        public event Action<Vector2Int> OnRoadChanged;
+
+        public HashSet<ConstructionGridData> OccupiedTiles => occupiedTiles;
+        public HashSet<Vector2Int> OccupiedTilesWithoutRoads => occupiedTilesWithoutRoads;
+        public HashSet<Vector2Int> RoadsTiles => roadsTiles;
+        public HashSet<Vector2Int> RoadPreview => roadPreview;
 
         private HashSet<ConstructionGridData> occupiedTiles = new HashSet<ConstructionGridData>();
         private HashSet<Vector2Int> occupiedTilesWithoutRoads = new HashSet<Vector2Int>();
         private HashSet<Vector2Int> roadsTiles = new HashSet<Vector2Int>();
+        private HashSet<Vector2Int> roadPreview = new HashSet<Vector2Int>();
 
         public void AddOccupant(List<Vector2Int> cells, BuildingDefinition buildingDefinition, BuildingView buildingView)
         {
@@ -55,6 +59,9 @@ namespace Models.Construction
                 roadsTiles.Add(pos);
 
             OnValueChanged?.Invoke();
+
+            if (buildingDefinition == BuildingDefinition.Road)
+                OnRoadChanged?.Invoke(pos);
         }
 
         public void RemoveOccupant(Vector2Int cellToRemove)
@@ -65,7 +72,28 @@ namespace Models.Construction
             if (roadsTiles.Contains(cellToRemove))
                 roadsTiles.Remove(cellToRemove);
 
-            OnValueChanged.Invoke();
+            OnValueChanged?.Invoke();
+            //OnRoadChanged?.Invoke(cellToRemove);
+        }
+
+        public void AddRoadPreview(Vector2Int pos)
+        {
+            if (roadsTiles.Contains(pos))
+                return;
+
+            roadPreview.Add(pos);
+            OnRoadChanged?.Invoke(pos);
+        }
+
+        public void ClearRoadPreview()
+        {
+            var positionsToUpdate = new List<Vector2Int>(roadPreview);
+            roadPreview.Clear();
+
+            foreach (var position in positionsToUpdate)
+            {
+                OnRoadChanged?.Invoke(position);
+            }
         }
 
         public bool IsValidPlacement(List<Vector2Int> cells)

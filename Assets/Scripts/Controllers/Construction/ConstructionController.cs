@@ -17,15 +17,14 @@ namespace Controllers.Construction
         private Transform constructionsContainer;
         private Transform roadContainer;
 
-        private RoadBuilderRectangular.Factory roadRectangularFactory;
         private RoadBuilder.Factory roadFactory;
         private ConstructionBuilder<BuildingView>.Factory constructionFactory;
 
-        public ConstructionController(SignalBus signalBus, RoadBuilder.Factory roadFactory, RoadBuilderRectangular.Factory roadRectangularFactory, ConstructionBuilder<BuildingView>.Factory constructionFactory)
+        public ConstructionController(SignalBus signalBus, RoadBuilder.Factory roadFactory,
+            ConstructionBuilder<BuildingView>.Factory constructionFactory)
         {
             this.signalBus = signalBus;
             this.roadFactory = roadFactory;
-            this.roadRectangularFactory = roadRectangularFactory;
             this.constructionFactory = constructionFactory;
 
             constructionsContainer = new GameObject("ConstructionsContainer").transform;
@@ -36,8 +35,7 @@ namespace Controllers.Construction
         {
             Func<IConstruction> BuildRoad()
             {
-                //var builder = roadFactory.Create();
-                var builder = roadRectangularFactory.Create();
+                var builder = roadFactory.Create();
                 builder.Setup(roadContainer);
                 return () => builder;
             }

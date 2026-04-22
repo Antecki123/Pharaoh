@@ -51,7 +51,6 @@ namespace App.Registrators
             Container.Bind(typeof(EnvironmentController), typeof(ITickable)).To<EnvironmentController>().AsSingle().NonLazy();
             Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();
 
-            Container.BindFactory<RoadBuilderRectangular, RoadBuilderRectangular.Factory>().AsTransient();
             Container.BindFactory<RoadBuilder, RoadBuilder.Factory>().AsTransient();
             Container.BindFactory<ConstructionBuilder<BuildingView>, ConstructionBuilder<BuildingView>.Factory>().AsTransient();
 

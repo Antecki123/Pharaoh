@@ -1,12 +1,9 @@
-﻿using App.Configs;
 using App.Helpers;
 using App.Signals;
-using Models.Ai;
-using Models.Ai.Pathfinding;
-using System;
+using Models.Construction;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Views.Road;
 using Zenject;
 
@@ -16,30 +13,29 @@ namespace Controllers.Construction
     {
         public class Factory : PlaceholderFactory<RoadBuilder> { }
 
-        private List<Vector3> segmentsPositions = new List<Vector3>();
-        private Vector3? startPosition;
-        private Vector3? endPosition;
-        private Camera mainCamera;
+        private List<RoadView> constructingRoads = new List<RoadView>();
+        private List<Vector2Int> currentRoadPath = new List<Vector2Int>();
+        private Vector2Int? startPosition;
+        private Vector2Int? endPosition;
+        private Vector2Int? lastCell;
 
-        private GameObject roadPreview;
-        private GameObject pointer;
-        private Material previewRoadMaterial;
+        private Camera mainCamera;
+        private RoadPathfinder roadPathfinder;
 
         private SignalBus signalBus;
         private PrefabManager prefabManager;
-        private NavigationGraph navigationGraph;
-        private ConstructionConfig constructionConfig;
+        private ConstructionGrid constructionGrid;
 
         private Transform roadContainer;
 
-        private readonly float zFightOffset = .1f;
-
-        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
+        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
-            this.navigationGraph = navigationGraph;
-            this.constructionConfig = constructionConfig;
+            this.constructionGrid = constructionGrid;
+
+            mainCamera = Camera.main;
+            roadPathfinder = new RoadPathfinder(constructionGrid.OccupiedTilesWithoutRoads as HashSet<Vector2Int>);
         }
 
         public void Setup(Transform roadContainer)
@@ -49,22 +45,7 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
-            var loadedAsset = Resources.Load<GameObject>("Prefabs/RoadPreview");
-            if (loadedAsset == null)
-            {
-                Debug.LogError($"Prefab 'roadPreview' could not be found in 'Prefabs/RoadPreview'. Make sure the path and name are correct.");
-                throw new NullReferenceException();
-            }
-
-            previewRoadMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            roadPreview = UnityEngine.Object.Instantiate(loadedAsset);
-
-            pointer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            pointer.transform.localScale = new Vector3(1f, .001f, 1f);
-            pointer.name = "Pointer";
-            pointer.GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = Color.cyan };
-
-            mainCamera = Camera.main;
+            lastCell = null;
         }
 
         public void Tick()
@@ -73,12 +54,7 @@ namespace Controllers.Construction
             {
                 if (startPosition != null)
                 {
-                    startPosition = null;
-                    endPosition = null;
-                    segmentsPositions.Clear();
-
-                    var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-                    lineRenderer.positionCount = 0;
+                    RestartConstruction();
                 }
                 else
                 {
@@ -86,51 +62,60 @@ namespace Controllers.Construction
                 }
             }
 
-            if (!TryGetSnappedPosition(out Vector3 position))
+            if (!GetGridCell(out Vector2Int currentCell))
                 return;
-
-            if (pointer != null)
-            {
-                var terrainHeight = Terrain.activeTerrain.SampleHeight(new Vector3(position.x, 0, position.z));
-                pointer.transform.position = new Vector3(position.x, terrainHeight + zFightOffset, position.z);
-            }
 
             if (Input.GetMouseButtonDown(0))
             {
+                if (!constructionGrid.IsValidPlacement(currentCell, true))
+                    return;
+
                 if (startPosition == null)
                 {
-                    SelectFirstPoint(position);
+                    startPosition = currentCell;
+                    lastCell = null;
                 }
-                else if (endPosition == null && !IntersectsExistingRoad(startPosition.Value, position) &&
-                    IsValidRoadAngle(startPosition.Value, position, navigationGraph.GetNeighborsPosition(startPosition.Value), constructionConfig.MinimumRoadAngle))
+                else
                 {
-                    CreateRoad(position);
+                    if (constructionGrid.IsValidPlacement(currentCell, true) && !IsUIHit())
+                        ConfirmRoadConstruction();
                 }
             }
 
             if (startPosition != null && endPosition == null)
             {
-                if (roadPreview != null)
+                if (lastCell == null || lastCell.Value != currentCell)
                 {
-                    var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-                    lineRenderer.positionCount = 2;
-                    lineRenderer.SetPosition(0, startPosition.Value);
-                    lineRenderer.SetPosition(1, position);
+                    constructionGrid.ClearRoadPreview();
 
-                    if (navigationGraph.Contains(startPosition.Value))
+                    currentRoadPath = roadPathfinder.FindRoadPath(startPosition.Value, currentCell);
+                    lastCell = currentCell;
+
+                    constructingRoads.ForEach(x => Object.Destroy(x.gameObject));
+                    constructingRoads.Clear();
+
+                    const float cellOffset = 0.5f;
+
+                    foreach (var roadPosition in currentRoadPath)
                     {
-                        if (IsValidRoadAngle(startPosition.Value, position, navigationGraph.GetNeighborsPosition(startPosition.Value),
-                            constructionConfig.MinimumRoadAngle) && !IntersectsExistingRoad(startPosition.Value, position))
-                            previewRoadMaterial.color = Color.green;
-                        else
-                            previewRoadMaterial.color = Color.red;
+                        var worldX = roadPosition.x + cellOffset;
+                        var worldZ = roadPosition.y + cellOffset;
+                        var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
+
+                        var newRoad = prefabManager.Instantiate<RoadView>("Road");
+                        newRoad.transform.position = new Vector3(worldX, height, worldZ);
+                        newRoad.transform.SetParent(roadContainer);
+                        newRoad.CreatePreview(roadPosition);
+
+                        constructingRoads.Add(newRoad);
+                        constructionGrid.AddRoadPreview(roadPosition);
                     }
-                    else
-                        previewRoadMaterial.color = Color.green;
 
-                    lineRenderer.material = previewRoadMaterial;
-
-                    segmentsPositions = GenerateSegments(startPosition.Value, position);
+                    foreach (var road in constructingRoads)
+                    {
+                        var color = IsValidPlacement() ? Color.lightGreen : Color.softRed;
+                        road.SetColor(color);
+                    }
                 }
             }
         }
@@ -139,253 +124,89 @@ namespace Controllers.Construction
         {
             startPosition = null;
             endPosition = null;
-            segmentsPositions.Clear();
+            currentRoadPath.Clear();
+        }
 
-            if (roadPreview != null)
+        private void ConfirmRoadConstruction()
+        {
+            foreach (var road in constructingRoads)
             {
-                UnityEngine.Object.Destroy(roadPreview);
-                roadPreview = null;
+                var roadPosition = currentRoadPath[constructingRoads.IndexOf(road)];
+                constructionGrid.AddOccupant(roadPosition, BuildingDefinition.Road, road);
+                road.PlaceBuilding();
             }
 
-            if (pointer != null)
-                UnityEngine.Object.Destroy(pointer);
+            startPosition = null;
+            endPosition = null;
+            currentRoadPath.Clear();
+            constructingRoads.Clear();
+        }
+
+        private void RestartConstruction()
+        {
+            constructionGrid.ClearRoadPreview();
+
+            constructingRoads.ForEach(x => Object.Destroy(x.gameObject));
+            constructingRoads.Clear();
+
+            startPosition = null;
+            endPosition = null;
+            currentRoadPath.Clear();
         }
 
         private void CancelConstruction()
         {
+            constructionGrid.ClearRoadPreview();
+
+            constructingRoads.ForEach(x => Object.Destroy(x.gameObject));
+            constructingRoads.Clear();
+
             signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
         }
 
-        private void SelectFirstPoint(Vector3 worldPos)
+        private bool GetGridCell(out Vector2Int cell)
         {
-            startPosition = new Vector3(worldPos.x, worldPos.y + zFightOffset, worldPos.z);
-
-            var lineRenderer = roadPreview.GetComponent<LineRenderer>();
-            lineRenderer.positionCount = 2;
-            lineRenderer.SetPosition(0, startPosition.Value);
-            lineRenderer.SetPosition(1, startPosition.Value);
-        }
-
-        private void CreateRoad(Vector3 position)
-        {
-            endPosition = new Vector3(position.x, position.y + zFightOffset, position.z);
-
-            var routePrefab = Resources.Load<RoadView>("Prefabs/RoadView");
-            if (routePrefab == null)
-            {
-                Debug.LogError($"Prefab 'roadPrefab' could not be found in 'Prefabs/RoadView'. Make sure the path and name are correct.");
-                throw new NullReferenceException();
-            }
-
-            var segmentNodes = new List<Node<Vector3>>();
-
-            for (int i = 0; i < segmentsPositions.Count; i++)
-            {
-                var nodePosition = segmentsPositions[i];
-                Node<Vector3> node;
-
-                node = navigationGraph.GetNode(nodePosition);
-                if (node == null)
-                {
-                    var nodeType = NodeType.Road;
-                    node = new Node<Vector3>(
-                        nodePosition,
-                        nodeType,
-                        (a, b) =>
-                        {
-                            float dist = Vector3.Distance(a.Data, b.Data);
-                            float multiplier = navigationGraph.MovementCost[nodeType];
-                            return dist * multiplier;
-                        },
-                        (a, goal) => Vector3.Distance(a.Data, goal.Data)
-                    );
-
-                    //navigationGraph.Nodes.Add(node);
-                }
-
-                segmentNodes.Add(node);
-            }
-
-            for (int i = 0; i < segmentNodes.Count - 1; i++)
-            {
-                var current = segmentNodes[i];
-                var next = segmentNodes[i + 1];
-
-                if (!current.Neighbors.Contains(next))
-                    current.Neighbors.Add(next);
-
-                if (!next.Neighbors.Contains(current))
-                    next.Neighbors.Add(current);
-
-                var routeView = prefabManager.InstantiateWithInject<RoadView>(routePrefab.gameObject);
-                routeView.Init(current.Data, next.Data);
-                routeView.transform.SetParent(roadContainer);
-            }
-
-            float connectionRange = 3f;
-
-            foreach (var roadNode in segmentNodes)
-            {
-                var nearbyTerrainNodes = navigationGraph.Nodes
-                    .Where(n => n.NodeType == NodeType.Terrain)
-                    .Where(n => Vector3.Distance(n.Data, roadNode.Data) <= connectionRange);
-
-                foreach (var terrainNode in nearbyTerrainNodes)
-                {
-                    if (!roadNode.Neighbors.Contains(terrainNode))
-                        roadNode.Neighbors.Add(terrainNode);
-
-                    if (!terrainNode.Neighbors.Contains(roadNode))
-                        terrainNode.Neighbors.Add(roadNode);
-                }
-            }
-
-            startPosition = endPosition;
-            endPosition = null;
-        }
-
-        private bool TryGetSnappedPosition(out Vector3 snappedPos)
-        {
-            var snapDistance = 1f;
-            var closestDistSqr = float.MaxValue;
-            Node<Vector3> closestNode = null;
+            if (mainCamera == null)
+                mainCamera = Camera.main;
 
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            int layerMask = 1 << 16;
+            var layerMask = 1 << 16;
 
-            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
+            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask) || IsUIHit())
             {
-                snappedPos = Vector3.zero;
+                cell = default;
                 return false;
             }
 
-            foreach (var node in navigationGraph.Nodes)
-            {
-                if (node.NodeType != NodeType.Road)
-                    continue;
+            int gridX = Mathf.FloorToInt(hit.point.x);
+            int gridZ = Mathf.FloorToInt(hit.point.z);
 
-                var distSqr = (hit.point - node.Data).sqrMagnitude;
-                if (distSqr < closestDistSqr && distSqr <= snapDistance * snapDistance)
-                {
-                    closestDistSqr = distSqr;
-                    closestNode = node;
-                }
-            }
-
-            if (closestNode != null)
-                snappedPos = closestNode.Data;
-            else
-                snappedPos = hit.point;
-
+            cell = new Vector2Int(gridX, gridZ);
             return true;
         }
 
-        private bool IsValidRoadAngle(Vector3 nodePos, Vector3 newPos, IEnumerable<Vector3> neighbors, float minAngle)
+        private bool IsUIHit()
         {
-            var dirNew = (newPos - nodePos).normalized;
-
-            foreach (var neighbor in neighbors)
+            var eventData = new PointerEventData(EventSystem.current)
             {
-                var dirExisting = (neighbor - nodePos).normalized;
-                float angle = Vector3.Angle(dirNew, dirExisting);
+                position = Input.mousePosition
+            };
 
-                if (angle < minAngle)
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            return results.Count > 0;
+        }
+
+        private bool IsValidPlacement()
+        {
+            foreach (var roadPosition in currentRoadPath)
+            {
+                if (!constructionGrid.IsValidPlacement(roadPosition, true))
                     return false;
             }
 
             return true;
-        }
-
-        private bool IntersectsExistingRoad(Vector3 startPos, Vector3 endPos)
-        {
-            var newA = new Vector2(startPos.x, startPos.z);
-            var newB = new Vector2(endPos.x, endPos.z);
-
-            foreach (var node in navigationGraph.Nodes)
-            {
-                if (node.NodeType != NodeType.Road)
-                    continue;
-
-                var roadNeighbors = node.Neighbors.Where(n => n.NodeType == NodeType.Road);
-                foreach (var neighbor in roadNeighbors)
-                {
-                    if (node.Id.CompareTo(neighbor.Id) > 0)
-                        continue;
-
-                    if (ApproximatelySame(node.Data, startPos) || ApproximatelySame(node.Data, endPos) ||
-                        ApproximatelySame(neighbor.Data, startPos) || ApproximatelySame(neighbor.Data, endPos))
-                        continue;
-
-                    var existingA = new Vector2(node.Data.x, node.Data.z);
-                    var existingB = new Vector2(neighbor.Data.x, neighbor.Data.z);
-
-                    if (DoSegmentsIntersect(newA, newB, existingA, existingB))
-                        return true;
-                }
-            }
-
-            return false;
-        }
-
-        private bool DoSegmentsIntersect(Vector2 p1, Vector2 p2, Vector2 q1, Vector2 q2)
-        {
-            var d1 = Direction(p1, p2, q1);
-            var d2 = Direction(p1, p2, q2);
-            var d3 = Direction(q1, q2, p1);
-            var d4 = Direction(q1, q2, p2);
-
-            if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
-                ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)))
-                return true;
-
-            return false;
-        }
-
-        private float Direction(Vector2 a, Vector2 b, Vector2 c)
-        {
-            return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
-        }
-
-        private bool ApproximatelySame(Vector3 a, Vector3 b, float tolerance = 0.01f)
-        {
-            return Vector3.Distance(a, b) <= tolerance;
-        }
-
-        private List<Vector3> GenerateSegments(Vector3 startPos, Vector3 endPos)
-        {
-            var points = new List<Vector3>();
-            var direction = (endPos - startPos).normalized;
-            var distance = Vector3.Distance(startPos, endPos);
-
-            var steps = Mathf.FloorToInt(distance / constructionConfig.SegmentSpacing);
-
-            var activeTerrain = Terrain.activeTerrain;
-            var terrainPos = activeTerrain.transform.position;
-
-            for (int i = 0; i <= steps; i++)
-            {
-                var point = startPos + direction * (i * constructionConfig.SegmentSpacing);
-                var terrainHeight = activeTerrain.SampleHeight(point) + terrainPos.y;
-
-                point.y = terrainHeight + zFightOffset;
-                points.Add(point);
-            }
-
-            var lastDist = Vector3.Distance(points[^1], endPos);
-            var endPoint = endPos;
-
-            if (activeTerrain != null)
-            {
-                var terrainHeight = activeTerrain.SampleHeight(endPoint) + terrainPos.y;
-                endPoint.y = terrainHeight + zFightOffset;
-            }
-
-            if (lastDist < constructionConfig.MinimumSpacing)
-                points[^1] = endPoint;
-            else
-                points.Add(endPoint);
-
-            return points;
         }
     }
 }

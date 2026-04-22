@@ -18,7 +18,7 @@ MonoBehaviour:
   BaseGold: 2000
   AvailableBuildings:
   - buildingDefinition: 1
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 2
     isAvailable: 1
   - buildingDefinition: 3

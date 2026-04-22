@@ -1,8 +1,9 @@
-using App.Configs;
 using Models.Ai;
 using Models.Ai.Pathfinding;
+using Models.Construction;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.U2D;
 using Views.Construction;
 using Zenject;
 
@@ -11,113 +12,111 @@ namespace Views.Road
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class RoadView : BuildingView
     {
-        private NavigationGraph navigationGraph;
-        private ConstructionConfig constructionConfig;
+        [SerializeField] private SpriteAtlas roadTextures;
+        private Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>();
 
-        private readonly float zFightOffset = .05f;
+        private MeshRenderer meshRenderer;
+        private NavigationGraph navigationGraph;
+        private ConstructionGrid constructionGrid;
+
+        private readonly float zFightOffset = .03f;
+        private Vector2Int position;
 
         private List<Vector3> navigationNodesForGizmos = new List<Vector3>();
 
         [Inject]
-        public void Constructor(NavigationGraph navigationGraph, ConstructionConfig constructionConfig)
+        public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
         {
             this.navigationGraph = navigationGraph;
-            this.constructionConfig = constructionConfig;
+            this.constructionGrid = constructionGrid;
+
+            meshRenderer = GetComponent<MeshRenderer>();
+            constructionGrid.OnRoadChanged += UpdateTileVisual;
         }
 
-        public void Init(Vector3 startPos, Vector3 endPos)
+        private void OnDestroy()
         {
-            GenerateMesh(startPos, endPos);
-
-            var roadIntersectionGenerator = new RoadIntersectionGenerator(navigationGraph, constructionConfig);
-            roadIntersectionGenerator.GenerateIntersection(startPos);
-            roadIntersectionGenerator.GenerateIntersection(endPos);
+            constructionGrid.OnRoadChanged -= UpdateTileVisual;
         }
 
-        public void Init(Vector3 centerPosition)
+        public override void PlaceBuilding()
         {
-            GenerateMesh(centerPosition);
-            GenerateNavigationNodes(centerPosition);
-        }
+            base.PlaceBuilding();
 
-        private void GenerateMesh(Vector3 startPos, Vector3 endPos)
-        {
-            var mesh = new Mesh();
-            var direction = (endPos - startPos).normalized;
-            var flatDirection = new Vector3(direction.x, 0f, direction.z).normalized;
-            var right = Vector3.Cross(Vector3.up, flatDirection).normalized * (constructionConfig.RoadWidth / 2f);
-
-            var v0 = startPos - right;
-            var v1 = startPos + right;
-            var v2 = endPos - right;
-            var v3 = endPos + right;
-
-            v0 = transform.InverseTransformPoint(v0);
-            v1 = transform.InverseTransformPoint(v1);
-            v2 = transform.InverseTransformPoint(v2);
-            v3 = transform.InverseTransformPoint(v3);
-
-            mesh.vertices = new Vector3[] { v0, v1, v2, v3 };
-
-            mesh.triangles = new int[]
+            foreach (var material in meshRenderer.materials)
             {
-                0, 2, 1,
-                2, 3, 1
-            };
-
-            mesh.uv = new Vector2[]
-            {
-                new Vector2(0, 0),
-                new Vector2(1, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 1)
-            };
-
-            mesh.RecalculateNormals();
-            GetComponent<MeshFilter>().mesh = mesh;
-
-            var meshMaterial = new Material(Resources.Load<Material>("Materials/baseMaterial"));
-            meshMaterial.color = Color.gray;
-            GetComponent<MeshRenderer>().material = meshMaterial;
+                material.color = Color.white;
+                GenerateNavigationNodes();
+            }
         }
 
-        private void GenerateMesh(Vector3 centerPosition)
+        public override void DestroyBuilding()
         {
-            var resolution = 10;
+            base.DestroyBuilding();
+        }
+
+        public void CreatePreview(Vector2Int position)
+        {
+            this.position = position;
+
+            GenerateMesh();
+            SetTexture();
+        }
+
+        public void SetColor(Color color)
+        {
+            foreach (var material in meshRenderer.materials)
+            {
+                material.color = color;
+            }
+        }
+
+        private void GenerateMesh()
+        {
+            const int resolution = 10;
+
             var terrain = Terrain.activeTerrain;
             var terrainY = terrain != null ? terrain.transform.position.y : 0f;
 
             var vertPerLine = resolution + 1;
+
             var vertices = new Vector3[vertPerLine * vertPerLine];
             var uvs = new Vector2[vertices.Length];
             var triangles = new int[resolution * resolution * 6];
 
             var v = 0;
-            for (var z = 0; z <= resolution; z++)
+
+            for (int z = 0; z <= resolution; z++)
             {
-                for (var x = 0; x <= resolution; x++)
+                for (int x = 0; x <= resolution; x++)
                 {
-                    var worldX = centerPosition.x - 0.5f + x / resolution;
-                    var worldZ = centerPosition.z - 0.5f + z / resolution;
+                    var localX = -0.5f + (float)x / resolution;
+                    var localZ = -0.5f + (float)z / resolution;
+
+                    var worldPos = transform.TransformPoint(new Vector3(localX, 0f, localZ));
 
                     var height = 0f;
+
                     if (terrain != null)
                     {
-                        height = terrain.SampleHeight(new Vector3(worldX, 0f, worldZ)) + terrainY + zFightOffset;
+                        height = terrain.SampleHeight(worldPos)
+                                 + terrainY
+                                 + zFightOffset;
                     }
 
-                    vertices[v] = new Vector3(worldX, height, worldZ);
+                    worldPos.y = height;
+                    vertices[v] = transform.InverseTransformPoint(worldPos);
                     uvs[v] = new Vector2((float)x / resolution, (float)z / resolution);
                     v++;
                 }
             }
 
             var t = 0;
-            for (var z = 0; z < resolution; z++)
+            for (int z = 0; z < resolution; z++)
             {
-                for (var x = 0; x < resolution; x++)
+                for (int x = 0; x < resolution; x++)
                 {
-                    var i = z * vertPerLine + x;
+                    int i = z * vertPerLine + x;
 
                     triangles[t++] = i;
                     triangles[t++] = i + vertPerLine;
@@ -129,25 +128,153 @@ namespace Views.Road
                 }
             }
 
-            var mesh = new Mesh
-            {
-                vertices = vertices,
-                triangles = triangles,
-                uv = uvs
-            };
+            var mesh = new Mesh();
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.uv = uvs;
 
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
-            var filter = GetComponent<MeshFilter>();
-            filter.mesh = mesh;
-
-            var meshMaterial = new Material(Resources.Load<Material>("Materials/baseMaterial"));
-            meshMaterial.color = Color.gray;
-            GetComponent<MeshRenderer>().material = meshMaterial;
+            GetComponent<MeshFilter>().mesh = mesh;
         }
 
-        private void GenerateNavigationNodes(Vector3 center, int resolution = 1)
+        private void UpdateTileVisual(Vector2Int changedTilePosition)
+        {
+            if (changedTilePosition != position
+                && changedTilePosition != position + Vector2Int.up
+                && changedTilePosition != position + Vector2Int.down
+                && changedTilePosition != position + Vector2Int.left
+                && changedTilePosition != position + Vector2Int.right)
+                return;
+
+            SetTexture();
+        }
+
+        private void SetTexture()
+        {
+            bool HasRoad(Vector2Int p) =>
+                constructionGrid.RoadsTiles.Contains(p)
+                || constructionGrid.RoadPreview.Contains(p);
+
+            var up = HasRoad(position + Vector2Int.up);
+            var down = HasRoad(position + Vector2Int.down);
+            var left = HasRoad(position + Vector2Int.left);
+            var right = HasRoad(position + Vector2Int.right);
+
+            int connections =
+                (up ? 1 : 0) +
+                (down ? 1 : 0) +
+                (left ? 1 : 0) +
+                (right ? 1 : 0);
+
+            if (connections == 4)
+            {
+                ApplySprite(GetSprite("RoadCrossroad"));
+                return;
+            }
+
+            if (connections == 3)
+            {
+                if (!up) ApplySprite(GetSprite("RoadTDown"));
+                else if (!down) ApplySprite(GetSprite("RoadTUp"));
+                else if (!left) ApplySprite(GetSprite("RoadTRight"));
+                else if (!right) ApplySprite(GetSprite("RoadTLeft"));
+
+                return;
+            }
+
+            if (connections == 2)
+            {
+                if (up && down)
+                {
+                    ApplySprite(GetSprite("RoadVertical"));
+                    return;
+                }
+
+                if (left && right)
+                {
+                    ApplySprite(GetSprite("RoadHorizontal"));
+                    return;
+                }
+
+                if (up && right)
+                {
+                    ApplySprite(GetSprite("RoadRightTurn"));
+                    return;
+                }
+
+                if (right && down)
+                {
+                    ApplySprite(GetSprite("RoadDownTurn"));
+                    return;
+                }
+
+                if (down && left)
+                {
+                    ApplySprite(GetSprite("RoadLeftTurn"));
+                    return;
+                }
+
+                if (left && up)
+                {
+                    ApplySprite(GetSprite("RoadUpTurn"));
+                    return;
+                }
+            }
+
+            if (connections == 1)
+            {
+                if (up) ApplySprite(GetSprite("RoadVertical"));
+                else if (down) ApplySprite(GetSprite("RoadVertical"));
+                else if (left) ApplySprite(GetSprite("RoadHorizontal"));
+                else if (right) ApplySprite(GetSprite("RoadHorizontal"));
+
+                return;
+            }
+
+            ApplySprite(GetSprite("RoadHorizontal"));
+        }
+
+        private Sprite GetSprite(string name)
+        {
+            if (!spriteCache.TryGetValue(name, out var sprite))
+            {
+                sprite = roadTextures.GetSprite(name);
+                spriteCache[name] = sprite;
+            }
+
+            return sprite;
+        }
+
+        private void ApplySprite(Sprite sprite)
+        {
+            if (sprite == null || meshRenderer == null)
+                return;
+
+            var block = new MaterialPropertyBlock();
+            meshRenderer.GetPropertyBlock(block);
+
+            var tex = sprite.texture;
+            var rect = sprite.textureRect;
+
+            var scale = new Vector2(
+                rect.width / tex.width,
+                rect.height / tex.height
+            );
+
+            var offset = new Vector2(
+                rect.x / tex.width,
+                rect.y / tex.height
+            );
+
+            block.SetTexture("_BaseMap", tex);
+            block.SetVector("_BaseMap_ST", new Vector4(scale.x, scale.y, offset.x, offset.y));
+
+            meshRenderer.SetPropertyBlock(block);
+        }
+
+        private void GenerateNavigationNodes(int resolution = 1)
         {
             var nodesPositions = new List<Vector3>();
 
@@ -158,10 +285,10 @@ namespace Views.Road
             {
                 for (int z = 0; z < resolution; z++)
                 {
-                    float xPos = center.x - startOffset + x * step;
-                    float zPos = center.z - startOffset + z * step;
-
+                    float xPos = transform.position.x - startOffset + x * step;
+                    float zPos = transform.position.z - startOffset + z * step;
                     float height = Terrain.activeTerrain.SampleHeight(new Vector3(xPos, 0, zPos)) + zFightOffset;
+
                     nodesPositions.Add(new Vector3(xPos, height, zPos));
                 }
             }

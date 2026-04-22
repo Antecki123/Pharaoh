@@ -76,38 +76,7 @@ namespace Controllers.SceneManagment
 
             await LoadPrefabs();
             await LoadUiElements();
-
-            Scene newScene;
-
-            if (IsAddressableScene(signal.TargetScene))
-            {
-                var handle = Addressables.LoadSceneAsync(
-                    signal.TargetScene.ToString(),
-                    LoadSceneMode.Additive,
-                    activateOnLoad: false
-                );
-
-                await handle.Task;
-                await handle.Result.ActivateAsync();
-                newScene = handle.Result.Scene;
-            }
-            else
-            {
-                var loadOp = SceneManager.LoadSceneAsync(signal.TargetScene.ToString(), LoadSceneMode.Additive);
-                loadOp.allowSceneActivation = false;
-
-                while (loadOp.progress < 0.9f)
-                {
-                    await UniTask.Yield();
-                }
-
-                loadOp.allowSceneActivation = true;
-                await loadOp;
-
-                newScene = SceneManager.GetSceneByName(signal.TargetScene.ToString());
-            }
-
-            SceneManager.SetActiveScene(newScene);
+            await LoadScene(signal.TargetScene);
 
             var loadingScene = SceneManager.GetSceneByName("LoadingScene");
             if (loadingScene.IsValid() && loadingScene.isLoaded)
@@ -152,6 +121,58 @@ namespace Controllers.SceneManagment
                 await prefabManager.LoadGameObjectsAssets(assetsKeys[i]);
                 OnAssetLoaded?.Invoke("LoadUiElements", (float)(i + 1) / assetsKeys.Count);
             }
+        }
+
+        private async UniTask LoadScene(SceneName targetScene)
+        {
+            Scene newScene;
+
+            if (IsAddressableScene(targetScene))
+            {
+                var handle = Addressables.LoadSceneAsync(
+                    targetScene.ToString(),
+                    LoadSceneMode.Additive,
+                    activateOnLoad: false
+                );
+
+                while (!handle.IsDone)
+                {
+                    var progress = handle.PercentComplete;
+                    OnAssetLoaded?.Invoke("LoadingScene", progress);
+
+                    await UniTask.Yield();
+                }
+
+                var activateHandle = handle.Result.ActivateAsync();
+                while (!activateHandle.isDone)
+                {
+                    var progress = activateHandle.progress;
+                    var normalized = Mathf.Clamp01(progress / 0.9f);
+                    OnAssetLoaded?.Invoke("LoadingScene", normalized);
+
+                    await UniTask.Yield();
+                }
+
+                newScene = handle.Result.Scene;
+            }
+            else
+            {
+                var loadOp = SceneManager.LoadSceneAsync(targetScene.ToString(), LoadSceneMode.Additive);
+                loadOp.allowSceneActivation = false;
+
+                while (loadOp.progress < 0.9f)
+                {
+                    OnAssetLoaded?.Invoke("LoadingScene", loadOp.progress);
+                    await UniTask.Yield();
+                }
+
+                loadOp.allowSceneActivation = true;
+                await loadOp;
+
+                newScene = SceneManager.GetSceneByName(targetScene.ToString());
+            }
+
+            SceneManager.SetActiveScene(newScene);
         }
 
         private bool IsAddressableScene(SceneName sceneName)
