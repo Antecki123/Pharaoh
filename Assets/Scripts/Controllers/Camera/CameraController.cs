@@ -41,32 +41,35 @@ namespace Controllers
 
         private void Movement()
         {
-            Vector3 targetVelocity = Vector3.zero;
+            var targetVelocity = Vector3.zero;
 
-            var speedModifier = Input.GetKey(KeyCode.LeftShift) ? cameraConfig.movementSpeed * 3 : cameraConfig.movementSpeed;
+            var speedModifier = Input.GetKey(KeyCode.LeftShift)
+                ? cameraConfig.movementSpeed * 3
+                : cameraConfig.movementSpeed;
+
             var movementInputX = Input.GetAxisRaw("Horizontal");
             var movementInputZ = Input.GetAxisRaw("Vertical");
 
             var currentY = mainCamera.transform.position.y;
 
-            if (movementInputX != 0f)
-                targetVelocity += mainCamera.transform.right * movementInputX;
+            targetVelocity += mainCamera.transform.right * movementInputX;
 
-            if (movementInputZ != 0f)
-            {
-                var forwardFlat = mainCamera.transform.forward;
-                forwardFlat.y = 0f;
-                forwardFlat.Normalize();
-                targetVelocity += forwardFlat * movementInputZ;
-            }
+            var forwardFlat = Vector3.ProjectOnPlane(mainCamera.transform.forward, Vector3.up).normalized;
+            targetVelocity += forwardFlat * movementInputZ;
 
             if (targetVelocity != Vector3.zero)
                 targetVelocity = targetVelocity.normalized * speedModifier;
 
-            currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, cameraConfig.acceleration * Time.deltaTime);
+            var t = 1f - Mathf.Exp(-cameraConfig.acceleration * Time.deltaTime);
+            currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, t);
 
-            mainCamera.transform.position += currentVelocity * Time.deltaTime;
-            mainCamera.transform.position = new Vector3(mainCamera.transform.position.x, currentY, mainCamera.transform.position.z);
+            var newPosition = mainCamera.transform.position + currentVelocity * Time.deltaTime;
+
+            newPosition.x = Mathf.Clamp(newPosition.x, cameraConfig.cameraClampX.Min, cameraConfig.cameraClampX.Max);
+            newPosition.z = Mathf.Clamp(newPosition.z, cameraConfig.cameraClampZ.Min, cameraConfig.cameraClampZ.Max);
+            newPosition.y = currentY;
+
+            mainCamera.transform.position = newPosition;
         }
 
         private void Rotation()
@@ -80,7 +83,7 @@ namespace Controllers
                 {
                     yRotation += mouseX;
                     xRotation -= mouseY;
-                    xRotation = Mathf.Clamp(xRotation, 10f, 70f);
+                    xRotation = Mathf.Clamp(xRotation, cameraConfig.cameraRotatnionY.Min, cameraConfig.cameraRotatnionY.Max);
 
                     targetRotation = Quaternion.Euler(xRotation, yRotation, 0f);
                 }
