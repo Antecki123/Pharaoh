@@ -60,10 +60,7 @@ namespace Views.Settler.Workers
 
             if (carrierTasks.Count == 0)
             {
-                OnTasksFinished?.Invoke();
-                OnTasksFinished = null;
-
-                signalBus.Fire(new WorkplaceSignals.ReturnCarrier(this));
+                FinishWork();
                 return;
             }
             else
@@ -90,9 +87,26 @@ namespace Views.Settler.Workers
                 }
             }
 
+            var originView = currentTask.Origin.GetBuildingView();
+            var targetView = currentTask.Target.GetBuildingView();
+
+            if (originView == null || targetView == null)
+            {
+                FinishWork();
+                return;
+            }
+
             var calculationResult = movementHandler.CalculateRoute(currentTask.Origin.GetBuildingView(), currentTask.Target.GetBuildingView());
             if (calculationResult)
                 transform.position = movementHandler.Waypoints[0];
+        }
+
+        private void FinishWork()
+        {
+            OnTasksFinished?.Invoke();
+            OnTasksFinished = null;
+
+            signalBus.Fire(new WorkplaceSignals.ReturnCarrier(this));
         }
     }
 
