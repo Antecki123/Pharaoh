@@ -27,6 +27,9 @@ namespace Controllers.Construction
         private Camera mainCamera;
 
         private int rotationSteps;
+        private const int samplesPerTile = 3;
+        private const int layerMask = 1 << 16;
+        private const float raycastDistance = 100f;
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionConfig constructionConfig,
             ConstructionGrid constructionGrid)
@@ -150,9 +153,8 @@ namespace Controllers.Construction
                 mainCamera = Camera.main;
 
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            var layerMask = 1 << 16;
 
-            if (!Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask))
+            if (!Physics.Raycast(ray, out RaycastHit hit, raycastDistance, layerMask))
             {
                 cell = default;
                 return false;
@@ -231,20 +233,11 @@ namespace Controllers.Construction
                 return false;
             }
 
-            int[,] mask = ConstructionFootprintMasks.ConstructionFootprintMask[buildingDefinition];
-            int height = mask.GetLength(0);
-            int width = mask.GetLength(1);
-            int normalizedRotation = rotationSteps % 4;
-
-            int rotatedWidth = (normalizedRotation % 2 == 0) ? width : height;
-            int rotatedHeight = (normalizedRotation % 2 == 0) ? height : width;
-
             var occupiedTiles = CalculateOccupiedTiles(buildingPosition);
 
             if (occupiedTiles.Count == 0)
                 return true;
 
-            int samplesPerTile = 3;
             var heights = new List<float>();
 
             foreach (var tile in occupiedTiles)

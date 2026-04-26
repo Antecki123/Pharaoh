@@ -1,4 +1,3 @@
-using App.Helpers;
 using App.Signals;
 using Models.Economy;
 using Models.Work;
@@ -116,6 +115,11 @@ namespace Controllers.Work
             workplaceModel.SetProcessingProgress(progress);
         }
 
+        public void DestroyWorkplace()
+        {
+            signalBus.Fire(new WorkplaceSignals.WorklplaceDestroyed(this));
+        }
+
         private void ScheduleTransport()
         {
             if (workplaceModel.CarriersCount == 0)
@@ -126,7 +130,7 @@ namespace Controllers.Work
                 return;
 
             workplaceModel.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier()));
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier(), this));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)

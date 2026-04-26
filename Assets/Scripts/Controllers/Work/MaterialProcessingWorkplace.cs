@@ -1,6 +1,6 @@
-using App.Helpers;
 using App.Signals;
 using Models.Economy;
+using Models.Helpers;
 using Models.Work;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,30 +15,32 @@ namespace Controllers.Work
     {
         public WorkplaceModel WorkplaceModel => workplaceModel;
 
-        private SupplyModel supplyModel;
-        private SignalBus signalBus;
-        private WorkplaceModel workplaceModel;
-        private BuildingView buildingView;
+        private readonly SupplyModel supplyModel;
+        private readonly SignalBus signalBus;
+        private readonly WorkplaceModel workplaceModel;
+        private readonly BuildingView buildingView;
 
         private float progress = 0f;
-        private float checkTimer;
-        private float checkSpanInSec = 5f;
+        private Timer timer;
 
-        public MaterialProcessingWorkplace(PrefabManager prefabManager, SupplyModel supplyModel, SignalBus signalBus,
+        public MaterialProcessingWorkplace(SupplyModel supplyModel, SignalBus signalBus,
             WorkplaceModel workplaceModel, BuildingView buildingView)
         {
             this.supplyModel = supplyModel;
             this.signalBus = signalBus;
             this.workplaceModel = workplaceModel;
             this.buildingView = buildingView;
+
+            timer = new Timer(5f);
         }
 
         public void Work()
         {
-            checkTimer -= Time.deltaTime;
-            if (checkTimer < 0)
+            timer.Tick(Time.deltaTime);
+
+            if (timer.IsFinished)
             {
-                checkTimer = checkSpanInSec;
+                timer.Reset();
 
                 if (workplaceModel.IsAnyCommodityToTake() || !workplaceModel.HasRequiredComodity())
                     ScheduleTransport();
@@ -124,6 +126,11 @@ namespace Controllers.Work
             return workplaceModel;
         }
 
+        public void DestroyWorkplace()
+        {
+            signalBus.Fire(new WorkplaceSignals.WorklplaceDestroyed(this));
+        }
+
         private void ScheduleTransport()
         {
             if (workplaceModel.CarriersCount == 0)
@@ -134,7 +141,7 @@ namespace Controllers.Work
                 return;
 
             workplaceModel.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier()));
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier(), this));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)

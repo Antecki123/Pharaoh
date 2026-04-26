@@ -40,7 +40,7 @@ namespace App.Debug
 
             if (sharedMaterial == null)
             {
-                sharedMaterial = new Material(Resources.Load<Material>("Materials/baseMaterial"));
+                sharedMaterial = new Material(Resources.Load<Material>("Materials/road"));
                 sharedMaterial.color = Color.crimson;
             }
 

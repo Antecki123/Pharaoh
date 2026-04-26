@@ -20,6 +20,7 @@ namespace Views.Ui.GameInterfaces
         [SerializeField] private Button leasureButton;
         [SerializeField] private Button municipalButton;
         [SerializeField] private Button decoratesButton;
+        [SerializeField] private Button destroyButton;
         [Space]
         [SerializeField] private RectTransform buildingButtonsContainer;
         [SerializeField] private BuildingButtonUI buildingButtonPrefab;
@@ -39,12 +40,13 @@ namespace Views.Ui.GameInterfaces
                 signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Road));
             });
 
-            housingButton.onClick.AddListener(() => OpenPanel(BuildingType.Housing));
-            farmingButton.onClick.AddListener(() => OpenPanel(BuildingType.Farming));
-            industryButton.onClick.AddListener(() => OpenPanel(BuildingType.Industry));
-            leasureButton.onClick.AddListener(() => OpenPanel(BuildingType.Leasure));
-            municipalButton.onClick.AddListener(() => OpenPanel(BuildingType.Municipal));
-            decoratesButton.onClick.AddListener(() => OpenPanel(BuildingType.Decorates));
+            housingButton.onClick.AddListener(OnHousingButtonClick);
+            farmingButton.onClick.AddListener(OnFarmingButtonClick);
+            industryButton.onClick.AddListener(OnIndustryButtonClick);
+            leasureButton.onClick.AddListener(OnLeasureButtonClick);
+            municipalButton.onClick.AddListener(OnMunicipalButtonClick);
+            decoratesButton.onClick.AddListener(OnDecoratesButtonClick);
+            destroyButton.onClick.AddListener(OnDestroyButtonClick);
 
             availableBuildingsPanel.gameObject.SetActive(false);
         }
@@ -58,7 +60,16 @@ namespace Views.Ui.GameInterfaces
             leasureButton.onClick.RemoveAllListeners();
             municipalButton.onClick.RemoveAllListeners();
             decoratesButton.onClick.RemoveAllListeners();
+            destroyButton.onClick.RemoveAllListeners();
         }
+
+        private void OnHousingButtonClick() => OpenPanel(BuildingType.Housing);
+        private void OnFarmingButtonClick() => OpenPanel(BuildingType.Farming);
+        private void OnIndustryButtonClick() => OpenPanel(BuildingType.Industry);
+        private void OnLeasureButtonClick() => OpenPanel(BuildingType.Leasure);
+        private void OnMunicipalButtonClick() => OpenPanel(BuildingType.Municipal);
+        private void OnDecoratesButtonClick() => OpenPanel(BuildingType.Decorates);
+        private void OnDestroyButtonClick() => signalBus.Fire(new ConstructionSignals.DestroyMode());
 
         private void OpenPanel(BuildingType buildingType)
         {

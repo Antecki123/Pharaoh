@@ -78,6 +78,11 @@ namespace Controllers.Work
             return distributionModel;
         }
 
+        public void DestroyWorkplace()
+        {
+            signalBus.Fire(new WorkplaceSignals.WorklplaceDestroyed(this));
+        }
+
         public void Work()
         {
             if (distributionModel.Workers.Count < distributionModel.MinimumWorkersCount)
@@ -184,7 +189,7 @@ namespace Controllers.Work
                 distributionModel.ReturnServiceAgent();
             }
 
-            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(serviceAgentPayload, OnAgentReturn));
+            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(serviceAgentPayload, OnAgentReturn, this));
         }
 
         private void ScheduleTransport(CommodityModel commodity)
@@ -197,7 +202,7 @@ namespace Controllers.Work
                 return;
 
             distributionModel.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => distributionModel.ReturnCarrier()));
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => distributionModel.ReturnCarrier(), this));
         }
 
         private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks)

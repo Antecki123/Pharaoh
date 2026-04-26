@@ -1,4 +1,3 @@
-using App.Helpers;
 using App.Signals;
 using Controllers.Construction;
 using Controllers.Work;
@@ -14,17 +13,15 @@ namespace Views.Construction
     public class BakeryView : BuildingView
     {
         private SignalBus signalBus;
-        private PrefabManager prefabManager;
         private SupplyModel supplyModel;
         private WorkplaceEconomyImporter economyImporter;
 
         private MaterialProcessingWorkplace workplace;
 
         [Inject]
-        public void Constructor(SignalBus signalBus, PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter)
+        public void Constructor(SignalBus signalBus, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter)
         {
             this.signalBus = signalBus;
-            this.prefabManager = prefabManager;
             this.supplyModel = supplyModel;
             this.economyImporter = economyImporter;
         }
@@ -68,7 +65,7 @@ namespace Views.Construction
 
             var workplaceModel = new WorkplaceModel(buildingDefinition, economyData, storage);
 
-            workplace = new MaterialProcessingWorkplace(prefabManager, supplyModel, signalBus, workplaceModel, this);
+            workplace = new MaterialProcessingWorkplace(supplyModel, signalBus, workplaceModel, this);
         }
     }
 }

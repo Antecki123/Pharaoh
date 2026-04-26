@@ -22,7 +22,7 @@ namespace Views.Road
         private readonly float zFightOffset = .03f;
         private Vector2Int position;
 
-        private List<Vector3> navigationNodesForGizmos = new List<Vector3>();
+        private List<Vector3> navigationNodes = new List<Vector3>();
 
         [Inject]
         public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
@@ -52,6 +52,11 @@ namespace Views.Road
 
         public override void DestroyBuilding()
         {
+            foreach (var node in navigationNodes)
+            {
+                navigationGraph.RemoveNode(node);
+            }
+
             base.DestroyBuilding();
         }
 
@@ -296,13 +301,13 @@ namespace Views.Road
             foreach (var position in nodesPositions)
             {
                 navigationGraph.AddNode(position, NodeType.Road);
-                navigationNodesForGizmos.Add(position);
+                navigationNodes.Add(position);
             }
         }
 
         private void OnDrawGizmosSelected()
         {
-            foreach (var nodePosition in navigationNodesForGizmos)
+            foreach (var nodePosition in navigationNodes)
             {
                 var node = navigationGraph.GetNode(nodePosition);
                 Gizmos.DrawWireSphere(node.Data, .05f);

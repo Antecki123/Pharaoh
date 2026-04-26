@@ -1,5 +1,6 @@
 using App.Signals;
 using Controllers.Ai;
+using Controllers.Work;
 using Models.Ai;
 using Models.Ai.Pathfinding;
 using Models.Construction;
@@ -13,7 +14,7 @@ using Zenject;
 namespace Views.Settler.Workers
 {
     [SelectionBase]
-    public class ServiceAgentView : MonoBehaviour
+    public class ServiceAgentView : MonoBehaviour, IWorker
     {
         public Action OnAgentReturn;
 

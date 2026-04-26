@@ -7,16 +7,22 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
-using UnityEngine.Pool;
 using Views.Settler.Workers;
 using Zenject;
 
 namespace Controllers.Work
 {
+    public interface IWorker
+    {
+        public void Tick();
+    }
+
     public class WorkersController : IInitializable, ITickable, IDisposable
     {
+        // TODO: remove carriers and serviceAgents collections
         private List<CarrierView> carriers = new List<CarrierView>();
         private List<ServiceAgentView> serviceAgents = new List<ServiceAgentView>();
+        private Dictionary<IWorker, IWorkplace> workersWorkplaceMap = new Dictionary<IWorker, IWorkplace>();
 
         private readonly SignalBus signalBus;
         private readonly WorkerObjectPool<CarrierView> carriersObjectPool;
@@ -25,6 +31,8 @@ namespace Controllers.Work
 
         private TransformAccessArray carriersMovementArray;
         private TransformAccessArray serviceAgentsMovementArray;
+
+        private const float waypointReachedDistance = 0.2f;
 
         public WorkersController(SignalBus signalBus, PrefabManager prefabManager)
         {
@@ -41,6 +49,7 @@ namespace Controllers.Work
             signalBus.Subscribe<WorkplaceSignals.ReturnCarrier>(ReturnCarrier);
             signalBus.Subscribe<WorkplaceSignals.SpawnServiceAgent>(SpawnServiceAgent);
             signalBus.Subscribe<WorkplaceSignals.ReturnServiceAgent>(ReturnServiceAgent);
+            signalBus.Subscribe<WorkplaceSignals.WorklplaceDestroyed>(WorklplaceDestroyed);
         }
 
         public void Tick()
@@ -56,6 +65,7 @@ namespace Controllers.Work
             signalBus.TryUnsubscribe<WorkplaceSignals.ReturnCarrier>(ReturnCarrier);
             signalBus.TryUnsubscribe<WorkplaceSignals.SpawnServiceAgent>(SpawnServiceAgent);
             signalBus.TryUnsubscribe<WorkplaceSignals.ReturnServiceAgent>(ReturnServiceAgent);
+            signalBus.TryUnsubscribe<WorkplaceSignals.WorklplaceDestroyed>(WorklplaceDestroyed);
 
             carriersMovementArray.Dispose();
             serviceAgentsMovementArray.Dispose();
@@ -68,12 +78,15 @@ namespace Controllers.Work
             carrier.OnTasksFinished += signal.OnTasksFinished;
 
             carriers.Add(carrier);
+            workersWorkplaceMap.Add(carrier, signal.Workplace);
         }
 
         private void ReturnCarrier(WorkplaceSignals.ReturnCarrier signal)
         {
             carriersObjectPool.WorkersPool.Release(signal.Carrier);
+
             carriers.Remove(signal.Carrier);
+            workersWorkplaceMap.Remove(signal.Carrier);
         }
 
         private void SpawnServiceAgent(WorkplaceSignals.SpawnServiceAgent signal)
@@ -83,21 +96,56 @@ namespace Controllers.Work
             agent.OnAgentReturn += signal.OnAgentReturn;
 
             serviceAgents.Add(agent);
+            workersWorkplaceMap.Add(agent, signal.Workplace);
         }
 
         private void ReturnServiceAgent(WorkplaceSignals.ReturnServiceAgent signal)
         {
             serviceAgentObjectPool.WorkersPool.Release(signal.Agent);
+
             serviceAgents.Remove(signal.Agent);
+            workersWorkplaceMap.Remove(signal.Agent);
+        }
+
+        private void WorklplaceDestroyed(WorkplaceSignals.WorklplaceDestroyed signal)
+        {
+            var toRemove = new List<IWorker>();
+
+            foreach (var kv in workersWorkplaceMap)
+            {
+                if (kv.Value != signal.Workplace)
+                    continue;
+
+                var worker = kv.Key;
+
+                switch (worker)
+                {
+                    case CarrierView carrier:
+                        carriersObjectPool.WorkersPool.Release(carrier);
+                        carriers.Remove(carrier);
+                        break;
+
+                    case ServiceAgentView agent:
+                        serviceAgentObjectPool.WorkersPool.Release(agent);
+                        serviceAgents.Remove(agent);
+                        break;
+                }
+
+                toRemove.Add(worker);
+            }
+
+            foreach (var worker in toRemove)
+            {
+                workersWorkplaceMap.Remove(worker);
+            }
         }
 
         private void WorkersTick()
         {
-            foreach (var carrier in carriers)
-                carrier.Tick();
-
-            foreach (var agent in serviceAgents)
-                agent.Tick();
+            foreach (var worker in workersWorkplaceMap)
+            {
+                worker.Key.Tick();
+            }
         }
 
         private void UpdateCarriersMovement()
@@ -130,8 +178,6 @@ namespace Controllers.Work
 
             var handle = movementUpdateJob.Schedule(carriersMovementArray);
             handle.Complete();
-
-            var waypointReachedDistance = 0.2f;
 
             foreach (var carrier in carriersToMove)
             {
@@ -181,8 +227,6 @@ namespace Controllers.Work
             var handle = movementUpdateJob.Schedule(serviceAgentsMovementArray);
             handle.Complete();
 
-            var waypointReachedDistance = 0.2f;
-
             foreach (var agent in agentsToMove)
             {
                 if (agent.IsReturning)
@@ -210,55 +254,6 @@ namespace Controllers.Work
 
             targetPositionsArray.Dispose();
             movementSpeedsArray.Dispose();
-        }
-    }
-
-    public class WorkerObjectPool<T> where T : MonoBehaviour
-    {
-        public ObjectPool<T> WorkersPool => workersPool;
-
-        private readonly ObjectPool<T> workersPool;
-        private readonly Transform workersContainer;
-
-        private readonly PrefabManager prefabManager;
-
-        public WorkerObjectPool(PrefabManager prefabManager, Transform workersContainer, bool collectionCheck = true,
-            int defaultCapacity = 30, int maxSize = 500)
-        {
-            this.prefabManager = prefabManager;
-            this.workersContainer = workersContainer;
-
-            workersPool = new ObjectPool<T>(
-            createFunc: Create,
-            actionOnGet: OnGet,
-            actionOnRelease: OnRelease,
-            actionOnDestroy: OnDestroy,
-            collectionCheck: collectionCheck,
-            defaultCapacity: defaultCapacity,
-            maxSize: maxSize);
-        }
-
-        private T Create()
-        {
-            var worker = prefabManager.Instantiate<T>(typeof(T).Name);
-            worker.transform.SetParent(workersContainer);
-
-            return worker;
-        }
-
-        private void OnGet(T worker)
-        {
-            worker.gameObject.SetActive(true);
-        }
-
-        private void OnRelease(T worker)
-        {
-            worker.gameObject.SetActive(false);
-        }
-
-        private void OnDestroy(T worker)
-        {
-            UnityEngine.Object.Destroy(worker.gameObject);
         }
     }
 }

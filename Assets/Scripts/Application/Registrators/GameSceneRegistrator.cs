@@ -43,7 +43,7 @@ namespace App.Registrators
             Container.Bind(typeof(ObjectivesController), typeof(IInitializable), typeof(ITickable)).To<ObjectivesController>().AsSingle().NonLazy();
             Container.Bind(typeof(SettlersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<SettlersController>().AsSingle().NonLazy();
             Container.Bind(typeof(WorkersController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<WorkersController>().AsSingle().NonLazy();
-            Container.Bind(typeof(WorkplacesController), typeof(IInitializable), typeof(ITickable)).To<WorkplacesController>().AsSingle().NonLazy();
+            Container.Bind(typeof(WorkplacesController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<WorkplacesController>().AsSingle().NonLazy();
             Container.Bind(typeof(HabitationController), typeof(IInitializable), typeof(ITickable)).To<HabitationController>().AsSingle().NonLazy();
             Container.Bind(typeof(InteractionController), typeof(IInitializable), typeof(ITickable)).To<InteractionController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable)).To<ConstructionController>().AsSingle().NonLazy();
@@ -52,6 +52,7 @@ namespace App.Registrators
             Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();
 
             Container.BindFactory<RoadBuilder, RoadBuilder.Factory>().AsTransient();
+            Container.BindFactory<ConstructionDestroyer, ConstructionDestroyer.Factory>().AsTransient();
             Container.BindFactory<ConstructionBuilder<BuildingView>, ConstructionBuilder<BuildingView>.Factory>().AsTransient();
 
             Container.Bind<StrategyFactory>().AsSingle();

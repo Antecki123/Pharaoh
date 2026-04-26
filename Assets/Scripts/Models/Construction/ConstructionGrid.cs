@@ -22,6 +22,8 @@ namespace Models.Construction
         private HashSet<Vector2Int> roadsTiles = new HashSet<Vector2Int>();
         private HashSet<Vector2Int> roadPreview = new HashSet<Vector2Int>();
 
+        private readonly List<ConstructionGridData> buffer = new List<ConstructionGridData>();
+
         public void AddOccupant(List<Vector2Int> cells, BuildingDefinition buildingDefinition, BuildingView buildingView)
         {
             foreach (var pos in cells)
@@ -66,14 +68,37 @@ namespace Models.Construction
 
         public void RemoveOccupant(Vector2Int cellToRemove)
         {
-            if (occupiedTilesWithoutRoads.Contains(cellToRemove))
-                occupiedTilesWithoutRoads.Remove(cellToRemove);
+            var tile = GetTileByPosition(cellToRemove);
 
-            if (roadsTiles.Contains(cellToRemove))
-                roadsTiles.Remove(cellToRemove);
+            if (tile == null)
+                return;
+
+            var building = tile.BuildingView;
+
+            if (building == null)
+                return;
+
+            buffer.Clear();
+
+            foreach (var t in OccupiedTiles)
+            {
+                if (t.BuildingView == building)
+                {
+                    buffer.Add(t);
+                }
+            }
+
+            foreach (var t in buffer)
+            {
+                OccupiedTiles.Remove(t);
+                occupiedTilesWithoutRoads.Remove(t.Position);
+                roadsTiles.Remove(t.Position);
+            }
 
             OnValueChanged?.Invoke();
-            //OnRoadChanged?.Invoke(cellToRemove);
+
+            if (tile.BuildingDefinition == BuildingDefinition.Road)
+                OnRoadChanged?.Invoke(cellToRemove);
         }
 
         public void AddRoadPreview(Vector2Int pos)

@@ -8,6 +8,7 @@ namespace App.Signals
         public ConstructionSignals(DiContainer container)
         {
             container.DeclareSignal<ConstructionMode>();
+            container.DeclareSignal<DestroyMode>();
         }
 
         public class ConstructionMode
@@ -18,6 +19,11 @@ namespace App.Signals
             {
                 Building = building;
             }
+        }
+
+        public class DestroyMode
+        {
+
         }
     }
 }

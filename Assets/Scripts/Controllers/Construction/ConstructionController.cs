@@ -19,13 +19,16 @@ namespace Controllers.Construction
 
         private RoadBuilder.Factory roadFactory;
         private ConstructionBuilder<BuildingView>.Factory constructionFactory;
+        private ConstructionDestroyer.Factory destroyerFactory;
 
         public ConstructionController(SignalBus signalBus, RoadBuilder.Factory roadFactory,
-            ConstructionBuilder<BuildingView>.Factory constructionFactory)
+            ConstructionBuilder<BuildingView>.Factory constructionFactory,
+            ConstructionDestroyer.Factory destroyerFactory)
         {
             this.signalBus = signalBus;
             this.roadFactory = roadFactory;
             this.constructionFactory = constructionFactory;
+            this.destroyerFactory = destroyerFactory;
 
             constructionsContainer = new GameObject("ConstructionsContainer").transform;
             roadContainer = new GameObject("RoadContainer").transform;
@@ -68,6 +71,7 @@ namespace Controllers.Construction
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);
+            signalBus.Subscribe<ConstructionSignals.DestroyMode>(SetDestroyMode);
         }
 
         public void Tick()
@@ -85,28 +89,12 @@ namespace Controllers.Construction
                 currentConstruction?.Initialize();
             }
         }
-    }
 
-    public enum BuildingDefinition
-    {
-        None,
-        Road,
-        Cottage,
-        House,
-        Residence,
-        Granary,
-        Windmill,
-        Bakery,
-        Bazaar,
-        Warehouse,
-        WheatFarm,
-        LinenFarm,
-        Pasture,
-        IrrigationDitch,
-        ShadufStation,
-        Well,
-        Brewery,
-        WeavingMill,
-        Tavern
+        private void SetDestroyMode(ConstructionSignals.DestroyMode signal)
+        {
+            currentConstruction?.Dispose();
+            currentConstruction = destroyerFactory.Create();
+            currentConstruction?.Initialize();
+        }
     }
 }

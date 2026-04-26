@@ -1,5 +1,6 @@
 using App.Signals;
 using Controllers.Ai;
+using Controllers.Work;
 using Models.Ai;
 using Models.Construction;
 using Models.Economy;
@@ -12,7 +13,7 @@ using Zenject;
 namespace Views.Settler.Workers
 {
     [SelectionBase]
-    public class CarrierView : MonoBehaviour
+    public class CarrierView : MonoBehaviour, IWorker
     {
         public event Action OnTasksFinished;
 

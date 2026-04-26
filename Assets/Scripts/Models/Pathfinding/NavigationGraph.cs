@@ -1,4 +1,5 @@
 using Models.Ai.Pathfinding;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,9 +7,13 @@ namespace Models.Ai
 {
     public class NavigationGraph
     {
+        public event Action OnValueChanged;
+
         public IReadOnlyList<Node<Vector3>> Nodes => nodes;
 
         private List<Node<Vector3>> nodes = new List<Node<Vector3>>();
+
+        private const float connectionRange = 1.5f;
 
         public IReadOnlyDictionary<NodeType, float> MovementCost { get; } = new Dictionary<NodeType, float>()
         {
@@ -39,7 +44,6 @@ namespace Models.Ai
 
             foreach (var node in nodes)
             {
-                var connectionRange = 1.5f;
                 float dist = Vector3.Distance(newNode.Data, node.Data);
                 if (dist <= connectionRange && node != newNode)
                 {
@@ -50,11 +54,25 @@ namespace Models.Ai
                         node.Neighbors.Add(newNode);
                 }
             }
+
+            OnValueChanged?.Invoke();
         }
 
-        public void RemoveNode(Vector3 nodePosition, NodeType nodeType)
+        public void RemoveNode(Vector3 nodePosition)
         {
+            if (!Contains(nodePosition))
+                return;
 
+            var nodeToRemove = GetNode(nodePosition);
+            foreach (var neighbor in nodeToRemove.Neighbors)
+            {
+                neighbor.Neighbors.Remove(nodeToRemove);
+            }
+
+            nodeToRemove.Neighbors.Clear();
+            nodes.Remove(nodeToRemove);
+
+            OnValueChanged?.Invoke();
         }
 
         public Node<Vector3> GetNode(Vector3 position)
@@ -100,22 +118,6 @@ namespace Models.Ai
             }
 
             return false;
-        }
-
-        public List<Vector3> GetNeighborsPosition(Vector3 position)
-        {
-            var neighborsPosition = new List<Vector3>();
-
-            if (Contains(position))
-            {
-                foreach (var node in GetNode(position).Neighbors)
-                {
-                    if (node.NodeType == NodeType.Road)
-                        neighborsPosition.Add(node.Data);
-                }
-            }
-
-            return neighborsPosition;
         }
     }
 }

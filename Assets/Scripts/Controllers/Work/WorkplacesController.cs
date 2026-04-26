@@ -1,6 +1,7 @@
 using App.Signals;
 using Models.Economy;
 using Models.Work;
+using System;
 using Zenject;
 
 namespace Controllers.Work
@@ -9,10 +10,12 @@ namespace Controllers.Work
     {
         public void Work();
 
+        public void DestroyWorkplace();
+
         public IEmployer GetEmployer();
     }
 
-    public class WorkplacesController : IInitializable, ITickable
+    public class WorkplacesController : IInitializable, ITickable, IDisposable
     {
         private readonly SignalBus signalBus;
         private readonly SupplyModel supplyModel;
@@ -41,6 +44,14 @@ namespace Controllers.Work
             }
         }
 
+        public void Dispose()
+        {
+            signalBus.Unsubscribe<WorkplaceSignals.RegisterWorkplace>(RegisterWorkplace);
+            signalBus.Unsubscribe<WorkplaceSignals.UnregisterWorkplace>(UnregisterWorkplace);
+            signalBus.Unsubscribe<WorkplaceSignals.RegisterSupplyTarget>(RegisterSupplyTarget);
+            signalBus.Unsubscribe<WorkplaceSignals.UnregisterSupplyTarget>(UnregisterSupplyTarget);
+        }
+
         private void RegisterWorkplace(WorkplaceSignals.RegisterWorkplace signal)
         {
             employmentModel.AddWorkplace(signal.Workplace, signal.BuildingView);
@@ -49,6 +60,7 @@ namespace Controllers.Work
         private void UnregisterWorkplace(WorkplaceSignals.UnregisterWorkplace signal)
         {
             employmentModel.RemoveWorkplace(signal.Workplace);
+            signal.Workplace.DestroyWorkplace();
         }
 
         private void RegisterSupplyTarget(WorkplaceSignals.RegisterSupplyTarget signal)

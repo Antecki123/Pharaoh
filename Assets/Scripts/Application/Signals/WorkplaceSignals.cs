@@ -1,12 +1,10 @@
 using Controllers.Work;
-using Models.Habitation;
 using Models.Work;
 using System;
 using System.Collections.Generic;
 using Views.Construction;
 using Views.Settler.Workers;
 using Zenject;
-using static UnityEngine.UI.Image;
 
 namespace App.Signals
 {
@@ -22,6 +20,7 @@ namespace App.Signals
             container.DeclareSignal<ReturnCarrier>();
             container.DeclareSignal<SpawnServiceAgent>();
             container.DeclareSignal<ReturnServiceAgent>();
+            container.DeclareSignal<WorklplaceDestroyed>();
         }
 
         public class RegisterWorkplace
@@ -76,10 +75,13 @@ namespace App.Signals
 
             public Action OnTasksFinished { get; private set; }
 
-            public SpawnCarrier(Queue<CarrierTask> carrierTasks, Action onTasksFinished)
+            public IWorkplace Workplace { get; private set; }
+
+            public SpawnCarrier(Queue<CarrierTask> carrierTasks, Action onTasksFinished, IWorkplace workplace)
             {
                 CarrierTasks = carrierTasks;
                 OnTasksFinished = onTasksFinished;
+                Workplace = workplace;
             }
         }
 
@@ -99,10 +101,13 @@ namespace App.Signals
 
             public Action OnAgentReturn { get; private set; }
 
-            public SpawnServiceAgent(ServiceAgentPayload serviceAgentPayload, Action onAgentReturn)
+            public IWorkplace Workplace { get; private set; }
+
+            public SpawnServiceAgent(ServiceAgentPayload serviceAgentPayload, Action onAgentReturn, IWorkplace workplace)
             {
                 ServiceAgentPayload = serviceAgentPayload;
                 OnAgentReturn = onAgentReturn;
+                Workplace = workplace;
             }
         }
 
@@ -113,6 +118,15 @@ namespace App.Signals
             public ReturnServiceAgent(ServiceAgentView agent)
             {
                 Agent = agent;
+            }
+        }
+
+        public class WorklplaceDestroyed
+        {
+            public IWorkplace Workplace { get; private set; }
+            public WorklplaceDestroyed(IWorkplace workplace)
+            {
+                Workplace = workplace;
             }
         }
     }

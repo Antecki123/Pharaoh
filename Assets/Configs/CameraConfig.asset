@@ -14,8 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movementSpeed: 40
   acceleration: 20
+  cameraClampX:
+    Min: -5
+    Max: 255
+  cameraClampZ:
+    Min: -5
+    Max: 255
   sensitivity: 6
-  rotationDamping: 20
+  rotationDamping: 10
+  cameraRotatnionY:
+    Min: 10
+    Max: 70
   scrollSpeed: 600
   scrollDamping: 15
   minZoom: 8

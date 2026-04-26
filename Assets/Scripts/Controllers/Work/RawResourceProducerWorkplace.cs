@@ -20,8 +20,8 @@ namespace Controllers.Work
         private WorkplaceModel workplaceModel;
         private BuildingView buildingView;
 
-        private Timer checkTimer;
         private float progress = 0f;
+        private Timer checkTimer;
 
         public RawResourceProducerWorkplace(SignalBus signalBus, SupplyModel supplyModel, WorkplaceModel workplaceModel, BuildingView buildingView)
         {
@@ -118,6 +118,11 @@ namespace Controllers.Work
             return false;
         }
 
+        public void DestroyWorkplace()
+        {
+            signalBus.Fire(new WorkplaceSignals.WorklplaceDestroyed(this));
+        }
+
         private void ScheduleTransport()
         {
             if (workplaceModel.CarriersCount == 0)
@@ -128,7 +133,7 @@ namespace Controllers.Work
                 return;
 
             workplaceModel.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier()));
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier(), this));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)

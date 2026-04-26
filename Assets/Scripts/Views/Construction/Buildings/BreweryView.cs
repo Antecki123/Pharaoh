@@ -68,7 +68,7 @@ namespace Views.Construction
 
             var workplaceModel = new WorkplaceModel(buildingDefinition, economyData, storage);
 
-            workplace = new MaterialProcessingWorkplace(prefabManager, supplyModel, signalBus, workplaceModel, this);
+            workplace = new MaterialProcessingWorkplace(supplyModel, signalBus, workplaceModel, this);
         }
     }
 }
