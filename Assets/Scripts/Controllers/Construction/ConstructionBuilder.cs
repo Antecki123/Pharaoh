@@ -50,6 +50,8 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
+            signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(true));
+
             building = prefabManager.Instantiate<T>(buildingDefinition.ToString());
 
             float yRotation = rotationSteps * 90f;
@@ -96,6 +98,8 @@ namespace Controllers.Construction
         {
             if (building != null)
                 Object.Destroy(building.gameObject);
+
+            signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(false));
         }
 
         private void CancelConstruction()

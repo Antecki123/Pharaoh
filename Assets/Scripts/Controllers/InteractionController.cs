@@ -1,3 +1,5 @@
+using App.Signals;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -5,14 +7,29 @@ using Zenject;
 
 namespace Controllers
 {
-    public class InteractionController : IInitializable, ITickable
+    public class InteractionController : IInitializable, ITickable, IDisposable
     {
+        private SignalBus signalBus;
+
         private Camera mainCamera;
         private IInteractable currentHighlighted;
 
+        private const int layerMask = 1 << 17;
+        private const float raycastDistance = 100f;
+
+        private bool interactionBlocked;
+
+        public InteractionController(SignalBus signalBus)
+        {
+            this.signalBus = signalBus;
+
+            mainCamera = Camera.main;
+
+        }
+
         public void Initialize()
         {
-            mainCamera = Camera.main;
+            signalBus.Subscribe<ConstructionSignals.ActivateConstructionMode>(OnConstructionModeChanged);
         }
 
         public void Tick()
@@ -20,23 +37,32 @@ namespace Controllers
             if (mainCamera == null)
                 mainCamera = Camera.main;
 
+            if (interactionBlocked)
+                return;
+
             TryGetObjectToSelect();
             TryInteractWithObject();
         }
 
+        public void Dispose()
+        {
+            signalBus.Unsubscribe<ConstructionSignals.ActivateConstructionMode>(OnConstructionModeChanged);
+        }
+
+        private void OnConstructionModeChanged(ConstructionSignals.ActivateConstructionMode signal) => 
+            interactionBlocked = signal.State;
+
         private void TryGetObjectToSelect()
         {
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            var layerMask = 1 << 17;
-
-            if (Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask) && !IsUIHit())
+            if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, layerMask) && !IsUIHit())
             {
                 if (hit.collider.TryGetComponent(out IInteractable interactable))
                 {
                     if (interactable != currentHighlighted)
                     {
-                        currentHighlighted?.Highlight(false);
-                        interactable.Highlight(true);
+                        currentHighlighted?.Highlight(false, default);
+                        interactable.Highlight(true, Color.lightGray);
                         currentHighlighted = interactable;
                     }
                 }
@@ -44,7 +70,7 @@ namespace Controllers
                 {
                     if (currentHighlighted != null)
                     {
-                        currentHighlighted.Highlight(false);
+                        currentHighlighted.Highlight(false, default);
                         currentHighlighted = null;
                     }
                 }
@@ -53,7 +79,7 @@ namespace Controllers
             {
                 if (currentHighlighted != null)
                 {
-                    currentHighlighted.Highlight(false);
+                    currentHighlighted.Highlight(false, default);
                     currentHighlighted = null;
                 }
             }
@@ -62,11 +88,9 @@ namespace Controllers
         private void TryInteractWithObject()
         {
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            var layerMask = 1 << 17;
-
             if (Input.GetMouseButtonDown(0))
             {
-                if (Physics.Raycast(ray, out RaycastHit hit, 300f, layerMask) && !IsUIHit())
+                if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, layerMask) && !IsUIHit())
                 {
                     if (hit.collider.TryGetComponent(out IInteractable interactable))
                     {
@@ -92,7 +116,7 @@ namespace Controllers
 
     public interface IInteractable
     {
-        public void Highlight(bool state);
+        public void Highlight(bool state, Color color);
 
         public void Interact();
     }

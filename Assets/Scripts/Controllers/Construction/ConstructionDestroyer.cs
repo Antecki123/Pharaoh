@@ -23,6 +23,9 @@ namespace Controllers.Construction
         private List<Vector2Int> selectedTiles = new List<Vector2Int>();
         private bool isSelecting;
 
+        private Vector2Int? lastHighlightCell;
+        private HashSet<Vector2Int> lastSelectedTiles = new HashSet<Vector2Int>();
+
         public ConstructionDestroyer(SignalBus signalBus, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
@@ -33,7 +36,7 @@ namespace Controllers.Construction
 
         public void Initialize()
         {
-
+            signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(true));
         }
 
         public void Tick()
@@ -52,12 +55,42 @@ namespace Controllers.Construction
                 startPoint = cell;
                 endPoint = cell;
                 isSelecting = true;
+
+                lastHighlightCell = null;
+                lastSelectedTiles.Clear();
             }
 
             if (Input.GetMouseButton(0) && isSelecting)
             {
-                endPoint = cell;
-                UpdateSelection();
+                if (!lastHighlightCell.HasValue || lastHighlightCell.Value != cell)
+                {
+                    endPoint = cell;
+                    UpdateSelection();
+
+                    foreach (var oldTile in lastSelectedTiles)
+                    {
+                        if (!selectedTiles.Contains(oldTile))
+                        {
+                            var building = constructionGrid.GetTileByPosition(oldTile);
+                            building?.BuildingView.Highlight(false, default);
+                        }
+                    }
+
+                    foreach (var tilePos in selectedTiles)
+                    {
+                        if (!lastSelectedTiles.Contains(tilePos))
+                        {
+                            var building = constructionGrid.GetTileByPosition(tilePos);
+                            building?.BuildingView.Highlight(true, Color.darkRed);
+                        }
+                    }
+
+                    lastSelectedTiles.Clear();
+                    foreach (var t in selectedTiles)
+                        lastSelectedTiles.Add(t);
+
+                    lastHighlightCell = cell;
+                }
             }
 
             if (Input.GetMouseButtonUp(0) && isSelecting)
@@ -68,14 +101,16 @@ namespace Controllers.Construction
 
                 foreach (var tilePos in selectedTiles)
                 {
-                    var buildingsToDestroy = constructionGrid.GetTileByPosition(tilePos);
-                    if (buildingsToDestroy != null)
+                    var building = constructionGrid.GetTileByPosition(tilePos);
+                    if (building != null)
                     {
                         constructionGrid.RemoveOccupant(tilePos);
-                        buildingsToDestroy.BuildingView.DestroyBuilding();
-                        Object.Destroy(buildingsToDestroy.BuildingView.gameObject);
+                        building.BuildingView.DestroyBuilding();
+                        Object.Destroy(building.BuildingView.gameObject);
                     }
                 }
+
+                lastSelectedTiles.Clear();
             }
         }
 
@@ -100,6 +135,8 @@ namespace Controllers.Construction
 
         public void Dispose()
         {
+            signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(false));
+
             startPoint = default;
             endPoint = default;
             selectedTiles = null;

@@ -1,18 +1,21 @@
 using App.Helpers;
 using App.Signals;
+using System;
 using UnityEngine;
 using Views.Ui.Buildings;
 using Zenject;
 
 namespace Controllers.UI
 {
-    public class BuildingsTooltipController : IInitializable, ITickable
+    public class BuildingsTooltipController : IInitializable, ITickable, IDisposable
     {
-        private SignalBus signalBus;
-        private PrefabManager prefabManager;
+        private readonly SignalBus signalBus;
+        private readonly PrefabManager prefabManager;
 
         private Canvas mainCanvas;
         private BuildingTooltipUI currentTooltip;
+
+        private bool interactionBlocked;
 
         public BuildingsTooltipController(SignalBus signalBus, PrefabManager prefabManager, [Inject(Id = "MainCanvas")] Canvas mainCanvas)
         {
@@ -23,11 +26,12 @@ namespace Controllers.UI
 
         public void Initialize()
         {
-            //signalBus.Subscribe<BuildingTooltipSignals.OpenHabitationTooltip>(OpenHabitationTooltip);
-            //signalBus.Subscribe<BuildingTooltipSignals.OpenProcessingWorkplaceTooltip>(OpenProcessingWorkplaceTooltip);
-            //signalBus.Subscribe<BuildingTooltipSignals.OpenStorageTooltipUI>(OpenStorageTooltipUI);
-            //signalBus.Subscribe<BuildingTooltipSignals.OpenDistributionPointTooltipUI>(OpenDistributionPointTooltipUI);
-            //signalBus.Subscribe<BuildingTooltipSignals.OpenFarmTooltipUI>(OpenFarmTooltipUI);
+            signalBus.Subscribe<BuildingTooltipSignals.OpenHabitationTooltip>(OpenHabitationTooltip);
+            signalBus.Subscribe<BuildingTooltipSignals.OpenProcessingWorkplaceTooltip>(OpenProcessingWorkplaceTooltip);
+            signalBus.Subscribe<BuildingTooltipSignals.OpenStorageTooltipUI>(OpenStorageTooltipUI);
+            signalBus.Subscribe<BuildingTooltipSignals.OpenDistributionPointTooltipUI>(OpenDistributionPointTooltipUI);
+            signalBus.Subscribe<BuildingTooltipSignals.OpenFarmTooltipUI>(OpenFarmTooltipUI);
+            signalBus.Subscribe<ConstructionSignals.ActivateConstructionMode>(OnConstructionModeChanged);
         }
 
         public void Tick()
@@ -38,16 +42,29 @@ namespace Controllers.UI
             }
         }
 
+        public void Dispose()
+        {
+            signalBus.Unsubscribe<BuildingTooltipSignals.OpenHabitationTooltip>(OpenHabitationTooltip);
+            signalBus.Unsubscribe<BuildingTooltipSignals.OpenProcessingWorkplaceTooltip>(OpenProcessingWorkplaceTooltip);
+            signalBus.Unsubscribe<BuildingTooltipSignals.OpenStorageTooltipUI>(OpenStorageTooltipUI);
+            signalBus.Unsubscribe<BuildingTooltipSignals.OpenDistributionPointTooltipUI>(OpenDistributionPointTooltipUI);
+            signalBus.Unsubscribe<BuildingTooltipSignals.OpenFarmTooltipUI>(OpenFarmTooltipUI);
+            signalBus.Unsubscribe<ConstructionSignals.ActivateConstructionMode>(OnConstructionModeChanged);
+        }
+
         private void CloseTooltips()
         {
             if (currentTooltip != null)
-                Object.Destroy(currentTooltip.gameObject);
+                UnityEngine.Object.Destroy(currentTooltip.gameObject);
 
             currentTooltip = null;
         }
 
         private void OpenHabitationTooltip(BuildingTooltipSignals.OpenHabitationTooltip signal)
         {
+            if (interactionBlocked)
+                return;
+
             CloseTooltips();
 
             var tooltip = prefabManager.Instantiate("HabitationTooltipUI").GetComponent<HabitationTooltipUI>();
@@ -60,6 +77,9 @@ namespace Controllers.UI
 
         private void OpenProcessingWorkplaceTooltip(BuildingTooltipSignals.OpenProcessingWorkplaceTooltip signal)
         {
+            if (interactionBlocked)
+                return;
+
             CloseTooltips();
 
             var tooltip = prefabManager.Instantiate("ProcessingWorkplaceTooltipUI").GetComponent<ProcessingWorkplaceTooltipUI>();
@@ -72,6 +92,9 @@ namespace Controllers.UI
 
         private void OpenStorageTooltipUI(BuildingTooltipSignals.OpenStorageTooltipUI signal)
         {
+            if (interactionBlocked)
+                return;
+
             CloseTooltips();
 
             var tooltip = prefabManager.Instantiate("StorageTooltipUI").GetComponent<StorageTooltipUI>();
@@ -84,6 +107,9 @@ namespace Controllers.UI
 
         private void OpenDistributionPointTooltipUI(BuildingTooltipSignals.OpenDistributionPointTooltipUI signal)
         {
+            if (interactionBlocked)
+                return;
+
             CloseTooltips();
 
             var tooltip = prefabManager.Instantiate("DistributionPointTooltipUI").GetComponent<DistributionPointTooltipUI>();
@@ -96,6 +122,9 @@ namespace Controllers.UI
 
         private void OpenFarmTooltipUI(BuildingTooltipSignals.OpenFarmTooltipUI signal)
         {
+            if (interactionBlocked)
+                return;
+
             CloseTooltips();
 
             var tooltip = prefabManager.Instantiate("FarmTooltipUI").GetComponent<FarmTooltipUI>();
@@ -105,5 +134,9 @@ namespace Controllers.UI
 
             tooltip.transform.SetParent(mainCanvas.transform);
         }
+
+        private void OnConstructionModeChanged(ConstructionSignals.ActivateConstructionMode signal) =>
+            interactionBlocked = signal.State;
+
     }
 }

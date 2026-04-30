@@ -22,14 +22,14 @@ namespace Views.Construction
             isPlaced = false;
         }
 
-        public void Highlight(bool state)
+        public void Highlight(bool state, Color color)
         {
             if (isPlaced)
             {
                 var renderers = GetComponentsInChildren<MeshRenderer>();
                 foreach (var renderer in renderers)
                 {
-                    renderer.material.color = state ? Color.lightGray : Color.white;
+                    renderer.material.color = state ? color : Color.white;
                 }
             }
         }

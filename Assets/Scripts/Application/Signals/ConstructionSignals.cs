@@ -9,6 +9,7 @@ namespace App.Signals
         {
             container.DeclareSignal<ConstructionMode>();
             container.DeclareSignal<DestroyMode>();
+            container.DeclareSignal<ActivateConstructionMode>();
         }
 
         public class ConstructionMode
@@ -24,6 +25,16 @@ namespace App.Signals
         public class DestroyMode
         {
 
+        }
+
+        public class ActivateConstructionMode
+        {
+            public bool State { get; private set; }
+
+            public ActivateConstructionMode(bool state)
+            {
+                State = state;
+            }
         }
     }
 }
