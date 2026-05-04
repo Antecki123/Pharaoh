@@ -3,6 +3,7 @@ using Models.Construction;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Views.Construction;
 using Zenject;
 
 namespace Controllers.Construction
@@ -26,6 +27,8 @@ namespace Controllers.Construction
         private Vector2Int? lastHighlightCell;
         private HashSet<Vector2Int> lastSelectedTiles = new HashSet<Vector2Int>();
 
+        private SelectionMaskView selectionMaskView;
+
         public ConstructionDestroyer(SignalBus signalBus, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
@@ -37,6 +40,9 @@ namespace Controllers.Construction
         public void Initialize()
         {
             signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(true));
+
+            var prefab = Resources.Load<SelectionMaskView>("SelectionMaskView");
+            selectionMaskView = Object.Instantiate(prefab);
         }
 
         public void Tick()
@@ -50,6 +56,11 @@ namespace Controllers.Construction
             if (!TryGetGridCell(out var cell) || IsUIHit())
                 return;
 
+            if (!isSelecting)
+            {
+                selectionMaskView.UpdateMask(cell, cell);
+            }
+
             if (Input.GetMouseButtonDown(0))
             {
                 startPoint = cell;
@@ -60,6 +71,11 @@ namespace Controllers.Construction
                 lastSelectedTiles.Clear();
             }
 
+            if (selectionMaskView != null && isSelecting)
+            {
+                selectionMaskView.UpdateMask(startPoint, endPoint);
+            }
+
             if (Input.GetMouseButton(0) && isSelecting)
             {
                 if (!lastHighlightCell.HasValue || lastHighlightCell.Value != cell)
@@ -67,27 +83,38 @@ namespace Controllers.Construction
                     endPoint = cell;
                     UpdateSelection();
 
-                    foreach (var oldTile in lastSelectedTiles)
-                    {
-                        if (!selectedTiles.Contains(oldTile))
-                        {
-                            var building = constructionGrid.GetTileByPosition(oldTile);
-                            building?.BuildingView.Highlight(false, default);
-                        }
-                    }
+                    var currentViews = new HashSet<BuildingView>();
+                    var previousViews = new HashSet<BuildingView>();
 
                     foreach (var tilePos in selectedTiles)
                     {
-                        if (!lastSelectedTiles.Contains(tilePos))
+                        var b = constructionGrid.GetTileByPosition(tilePos);
+                        if (b != null)
+                            currentViews.Add(b.BuildingView);
+                    }
+
+                    foreach (var tilePos in lastSelectedTiles)
+                    {
+                        var b = constructionGrid.GetTileByPosition(tilePos);
+                        if (b != null)
+                            previousViews.Add(b.BuildingView);
+                    }
+
+                    foreach (var view in currentViews)
+                    {
+                        view.Highlight(true, Color.darkRed);
+                    }
+
+                    foreach (var view in previousViews)
+                    {
+                        if (!currentViews.Contains(view))
                         {
-                            var building = constructionGrid.GetTileByPosition(tilePos);
-                            building?.BuildingView.Highlight(true, Color.darkRed);
+                            view.Highlight(false, default);
                         }
                     }
 
                     lastSelectedTiles.Clear();
-                    foreach (var t in selectedTiles)
-                        lastSelectedTiles.Add(t);
+                    lastSelectedTiles.UnionWith(selectedTiles);
 
                     lastHighlightCell = cell;
                 }
@@ -136,6 +163,7 @@ namespace Controllers.Construction
         public void Dispose()
         {
             signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(false));
+            Object.Destroy(selectionMaskView.gameObject);
 
             startPoint = default;
             endPoint = default;

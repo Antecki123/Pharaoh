@@ -30,6 +30,7 @@ namespace Controllers.Construction
 
         private const int layerMask = 1 << 16;
         private const float raycastDistance = 100f;
+        private const float cellOffset = 0.5f;
 
         public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid)
         {
@@ -96,8 +97,6 @@ namespace Controllers.Construction
 
                     constructingRoads.ForEach(x => Object.Destroy(x.View.gameObject));
                     constructingRoads.Clear();
-
-                    const float cellOffset = 0.5f;
 
                     foreach (var roadPosition in currentRoadPath)
                     {
@@ -216,7 +215,6 @@ namespace Controllers.Construction
 
             return true;
         }
-
     }
 
     public class ConstructingRoadPresenter
