@@ -18,18 +18,22 @@ namespace Controllers.Construction
         private T building;
         private BuildingDefinition buildingDefinition;
 
-        private SignalBus signalBus;
-        private PrefabManager prefabManager;
-        private ConstructionConfig constructionConfig;
-        private ConstructionGrid constructionGrid;
+        private readonly SignalBus signalBus;
+        private readonly PrefabManager prefabManager;
+        private readonly ConstructionConfig constructionConfig;
+        private readonly ConstructionGrid constructionGrid;
 
         private Transform constructionsContainer;
         private Camera mainCamera;
+        private readonly Terrain terrain;
 
         private int rotationSteps;
         private const int samplesPerTile = 3;
         private const int layerMask = 1 << 16;
-        private const float raycastDistance = 100f;
+        private const float raycastDistance = 200f;
+
+        private readonly PointerEventData pointerEventData;
+        private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionConfig constructionConfig,
             ConstructionGrid constructionGrid)
@@ -40,6 +44,8 @@ namespace Controllers.Construction
             this.constructionGrid = constructionGrid;
 
             mainCamera = Camera.main;
+            terrain = Terrain.activeTerrain;
+            pointerEventData = new PointerEventData(EventSystem.current);
         }
 
         public void Setup(BuildingDefinition buildingDefinition, Transform constructionsContainer)
@@ -83,7 +89,7 @@ namespace Controllers.Construction
 
                 if (Input.GetMouseButtonUp(0) && !IsUIHit())
                 {
-                    constructionGrid.AddOccupant(occupiedCells, buildingDefinition, building);
+                    constructionGrid.AddOccupant(occupiedCells, TileType.Building, building);
                     PlaceBuilding();
                 }
             }
@@ -123,7 +129,7 @@ namespace Controllers.Construction
             float worldX = position.x + offsetX;
             float worldZ = position.y + offsetZ;
 
-            var h = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
+            var h = terrain.SampleHeight(new Vector3(worldX, 0, worldZ));
             building.transform.position = new Vector3(worldX, h, worldZ);
 
             if (building.BuildingFoundation != null)
@@ -173,15 +179,10 @@ namespace Controllers.Construction
 
         private bool IsUIHit()
         {
-            var eventData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
-
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-
-            return results.Count > 0;
+            pointerEventData.position = Input.mousePosition;
+            raycastResults.Clear();
+            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
+            return raycastResults.Count > 0;
         }
 
         private List<Vector2Int> CalculateOccupiedTiles(Vector2Int buildingPosition)
@@ -253,7 +254,7 @@ namespace Controllers.Construction
                         float sampleX = tile.x + (sx / (float)(samplesPerTile - 1));
                         float sampleZ = tile.y + (sy / (float)(samplesPerTile - 1));
 
-                        float h = Terrain.activeTerrain.SampleHeight(new Vector3(sampleX, 0, sampleZ));
+                        float h = terrain.SampleHeight(new Vector3(sampleX, 0, sampleZ));
                         heights.Add(h);
                     }
                 }

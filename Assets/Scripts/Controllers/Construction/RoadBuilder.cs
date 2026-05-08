@@ -13,23 +13,30 @@ namespace Controllers.Construction
     {
         public class Factory : PlaceholderFactory<RoadBuilder> { }
 
-        private List<ConstructingRoadPresenter> constructingRoads = new List<ConstructingRoadPresenter>();
-        private List<Vector2Int> currentRoadPath = new List<Vector2Int>();
+        private readonly Stack<RoadView> poolInactive = new Stack<RoadView>(32);
+        private readonly List<RoadView> poolActive = new List<RoadView>(32);
+        private readonly List<Vector2Int> activePositions = new List<Vector2Int>(32);
+        private readonly List<Vector2Int> currentRoadPath = new List<Vector2Int>(64);
+
         private Vector2Int? startPosition;
         private Vector2Int? endPosition;
         private Vector2Int? lastCell;
 
         private Camera mainCamera;
-        private RoadPathfinder roadPathfinder;
+        private readonly Terrain terrain;
+        private readonly RoadPathfinder roadPathfinder;
 
         private readonly SignalBus signalBus;
         private readonly PrefabManager prefabManager;
         private readonly ConstructionGrid constructionGrid;
 
+        private readonly PointerEventData pointerEventData;
+        private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
+
         private Transform roadContainer;
 
         private const int layerMask = 1 << 16;
-        private const float raycastDistance = 100f;
+        private const float raycastDistance = 200f;
         private const float cellOffset = 0.5f;
 
         public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid)
@@ -39,7 +46,9 @@ namespace Controllers.Construction
             this.constructionGrid = constructionGrid;
 
             mainCamera = Camera.main;
+            terrain = Terrain.activeTerrain;
             roadPathfinder = new RoadPathfinder(constructionGrid.OccupiedTilesWithoutRoads);
+            pointerEventData = new PointerEventData(EventSystem.current);
         }
 
         public void Setup(Transform roadContainer)
@@ -57,13 +66,9 @@ namespace Controllers.Construction
             if (Input.GetMouseButtonDown(1))
             {
                 if (startPosition != null)
-                {
                     RestartConstruction();
-                }
                 else
-                {
                     CancelConstruction();
-                }
             }
 
             if (!GetGridCell(out Vector2Int currentCell))
@@ -90,42 +95,39 @@ namespace Controllers.Construction
             {
                 if (lastCell == null || lastCell.Value != currentCell)
                 {
-                    constructionGrid.ClearRoadPreview();
-
-                    currentRoadPath = roadPathfinder.FindRoadPath(startPosition.Value, currentCell);
+                    UpdateRoadPreview(currentCell);
                     lastCell = currentCell;
-
-                    constructingRoads.ForEach(x => Object.Destroy(x.View.gameObject));
-                    constructingRoads.Clear();
-
-                    foreach (var roadPosition in currentRoadPath)
-                    {
-                        if (constructionGrid.RoadsTiles.Contains(roadPosition))
-                            continue;
-
-                        var worldX = roadPosition.x + cellOffset;
-                        var worldZ = roadPosition.y + cellOffset;
-                        var height = Terrain.activeTerrain.SampleHeight(new Vector3(worldX, 0, worldZ));
-
-                        var newRoad = prefabManager.Instantiate<RoadView>("Road");
-                        newRoad.transform.position = new Vector3(worldX, height, worldZ);
-                        newRoad.transform.SetParent(roadContainer);
-                        newRoad.CreatePreview(roadPosition);
-
-                        constructingRoads.Add(new ConstructingRoadPresenter()
-                        {
-                            View = newRoad,
-                            Position = roadPosition
-                        });
-                        constructionGrid.AddRoadPreview(roadPosition);
-                    }
-
-                    foreach (var road in constructingRoads)
-                    {
-                        var color = IsValidPlacement() ? Color.lightGreen : Color.softRed;
-                        road.View.SetColor(color);
-                    }
                 }
+            }
+        }
+
+        private void UpdateRoadPreview(Vector2Int currentCell)
+        {
+            constructionGrid.ClearRoadPreview();
+            ReturnAllToPool();
+
+            roadPathfinder.FindRoadPath(startPosition.Value, currentCell, currentRoadPath);
+
+            bool isValid = IsValidPlacement();
+            Color previewColor = isValid ? Color.lightGreen : Color.softRed;
+
+            for (int i = 0; i < currentRoadPath.Count; i++)
+            {
+                var roadPosition = currentRoadPath[i];
+                if (constructionGrid.RoadsTiles.Contains(roadPosition))
+                    continue;
+
+                var worldX = roadPosition.x + cellOffset;
+                var worldZ = roadPosition.y + cellOffset;
+                var height = terrain.SampleHeight(new Vector3(worldX, 0, worldZ));
+
+                var view = RentFromPool();
+                view.transform.position = new Vector3(worldX, height, worldZ);
+                view.CreatePreview(roadPosition);
+                view.SetColor(previewColor);
+
+                activePositions.Add(roadPosition);
+                constructionGrid.AddRoadPreview(roadPosition);
             }
         }
 
@@ -138,24 +140,24 @@ namespace Controllers.Construction
 
         private void ConfirmRoadConstruction()
         {
-            foreach (var road in constructingRoads)
+            for (int i = 0; i < poolActive.Count; i++)
             {
-                constructionGrid.AddOccupant(road.Position, BuildingDefinition.Road, road.View);
-                road.View.PlaceBuilding();
+                constructionGrid.AddOccupant(activePositions[i], TileType.Road, poolActive[i]);
+                poolActive[i].PlaceBuilding();
             }
+
+            poolActive.Clear();
+            activePositions.Clear();
 
             startPosition = null;
             endPosition = null;
             currentRoadPath.Clear();
-            constructingRoads.Clear();
         }
 
         private void RestartConstruction()
         {
             constructionGrid.ClearRoadPreview();
-
-            constructingRoads.ForEach(x => Object.Destroy(x.View.gameObject));
-            constructingRoads.Clear();
+            ReturnAllToPool();
 
             startPosition = null;
             endPosition = null;
@@ -165,11 +167,37 @@ namespace Controllers.Construction
         private void CancelConstruction()
         {
             constructionGrid.ClearRoadPreview();
-
-            constructingRoads.ForEach(x => Object.Destroy(x.View.gameObject));
-            constructingRoads.Clear();
+            ReturnAllToPool();
 
             signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.None));
+        }
+
+        private RoadView RentFromPool()
+        {
+            RoadView view;
+            if (poolInactive.Count > 0)
+            {
+                view = poolInactive.Pop();
+                view.gameObject.SetActive(true);
+            }
+            else
+            {
+                view = prefabManager.Instantiate<RoadView>("Road");
+                view.transform.SetParent(roadContainer);
+            }
+            poolActive.Add(view);
+            return view;
+        }
+
+        private void ReturnAllToPool()
+        {
+            for (int i = 0; i < poolActive.Count; i++)
+            {
+                poolActive[i].gameObject.SetActive(false);
+                poolInactive.Push(poolActive[i]);
+            }
+            poolActive.Clear();
+            activePositions.Clear();
         }
 
         private bool GetGridCell(out Vector2Int cell)
@@ -185,42 +213,26 @@ namespace Controllers.Construction
                 return false;
             }
 
-            int gridX = Mathf.FloorToInt(hit.point.x);
-            int gridZ = Mathf.FloorToInt(hit.point.z);
-
-            cell = new Vector2Int(gridX, gridZ);
+            cell = new Vector2Int(Mathf.FloorToInt(hit.point.x), Mathf.FloorToInt(hit.point.z));
             return true;
         }
 
         private bool IsUIHit()
         {
-            var eventData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
-
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-
-            return results.Count > 0;
+            pointerEventData.position = Input.mousePosition;
+            raycastResults.Clear();
+            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
+            return raycastResults.Count > 0;
         }
 
         private bool IsValidPlacement()
         {
-            foreach (var roadPosition in currentRoadPath)
+            for (int i = 0; i < currentRoadPath.Count; i++)
             {
-                if (!constructionGrid.IsValidPlacement(roadPosition, true))
+                if (!constructionGrid.IsValidPlacement(currentRoadPath[i], true))
                     return false;
             }
-
             return true;
         }
-    }
-
-    public class ConstructingRoadPresenter
-    {
-        public RoadView View { get; set; }
-
-        public Vector2Int Position { get; set; }
     }
 }

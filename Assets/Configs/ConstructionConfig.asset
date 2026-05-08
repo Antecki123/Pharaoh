@@ -12,8 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e3cb09e80f7ad643adcc0e6d6a78016, type: 3}
   m_Name: ConstructionConfig
   m_EditorClassIdentifier: 
-  <RoadWidth>k__BackingField: 3
-  <SegmentSpacing>k__BackingField: 2
-  <MinimumSpacing>k__BackingField: 1
-  <MinimumRoadAngle>k__BackingField: 30
-  <MaxHeightDiff>k__BackingField: 3
+  <MaxHeightDiff>k__BackingField: 0.5

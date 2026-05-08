@@ -1,4 +1,3 @@
-using Controllers.Construction;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,37 +5,77 @@ using Views.Construction;
 
 namespace Models.Construction
 {
+    public enum TileType
+    {
+        Water,
+        Cliff,
+        Road,
+        Building,
+        Blocked
+    }
+
     public class ConstructionGrid
     {
         public event Action OnValueChanged;
-
         public event Action<Vector2Int> OnRoadChanged;
 
-        public HashSet<ConstructionGridData> OccupiedTiles => occupiedTiles;
         public HashSet<Vector2Int> OccupiedTilesWithoutRoads => occupiedTilesWithoutRoads;
         public HashSet<Vector2Int> RoadsTiles => roadsTiles;
         public HashSet<Vector2Int> RoadPreview => roadPreview;
 
-        private HashSet<ConstructionGridData> occupiedTiles = new HashSet<ConstructionGridData>();
-        private HashSet<Vector2Int> occupiedTilesWithoutRoads = new HashSet<Vector2Int>();
-        private HashSet<Vector2Int> roadsTiles = new HashSet<Vector2Int>();
-        private HashSet<Vector2Int> roadPreview = new HashSet<Vector2Int>();
+        private readonly Dictionary<Vector2Int, ConstructionGridData> tilesByPosition = new Dictionary<Vector2Int, ConstructionGridData>();
+        private readonly HashSet<Vector2Int> occupiedTilesWithoutRoads = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> roadsTiles = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> roadPreview = new HashSet<Vector2Int>();
 
-        private readonly List<ConstructionGridData> buffer = new List<ConstructionGridData>();
+        private readonly List<Vector2Int> removeBuffer = new List<Vector2Int>(32);
 
-        public void AddOccupant(List<Vector2Int> cells, BuildingDefinition buildingDefinition, BuildingView buildingView)
+        private static readonly Vector2Int[] Neighbours = {
+            Vector2Int.up,
+            Vector2Int.down,
+            Vector2Int.left,
+            Vector2Int.right
+        };
+
+        public void AddOccupant(Vector2Int pos, TileType tileType, BuildingView buildingView = null)
         {
-            foreach (var pos in cells)
+            if (!tilesByPosition.ContainsKey(pos))
             {
-                var data = new ConstructionGridData()
+                tilesByPosition[pos] = new ConstructionGridData
                 {
                     Position = pos,
-                    BuildingDefinition = buildingDefinition,
+                    TileType = tileType,
                     BuildingView = buildingView
                 };
-                occupiedTiles.Add(data);
+            }
 
-                if (buildingDefinition != BuildingDefinition.Road)
+            if (tileType != TileType.Road)
+                occupiedTilesWithoutRoads.Add(pos);
+            else
+                roadsTiles.Add(pos);
+
+            OnValueChanged?.Invoke();
+
+            if (tileType == TileType.Road)
+                OnRoadChanged?.Invoke(pos);
+        }
+
+        public void AddOccupant(List<Vector2Int> cells, TileType tileType, BuildingView buildingView)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i];
+                if (!tilesByPosition.ContainsKey(pos))
+                {
+                    tilesByPosition[pos] = new ConstructionGridData
+                    {
+                        Position = pos,
+                        TileType = tileType,
+                        BuildingView = buildingView
+                    };
+                }
+
+                if (tileType != TileType.Road)
                     occupiedTilesWithoutRoads.Add(pos);
                 else
                     roadsTiles.Add(pos);
@@ -45,59 +84,35 @@ namespace Models.Construction
             OnValueChanged?.Invoke();
         }
 
-        public void AddOccupant(Vector2Int pos, BuildingDefinition buildingDefinition, BuildingView buildingView)
-        {
-            var data = new ConstructionGridData()
-            {
-                Position = pos,
-                BuildingDefinition = buildingDefinition,
-                BuildingView = buildingView
-            };
-            occupiedTiles.Add(data);
-
-            if (buildingDefinition != BuildingDefinition.Road)
-                occupiedTilesWithoutRoads.Add(pos);
-            else
-                roadsTiles.Add(pos);
-
-            OnValueChanged?.Invoke();
-
-            if (buildingDefinition == BuildingDefinition.Road)
-                OnRoadChanged?.Invoke(pos);
-        }
-
         public void RemoveOccupant(Vector2Int cellToRemove)
         {
-            var tile = GetTileByPosition(cellToRemove);
+            if (!tilesByPosition.TryGetValue(cellToRemove, out var tile))
+                return;
 
-            if (tile == null)
+            if (tile.BuildingView == null)
                 return;
 
             var building = tile.BuildingView;
+            var tileType = tile.TileType;
 
-            if (building == null)
-                return;
-
-            buffer.Clear();
-
-            foreach (var t in OccupiedTiles)
+            removeBuffer.Clear();
+            foreach (var kvp in tilesByPosition)
             {
-                if (t.BuildingView == building)
-                {
-                    buffer.Add(t);
-                }
+                if (kvp.Value.BuildingView == building)
+                    removeBuffer.Add(kvp.Key);
             }
 
-            foreach (var t in buffer)
+            for (int i = 0; i < removeBuffer.Count; i++)
             {
-                OccupiedTiles.Remove(t);
-                occupiedTilesWithoutRoads.Remove(t.Position);
-                roadsTiles.Remove(t.Position);
+                var pos = removeBuffer[i];
+                tilesByPosition.Remove(pos);
+                occupiedTilesWithoutRoads.Remove(pos);
+                roadsTiles.Remove(pos);
             }
 
             OnValueChanged?.Invoke();
 
-            if (tile.BuildingDefinition == BuildingDefinition.Road)
+            if (tileType == TileType.Road)
                 OnRoadChanged?.Invoke(cellToRemove);
         }
 
@@ -112,101 +127,71 @@ namespace Models.Construction
 
         public void ClearRoadPreview()
         {
-            var positionsToUpdate = new List<Vector2Int>(roadPreview);
+            removeBuffer.Clear();
+            removeBuffer.AddRange(roadPreview);
             roadPreview.Clear();
 
-            foreach (var position in positionsToUpdate)
-            {
-                OnRoadChanged?.Invoke(position);
-            }
+            for (int i = 0; i < removeBuffer.Count; i++)
+                OnRoadChanged?.Invoke(removeBuffer[i]);
         }
 
         public bool IsValidPlacement(List<Vector2Int> cells)
         {
-            foreach (var cell in cells)
+            for (int i = 0; i < cells.Count; i++)
             {
-                foreach (var tile in occupiedTiles)
-                {
-                    if (cell == tile.Position)
-                        return false;
-                }
+                if (tilesByPosition.ContainsKey(cells[i]))
+                    return false;
             }
-
             return true;
         }
 
         public bool IsValidPlacement(Vector2Int tileToCheck, bool excludeRoadTiles = false)
         {
-            foreach (var tile in occupiedTiles)
-            {
-                if (tile.Position != tileToCheck)
-                    continue;
+            if (!tilesByPosition.TryGetValue(tileToCheck, out var tile))
+                return true;
 
-                if (excludeRoadTiles && tile.BuildingDefinition == BuildingDefinition.Road)
-                    continue;
+            if (excludeRoadTiles && tile.TileType == TileType.Road)
+                return true;
 
-                return false;
-            }
-
-            return true;
+            return false;
         }
 
         public bool HasRoadConnection(BuildingView buildingView)
         {
-            foreach (var tile in occupiedTiles)
+            foreach (var kvp in tilesByPosition)
             {
-                if (tile.BuildingView != buildingView)
+                if (kvp.Value.BuildingView != buildingView)
                     continue;
 
-                var pos = tile.Position;
-                Vector2Int[] neighbours =
+                var pos = kvp.Key;
+                for (int i = 0; i < Neighbours.Length; i++)
                 {
-                    pos + Vector2Int.up,
-                    pos + Vector2Int.down,
-                    pos + Vector2Int.left,
-                    pos + Vector2Int.right
-                };
-
-                foreach (var neighbourPos in neighbours)
-                {
-                    var neighbourData = GetTileByPosition(neighbourPos);
-
-                    if (neighbourData != null && neighbourData.BuildingDefinition == BuildingDefinition.Road)
+                    if (tilesByPosition.TryGetValue(pos + Neighbours[i], out var neighbour)
+                        && neighbour.TileType == TileType.Road)
                         return true;
                 }
             }
-
             return false;
         }
 
         public List<Vector2Int> GetAllConnectedRoadTiles(BuildingView buildingView)
         {
             var roadTiles = new List<Vector2Int>();
-            foreach (var tile in occupiedTiles)
+
+            foreach (var kvp in tilesByPosition)
             {
-                if (tile.BuildingView != buildingView)
+                if (kvp.Value.BuildingView != buildingView)
                     continue;
 
-                var pos = tile.Position;
-                Vector2Int[] neighbours =
+                var pos = kvp.Key;
+                for (int i = 0; i < Neighbours.Length; i++)
                 {
-                    pos + Vector2Int.up,
-                    pos + Vector2Int.down,
-                    pos + Vector2Int.left,
-                    pos + Vector2Int.right
-                };
-
-                foreach (var neighbourPos in neighbours)
-                {
-                    var lookup = new ConstructionGridData { Position = neighbourPos };
-
-                    if (!occupiedTiles.TryGetValue(lookup, out var neighbourTile))
-                        continue;
-
-                    if (neighbourTile.BuildingDefinition == BuildingDefinition.Road)
+                    var neighbourPos = pos + Neighbours[i];
+                    if (tilesByPosition.TryGetValue(neighbourPos, out var neighbour)
+                        && neighbour.TileType == TileType.Road
+                        && !roadTiles.Contains(neighbourPos))
                     {
-                        if (!roadTiles.Contains(neighbourPos))
-                            roadTiles.Add(neighbourPos);
+                        roadTiles.Add(neighbourPos);
                     }
                 }
             }
@@ -216,35 +201,40 @@ namespace Models.Construction
 
         public ConstructionGridData GetTileByPosition(Vector2Int position)
         {
-            foreach (var tile in occupiedTiles)
-            {
-                if (tile.Position == position)
-                    return tile;
-            }
-
-            return null;
+            tilesByPosition.TryGetValue(position, out var tile);
+            return tile;
         }
     }
 
     public class ConstructionGridData
     {
         public Vector2Int Position { get; set; }
-
-        public BuildingDefinition BuildingDefinition { get; set; }
-
+        public TileType TileType { get; set; }
         public BuildingView BuildingView { get; set; }
 
         public override bool Equals(object obj)
-        {
-            if (obj is not ConstructionGridData other)
-                return false;
-
-            return Position.Equals(other.Position);
-        }
+            => obj is ConstructionGridData other && Position.Equals(other.Position);
 
         public override int GetHashCode()
+            => Position.GetHashCode();
+    }
+
+    [Serializable]
+    public class TileData
+    {
+        public Vector2Int cell;
+        public TileType type;
+
+        public TileData(Vector2Int c, TileType t)
         {
-            return Position.GetHashCode();
+            cell = c;
+            type = t;
         }
+    }
+
+    [Serializable]
+    public class TileDataCollection
+    {
+        public List<TileData> tiles = new List<TileData>();
     }
 }

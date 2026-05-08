@@ -1,3 +1,4 @@
+using App.Helpers;
 using App.Signals;
 using Models.Construction;
 using System.Collections.Generic;
@@ -12,37 +13,43 @@ namespace Controllers.Construction
     {
         public class Factory : PlaceholderFactory<ConstructionDestroyer> { }
 
-        private SignalBus signalBus;
-        private ConstructionGrid constructionGrid;
+        private readonly SignalBus signalBus;
+        private readonly ConstructionGrid constructionGrid;
+        private readonly PrefabManager prefabManager;
         private Camera mainCamera;
 
         private const int layerMask = 1 << 16;
-        private const float raycastDistance = 100f;
+        private const float raycastDistance = 200f;
 
+        private bool isSelecting;
+        private Vector2Int? lastHighlightCell;
         private Vector2Int startPoint;
         private Vector2Int endPoint;
-        private List<Vector2Int> selectedTiles = new List<Vector2Int>();
-        private bool isSelecting;
 
-        private Vector2Int? lastHighlightCell;
-        private HashSet<Vector2Int> lastSelectedTiles = new HashSet<Vector2Int>();
+        private readonly List<Vector2Int> selectedTiles = new List<Vector2Int>(64);
+        private readonly HashSet<Vector2Int> lastSelectedTiles = new HashSet<Vector2Int>(64);
+        private readonly HashSet<BuildingView> currentViews = new HashSet<BuildingView>(32);
+        private readonly HashSet<BuildingView> previousViews = new HashSet<BuildingView>(32);
 
         private SelectionMaskView selectionMaskView;
 
-        public ConstructionDestroyer(SignalBus signalBus, ConstructionGrid constructionGrid)
+        private readonly PointerEventData pointerEventData;
+        private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
+
+        public ConstructionDestroyer(SignalBus signalBus, ConstructionGrid constructionGrid, PrefabManager prefabManager)
         {
             this.signalBus = signalBus;
             this.constructionGrid = constructionGrid;
+            this.prefabManager = prefabManager;
 
             mainCamera = Camera.main;
+            pointerEventData = new PointerEventData(EventSystem.current);
         }
 
         public void Initialize()
         {
             signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(true));
-
-            var prefab = Resources.Load<SelectionMaskView>("SelectionMaskView");
-            selectionMaskView = Object.Instantiate(prefab);
+            selectionMaskView = prefabManager.Instantiate<SelectionMaskView>("SelectionMaskView");
         }
 
         public void Tick()
@@ -66,7 +73,6 @@ namespace Controllers.Construction
                 startPoint = cell;
                 endPoint = cell;
                 isSelecting = true;
-
                 lastHighlightCell = null;
                 lastSelectedTiles.Clear();
             }
@@ -82,40 +88,7 @@ namespace Controllers.Construction
                 {
                     endPoint = cell;
                     UpdateSelection();
-
-                    var currentViews = new HashSet<BuildingView>();
-                    var previousViews = new HashSet<BuildingView>();
-
-                    foreach (var tilePos in selectedTiles)
-                    {
-                        var b = constructionGrid.GetTileByPosition(tilePos);
-                        if (b != null)
-                            currentViews.Add(b.BuildingView);
-                    }
-
-                    foreach (var tilePos in lastSelectedTiles)
-                    {
-                        var b = constructionGrid.GetTileByPosition(tilePos);
-                        if (b != null)
-                            previousViews.Add(b.BuildingView);
-                    }
-
-                    foreach (var view in currentViews)
-                    {
-                        view.Highlight(true, Color.darkRed);
-                    }
-
-                    foreach (var view in previousViews)
-                    {
-                        if (!currentViews.Contains(view))
-                        {
-                            view.Highlight(false, default);
-                        }
-                    }
-
-                    lastSelectedTiles.Clear();
-                    lastSelectedTiles.UnionWith(selectedTiles);
-
+                    UpdateHighlights();
                     lastHighlightCell = cell;
                 }
             }
@@ -125,19 +98,54 @@ namespace Controllers.Construction
                 endPoint = cell;
                 UpdateSelection();
                 isSelecting = false;
-
-                foreach (var tilePos in selectedTiles)
-                {
-                    var building = constructionGrid.GetTileByPosition(tilePos);
-                    if (building != null)
-                    {
-                        constructionGrid.RemoveOccupant(tilePos);
-                        building.BuildingView.DestroyBuilding();
-                        Object.Destroy(building.BuildingView.gameObject);
-                    }
-                }
-
+                DestroySelected();
                 lastSelectedTiles.Clear();
+            }
+        }
+
+        private void UpdateHighlights()
+        {
+            currentViews.Clear();
+            previousViews.Clear();
+
+            for (int i = 0; i < selectedTiles.Count; i++)
+            {
+                var b = constructionGrid.GetTileByPosition(selectedTiles[i]);
+                if (b?.BuildingView != null)
+                    currentViews.Add(b.BuildingView);
+            }
+
+            foreach (var tilePos in lastSelectedTiles)
+            {
+                var b = constructionGrid.GetTileByPosition(tilePos);
+                if (b?.BuildingView != null)
+                    previousViews.Add(b.BuildingView);
+            }
+
+            foreach (var view in currentViews)
+                view.Highlight(true, Color.darkRed);
+
+            foreach (var view in previousViews)
+            {
+                if (!currentViews.Contains(view))
+                    view.Highlight(false, default);
+            }
+
+            lastSelectedTiles.Clear();
+            lastSelectedTiles.UnionWith(selectedTiles);
+        }
+
+        private void DestroySelected()
+        {
+            for (int i = 0; i < selectedTiles.Count; i++)
+            {
+                var building = constructionGrid.GetTileByPosition(selectedTiles[i]);
+                if (building?.BuildingView != null)
+                {
+                    constructionGrid.RemoveOccupant(selectedTiles[i]);
+                    building.BuildingView.DestroyBuilding();
+                    Object.Destroy(building.BuildingView.gameObject);
+                }
             }
         }
 
@@ -145,19 +153,14 @@ namespace Controllers.Construction
         {
             selectedTiles.Clear();
 
-            var minX = Mathf.Min(startPoint.x, endPoint.x);
-            var maxX = Mathf.Max(startPoint.x, endPoint.x);
-
-            var minY = Mathf.Min(startPoint.y, endPoint.y);
-            var maxY = Mathf.Max(startPoint.y, endPoint.y);
+            int minX = Mathf.Min(startPoint.x, endPoint.x);
+            int maxX = Mathf.Max(startPoint.x, endPoint.x);
+            int minY = Mathf.Min(startPoint.y, endPoint.y);
+            int maxY = Mathf.Max(startPoint.y, endPoint.y);
 
             for (int x = minX; x <= maxX; x++)
-            {
                 for (int y = minY; y <= maxY; y++)
-                {
                     selectedTiles.Add(new Vector2Int(x, y));
-                }
-            }
         }
 
         public void Dispose()
@@ -167,7 +170,7 @@ namespace Controllers.Construction
 
             startPoint = default;
             endPoint = default;
-            selectedTiles = null;
+            selectedTiles.Clear();
         }
 
         private bool TryGetGridCell(out Vector2Int cell)
@@ -182,24 +185,16 @@ namespace Controllers.Construction
                 return false;
             }
 
-            var gridX = Mathf.FloorToInt(hit.point.x);
-            var gridZ = Mathf.FloorToInt(hit.point.z);
-
-            cell = new Vector2Int(gridX, gridZ);
+            cell = new Vector2Int(Mathf.FloorToInt(hit.point.x), Mathf.FloorToInt(hit.point.z));
             return true;
         }
 
         private bool IsUIHit()
         {
-            var eventData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
-
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-
-            return results.Count > 0;
+            pointerEventData.position = Input.mousePosition;
+            raycastResults.Clear();
+            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
+            return raycastResults.Count > 0;
         }
     }
 }

@@ -157,7 +157,7 @@ namespace Controllers.Work
                 {
                     var neighbor = constructionGrid.GetTileByPosition(neighborPos);
 
-                    if (neighbor == null || neighbor.BuildingDefinition != Construction.BuildingDefinition.Road)
+                    if (neighbor == null || neighbor.TileType != TileType.Road)
                         continue;
 
                     if (influencedTiles.Contains(neighbor.Position))

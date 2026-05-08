@@ -14,17 +14,20 @@ namespace Controllers
         private Camera mainCamera;
         private IInteractable currentHighlighted;
 
-        private const int layerMask = 1 << 17;
-        private const float raycastDistance = 100f;
-
         private bool interactionBlocked;
+
+        private const int layerMask = 1 << 17;
+        private const float raycastDistance = 200f;
+
+        private readonly PointerEventData pointerEventData;
+        private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
 
         public InteractionController(SignalBus signalBus)
         {
             this.signalBus = signalBus;
 
             mainCamera = Camera.main;
-
+            pointerEventData = new PointerEventData(EventSystem.current);
         }
 
         public void Initialize()
@@ -102,15 +105,10 @@ namespace Controllers
 
         private bool IsUIHit()
         {
-            var eventData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
-
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-
-            return results.Count > 0;
+            pointerEventData.position = Input.mousePosition;
+            raycastResults.Clear();
+            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
+            return raycastResults.Count > 0;
         }
     }
 

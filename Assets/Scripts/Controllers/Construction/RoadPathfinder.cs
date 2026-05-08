@@ -6,111 +6,156 @@ namespace Controllers.Construction
     public class RoadPathfinder
     {
         private readonly HashSet<Vector2Int> occupied;
+        private static readonly Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
-        private static readonly Vector2Int[] directions = new Vector2Int[]
-        {
-            Vector2Int.up,
-            Vector2Int.down,
-            Vector2Int.left,
-            Vector2Int.right
-        };
+        private readonly Dictionary<Vector2Int, float> gScore = new(256);
+        private readonly Dictionary<Vector2Int, Vector2Int> cameFrom = new(256);
+        private readonly HashSet<Vector2Int> closedSet = new(256);
+        private readonly MinHeap<Vector2Int> openQueue = new();
+        private readonly HashSet<Vector2Int> openSet = new(256);
 
         public RoadPathfinder(HashSet<Vector2Int> occupied)
         {
             this.occupied = occupied;
         }
 
-        public List<Vector2Int> FindRoadPath(Vector2Int startPosition, Vector2Int endPosition)
+        public void FindRoadPath(Vector2Int start, Vector2Int end, List<Vector2Int> route, float maxDistance = float.MaxValue)
         {
-            if (startPosition == endPosition)
-                return new List<Vector2Int> { startPosition };
-
-            var closedSet = new HashSet<Vector2Int>();
-            var openSet = new HashSet<Vector2Int> { startPosition };
-
-            var cameFrom = new Dictionary<Vector2Int, Vector2Int>(64);
-            var gScore = new Dictionary<Vector2Int, float>(64);
-            var fScore = new Dictionary<Vector2Int, float>(64);
-
-            gScore[startPosition] = 0f;
-            fScore[startPosition] = HeuristicCost(startPosition, endPosition);
-
-            while (openSet.Count > 0)
+            if (start == end)
             {
-                Vector2Int current = default;
-                float bestScore = float.MaxValue;
+                route.Clear();
+                route.Add(start);
+                return;
+            }
 
-                foreach (var pos in openSet)
+            gScore.Clear();
+            cameFrom.Clear();
+            closedSet.Clear();
+            openSet.Clear();
+
+            while (openQueue.Count > 0) 
+                openQueue.Dequeue();
+
+            gScore[start] = 0f;
+            openQueue.Enqueue(start, Heuristic(start, end));
+            openSet.Add(start);
+
+            while (openQueue.Count > 0)
+            {
+                var current = openQueue.Dequeue();
+                openSet.Remove(current);
+
+                if (current == end)
                 {
-                    float score;
-                    if (!fScore.TryGetValue(pos, out score))
-                        score = float.MaxValue;
-
-                    if (score < bestScore)
-                    {
-                        bestScore = score;
-                        current = pos;
-                    }
+                    ReconstructPath(current, route);
+                    return;
                 }
 
-                if (current == endPosition)
-                    return ReconstructPath(cameFrom, current);
-
-                openSet.Remove(current);
                 closedSet.Add(current);
-
                 float currentG = gScore[current];
 
                 for (int i = 0; i < directions.Length; i++)
                 {
-                    Vector2Int neighbor = current + directions[i];
+                    var neighbor = current + directions[i];
 
                     if (closedSet.Contains(neighbor))
                         continue;
 
+                    if (Heuristic(neighbor, end) > maxDistance)
+                        continue;
+
                     float tentativeG = currentG + GetMovementCost(neighbor);
 
-                    bool hasG = gScore.TryGetValue(neighbor, out float existingG);
+                    if (gScore.TryGetValue(neighbor, out float existingG)
+                        && tentativeG >= existingG)
+                        continue;
 
-                    if (!hasG || tentativeG < existingG)
+                    cameFrom[neighbor] = current;
+                    gScore[neighbor] = tentativeG;
+                    float f = tentativeG + Heuristic(neighbor, end);
+
+                    if (!openSet.Contains(neighbor))
                     {
-                        cameFrom[neighbor] = current;
-                        gScore[neighbor] = tentativeG;
-                        fScore[neighbor] = tentativeG + HeuristicCost(neighbor, endPosition);
-
-                        if (!hasG)
-                            openSet.Add(neighbor);
+                        openQueue.Enqueue(neighbor, f);
+                        openSet.Add(neighbor);
+                    }
+                    else
+                    {
+                        openQueue.Enqueue(neighbor, f);
                     }
                 }
             }
 
-            return new List<Vector2Int>();
+            return;
         }
 
-        private List<Vector2Int> ReconstructPath(Dictionary<Vector2Int, Vector2Int> cameFrom, Vector2Int current)
+        private void ReconstructPath(Vector2Int current, List<Vector2Int> route)
         {
-            var path = new List<Vector2Int>(32)
-            {
-                current
-            };
+            route.Clear();
+            route.Add(current);
 
             while (cameFrom.TryGetValue(current, out current))
-            {
-                path.Add(current);
-            }
+                route.Add(current);
 
-            path.Reverse();
-            return path;
+            route.Reverse();
         }
 
-        private float HeuristicCost(Vector2Int a, Vector2Int b)
-        {
-            return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
-        }
+        private static float Heuristic(Vector2Int a, Vector2Int b)
+            => Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
 
         private float GetMovementCost(Vector2Int to)
+            => occupied.Contains(to) ? 10f : 1f;
+    }
+
+    public class MinHeap<T>
+    {
+        private readonly List<(T item, float priority)> _heap = new(64);
+
+        public int Count => _heap.Count;
+
+        public void Enqueue(T item, float priority)
         {
-            return occupied.Contains(to) ? 10f : 1f;
+            _heap.Add((item, priority));
+            BubbleUp(_heap.Count - 1);
+        }
+
+        public T Dequeue()
+        {
+            T top = _heap[0].item;
+            int last = _heap.Count - 1;
+            _heap[0] = _heap[last];
+            _heap.RemoveAt(last);
+            if (_heap.Count > 0) SiftDown(0);
+            return top;
+        }
+
+        public void Clear() => _heap.Clear();
+
+        private void BubbleUp(int i)
+        {
+            while (i > 0)
+            {
+                int parent = (i - 1) / 2;
+                if (_heap[parent].priority <= _heap[i].priority) break;
+                (_heap[i], _heap[parent]) = (_heap[parent], _heap[i]);
+                i = parent;
+            }
+        }
+
+        private void SiftDown(int i)
+        {
+            int count = _heap.Count;
+            while (true)
+            {
+                int smallest = i;
+                int left = 2 * i + 1;
+                int right = 2 * i + 2;
+                if (left < count && _heap[left].priority < _heap[smallest].priority) smallest = left;
+                if (right < count && _heap[right].priority < _heap[smallest].priority) smallest = right;
+                if (smallest == i) break;
+                (_heap[i], _heap[smallest]) = (_heap[smallest], _heap[i]);
+                i = smallest;
+            }
         }
     }
 }

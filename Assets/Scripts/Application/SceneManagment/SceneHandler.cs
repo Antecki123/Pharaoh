@@ -106,6 +106,7 @@ namespace Controllers.SceneManagment
                 "SettlerView",
                 "CarrierView",
                 "ServiceAgentView",
+                "SelectionMaskView",
 
                 // UI ELEMENTS
                 "ProcessingWorkplaceTooltipUI",

@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbc46ad7f519aec46b51132ec547c031
+    m_Address: SelectionMaskView
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ecfbc1e269a548a499089d94289542cc
     m_Address: CarrierView
     m_ReadOnly: 0
