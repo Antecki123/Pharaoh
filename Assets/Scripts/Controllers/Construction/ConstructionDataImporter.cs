@@ -33,8 +33,8 @@ namespace Controllers.Construction
                 var definition = Enum.TryParse(text[0], out BuildingDefinition buildingDefinition) ? buildingDefinition : default;
                 var data = new ConstructionData()
                 {
-                    BuildingOffset = float.TryParse(text[1], out float buildingOffset) ? buildingOffset : default,
-                    SnapDistance = float.TryParse(text[2], out float snapDistance) ? snapDistance : default
+                    Width = int.TryParse(text[1], out int width) ? width : default,
+                    Height = int.TryParse(text[2], out int height) ? height : default
                 };
 
                 constructionData.Add(definition, data);
@@ -45,7 +45,7 @@ namespace Controllers.Construction
 
     public struct ConstructionData
     {
-        public float BuildingOffset { get; set; }
-        public float SnapDistance { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

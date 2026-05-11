@@ -20,6 +20,7 @@ namespace Controllers.Construction
 
         private readonly SignalBus signalBus;
         private readonly PrefabManager prefabManager;
+        private readonly ConstructionDataImporter constructionData;
         private readonly ConstructionConfig constructionConfig;
         private readonly ConstructionGrid constructionGrid;
 
@@ -35,11 +36,12 @@ namespace Controllers.Construction
         private readonly PointerEventData pointerEventData;
         private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
 
-        public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionConfig constructionConfig,
-            ConstructionGrid constructionGrid)
+        public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionDataImporter constructionData,
+            ConstructionConfig constructionConfig, ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
+            this.constructionData = constructionData;
             this.constructionConfig = constructionConfig;
             this.constructionGrid = constructionGrid;
 
@@ -77,8 +79,8 @@ namespace Controllers.Construction
             if (building == null || !GetGridCell(out Vector2Int position))
                 return;
 
-            UpdatePosition(position);
             RotateConstruction();
+            UpdatePosition(position);
 
             var occupiedCells = CalculateOccupiedTiles(position);
 
@@ -115,16 +117,14 @@ namespace Controllers.Construction
 
         private void UpdatePosition(Vector2Int position)
         {
-            int[,] mask = ConstructionFootprintMasks.ConstructionFootprintMask[buildingDefinition];
-            int height = mask.GetLength(0);
-            int width = mask.GetLength(1);
+            var data = constructionData.ConstructionData[buildingDefinition];
             int normalizedRotation = rotationSteps % 4;
 
-            int rotatedWidth = (normalizedRotation % 2 == 0) ? width : height;
-            int rotatedHeight = (normalizedRotation % 2 == 0) ? height : width;
+            int rotatedWidth = (normalizedRotation % 2 == 0) ? data.Width : data.Height;
+            int rotatedHeight = (normalizedRotation % 2 == 0) ? data.Height : data.Width;
 
-            float offsetX = (rotatedWidth % 2 == 1) ? 0.5f : 0f;
-            float offsetZ = (rotatedHeight % 2 == 1) ? 0.5f : 0f;
+            float offsetX = (rotatedWidth % 2 == 0) ? 0f : 0.5f;
+            float offsetZ = (rotatedHeight % 2 == 0) ? 0f : 0.5f;
 
             float worldX = position.x + offsetX;
             float worldZ = position.y + offsetZ;
@@ -188,16 +188,19 @@ namespace Controllers.Construction
         private List<Vector2Int> CalculateOccupiedTiles(Vector2Int buildingPosition)
         {
             var occupiedTiles = new List<Vector2Int>();
-            if (!ConstructionFootprintMasks.ConstructionFootprintMask.ContainsKey(buildingDefinition))
+
+            if (!constructionData.ConstructionData.ContainsKey(buildingDefinition))
             {
-                Debug.LogWarning($"No mask for the building: {buildingDefinition}");
+                Debug.LogWarning($"No data for the building: {buildingDefinition}");
                 return occupiedTiles;
             }
 
-            int[,] mask = ConstructionFootprintMasks.ConstructionFootprintMask[buildingDefinition];
-            int height = mask.GetLength(0);
-            int width = mask.GetLength(1);
+            var data = constructionData.ConstructionData[buildingDefinition];
             int normalizedRotation = rotationSteps % 4;
+
+            int width = (normalizedRotation % 2 == 0) ? data.Width : data.Height;
+            int height = (normalizedRotation % 2 == 0) ? data.Height : data.Width;
+
             int pivotX = width / 2;
             int pivotY = height / 2;
 
@@ -205,34 +208,22 @@ namespace Controllers.Construction
             {
                 for (int x = 0; x < width; x++)
                 {
-                    if (mask[y, x] != 0)
-                    {
-                        int relX = x - pivotX;
-                        int relY = y - pivotY;
+                    int relX = x - pivotX;
+                    int relY = y - pivotY;
 
-                        Vector2Int rotatedPos = normalizedRotation switch
-                        {
-                            0 => new Vector2Int(relX, relY),
-                            1 => new Vector2Int(-relY - (height % 2 == 0 ? 1 : 0), relX),
-                            2 => new Vector2Int(-relX - (width % 2 == 0 ? 1 : 0), -relY - (height % 2 == 0 ? 1 : 0)),
-                            3 => new Vector2Int(relY, -relX - (width % 2 == 0 ? 1 : 0)),
-                            _ => new Vector2Int(relX, relY),
-                        };
-
-                        var tilePosition = new Vector2Int(
-                            buildingPosition.x + rotatedPos.x,
-                            buildingPosition.y + rotatedPos.y
-                        );
-                        occupiedTiles.Add(tilePosition);
-                    }
+                    occupiedTiles.Add(new Vector2Int(
+                        buildingPosition.x + relX,
+                        buildingPosition.y + relY
+                    ));
                 }
             }
+
             return occupiedTiles;
         }
 
         private bool IsTerrainFlat(Vector2Int buildingPosition)
         {
-            if (!ConstructionFootprintMasks.ConstructionFootprintMask.ContainsKey(buildingDefinition))
+            if (!constructionData.ConstructionData.ContainsKey(buildingDefinition))
             {
                 Debug.LogWarning($"No mask for the building: {buildingDefinition}");
                 return false;
