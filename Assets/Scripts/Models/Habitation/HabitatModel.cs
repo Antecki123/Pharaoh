@@ -1,3 +1,4 @@
+using Controllers.Work;
 using Models.Economy;
 using Models.Helpers;
 using Models.Settler;
@@ -20,11 +21,13 @@ namespace Models.Habitation
 
         public IReadOnlyList<SettlerModel> Residents => residents;
         public IReadOnlyList<CommodityModel> Storage => storage;
-        public IReadOnlyList<HabitationRequirement> HabitationRequirements => habitationRequirements;
+        public IReadOnlyDictionary<HabitatRequirementDefinition, HabitationRequirement> HabitationRequirements => habitationRequirements;
+        public IReadOnlyDictionary<Type, float> MunicipalServices => municipalServices;
 
         private readonly List<SettlerModel> residents = new List<SettlerModel>();
         private readonly List<CommodityModel> storage = new List<CommodityModel>();
-        private readonly List<HabitationRequirement> habitationRequirements = new List<HabitationRequirement>();
+        private readonly Dictionary<HabitatRequirementDefinition, HabitationRequirement> habitationRequirements;
+        private readonly Dictionary<Type, float> municipalServices;
 
         private int currentLevel = 1;
 
@@ -45,18 +48,24 @@ namespace Models.Habitation
             this.namesPerLevel = namesPerLevel;
             this.residentsPerLevel = residentsPerLevel;
 
-            habitationRequirements = new List<HabitationRequirement>()
+            habitationRequirements = new Dictionary<HabitatRequirementDefinition, HabitationRequirement>()
             {
-                new(HabitationRequirementDefinition.Water, 1, 10, 0.05f),
-                new(HabitationRequirementDefinition.Food, 1, 50),
-                new(HabitationRequirementDefinition.Tavern, 1),
-                new(HabitationRequirementDefinition.Clothes, 2, 50),
-                new(HabitationRequirementDefinition.Pottery, 2, 30),
-                new(HabitationRequirementDefinition.Tool, 2, 20),
-                new(HabitationRequirementDefinition.Entertainment_1, 2),
-                new(HabitationRequirementDefinition.Arts, 3),
-                new(HabitationRequirementDefinition.Papyrus, 3, 50),
-                new(HabitationRequirementDefinition.Entertainment_2, 3),
+                { HabitatRequirementDefinition.Water, new(HabitatRequirementDefinition.Water, 1, 10, 0.05f) },
+                { HabitatRequirementDefinition.Food, new(HabitatRequirementDefinition.Food, 1, 50) },
+                { HabitatRequirementDefinition.Tavern, new(HabitatRequirementDefinition.Tavern, 1) },
+                { HabitatRequirementDefinition.Clothes, new(HabitatRequirementDefinition.Clothes, 2, 50) },
+                { HabitatRequirementDefinition.Pottery, new(HabitatRequirementDefinition.Pottery, 2, 30) },
+                { HabitatRequirementDefinition.Tool, new(HabitatRequirementDefinition.Tool, 2, 20) },
+                { HabitatRequirementDefinition.Entertainment, new(HabitatRequirementDefinition.Entertainment, 2) },
+                { HabitatRequirementDefinition.Arts, new(HabitatRequirementDefinition.Arts, 3) },
+                { HabitatRequirementDefinition.Papyrus, new(HabitatRequirementDefinition.Papyrus, 3, 50) }
+            };
+
+            municipalServices = new()
+            {
+                { typeof(TaxCollectionService), 1f },
+                { typeof(FireProtectionService), 1f },
+                { typeof(ReligionService), 1f },
             };
         }
 
@@ -145,17 +154,32 @@ namespace Models.Habitation
             }
         }
 
-        public float SatisfyResidentNeeds(HabitationRequirementDefinition requirementDefinition, float value)
+        public void SatisfyResidentNeeds(HabitatRequirementDefinition requirementDefinition)
         {
-            foreach (var requirement in habitationRequirements)
-            {
-                if (requirement.RequirementDefinition == requirementDefinition)
-                {
-                    return requirement.AddWithResidual(value);
-                }
-            }
+            if (habitationRequirements.TryGetValue(requirementDefinition, out var requirement))
+                requirement?.SatisfyNeed();
+        }
 
-            return 0f;
+        public void ReceiveService(IService service)
+        {
+            switch (service)
+            {
+                case TaxCollectionService tax:
+                    municipalServices[tax.GetType()] = tax.Value;
+                    break;
+
+                case ReligionService religion:
+                    municipalServices[religion.GetType()] = religion.Value;
+                    break;
+
+                case FireProtectionService fireProtection:
+                    municipalServices[fireProtection.GetType()] = fireProtection.Value;
+                    break;
+
+                case HabitationRequirementService habitation:
+                    SatisfyResidentNeeds(habitation.RequirementDefinition);
+                    break;
+            }
         }
     }
 }

@@ -19,13 +19,15 @@ namespace Views.Ui.GameInterfaces
 
         private void OnEnable()
         {
-            selectConstructionButton.onClick.AddListener(() => signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition)));
+            selectConstructionButton.onClick.AddListener(OnSelectConstructionButton);
         }
 
         private void OnDisable()
         {
             selectConstructionButton.onClick.RemoveAllListeners();
         }
+
+        private void OnSelectConstructionButton() => signalBus.Fire(new ConstructionSignals.ConstructionMode(buildingDefinition));
 
         public void InitializeButton(SignalBus signalBus, BuildingDefinition buildingDefinition)
         {

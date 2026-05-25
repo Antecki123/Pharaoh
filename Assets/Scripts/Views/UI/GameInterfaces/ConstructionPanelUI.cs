@@ -33,13 +33,7 @@ namespace Views.Ui.GameInterfaces
 
         private void OnEnable()
         {
-            roadsButton.onClick.AddListener(() =>
-            {
-                ClearTabs();
-                availableBuildingsPanel.gameObject.SetActive(false);
-                signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Road));
-            });
-
+            roadsButton.onClick.AddListener(OnRoadButtonClick);
             housingButton.onClick.AddListener(OnHousingButtonClick);
             farmingButton.onClick.AddListener(OnFarmingButtonClick);
             industryButton.onClick.AddListener(OnIndustryButtonClick);
@@ -61,6 +55,13 @@ namespace Views.Ui.GameInterfaces
             municipalButton.onClick.RemoveAllListeners();
             decoratesButton.onClick.RemoveAllListeners();
             destroyButton.onClick.RemoveAllListeners();
+        }
+
+        private void OnRoadButtonClick()
+        {
+            ClearTabs();
+            availableBuildingsPanel.gameObject.SetActive(false);
+            signalBus.Fire(new ConstructionSignals.ConstructionMode(BuildingDefinition.Road));
         }
 
         private void OnHousingButtonClick() => OpenPanel(BuildingType.Housing);
@@ -119,6 +120,7 @@ namespace Views.Ui.GameInterfaces
                             BuildingDefinition.Well,
                             BuildingDefinition.Bazaar,
                             BuildingDefinition.Tavern,
+                            BuildingDefinition.TaxCollector,
                         };
                         break;
 

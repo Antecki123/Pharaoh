@@ -1,9 +1,10 @@
 using Controllers;
+using Controllers.Work;
 using UnityEngine;
 
 namespace Views.Construction
 {
-    public class BuildingView : MonoBehaviour, IInteractable
+    public class BuildingView : MonoBehaviour, IInteractable, IServiceReceiver
     {
         public BuildingFoundationView BuildingFoundation;
 
@@ -35,5 +36,7 @@ namespace Views.Construction
         }
 
         public virtual void Interact() { }
+
+        public virtual void ReceiveService(IService service) { }
     }
 }

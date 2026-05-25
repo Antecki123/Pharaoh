@@ -1,6 +1,7 @@
 using App.Helpers;
 using App.Signals;
 using Models.Construction;
+using Models.Economy;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -29,6 +30,8 @@ namespace Controllers.Construction
         private readonly SignalBus signalBus;
         private readonly PrefabManager prefabManager;
         private readonly ConstructionGrid constructionGrid;
+        private readonly ConstructionDataImporter constructionData;
+        private readonly EconomyModel economyModel;
 
         private readonly PointerEventData pointerEventData;
         private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
@@ -39,11 +42,14 @@ namespace Controllers.Construction
         private const float raycastDistance = 200f;
         private const float cellOffset = 0.5f;
 
-        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid)
+        public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid,
+            ConstructionDataImporter constructionData, EconomyModel economyModel)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.constructionGrid = constructionGrid;
+            this.constructionData = constructionData;
+            this.economyModel = economyModel;
 
             mainCamera = Camera.main;
             terrain = Terrain.activeTerrain;
@@ -86,8 +92,13 @@ namespace Controllers.Construction
                 }
                 else
                 {
-                    if (constructionGrid.IsValidPlacement(currentCell, true) && !IsUIHit())
+                    var cost = constructionData.ConstructionData[BuildingDefinition.Road].Cost * currentRoadPath.Count;
+
+                    if (constructionGrid.IsValidPlacement(currentCell, true) && !IsUIHit() && economyModel.HasEnoughCurrency(cost))
+                    {
+                        economyModel.RemoveCurrency(cost);
                         ConfirmRoadConstruction();
+                    }
                 }
             }
 
@@ -107,9 +118,9 @@ namespace Controllers.Construction
             ReturnAllToPool();
 
             roadPathfinder.FindRoadPath(startPosition.Value, currentCell, currentRoadPath);
-
-            bool isValid = IsValidPlacement();
-            Color previewColor = isValid ? Color.lightGreen : Color.softRed;
+            int cost = constructionData.ConstructionData[BuildingDefinition.Road].Cost * currentRoadPath.Count;
+            bool isValid = IsValidPlacement() && economyModel.HasEnoughCurrency(cost);
+            var previewColor = isValid ? Color.lightGreen : Color.softRed;
 
             for (int i = 0; i < currentRoadPath.Count; i++)
             {

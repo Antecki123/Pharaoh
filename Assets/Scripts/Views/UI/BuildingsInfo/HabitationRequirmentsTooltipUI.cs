@@ -22,7 +22,7 @@ namespace Views.Ui.Buildings
                 commodityElement.transform.SetParent(requirementsContainer);
                 commodityElements.Add(commodityElement);
 
-                requirement.OnValueChanged += RefreshUI;
+                requirement.Value.OnValueChanged += RefreshUI;
                 RefreshUI();
             }
         }
@@ -31,21 +31,26 @@ namespace Views.Ui.Buildings
         {
             foreach (var requirement in habitatModel.HabitationRequirements)
             {
-                requirement.OnValueChanged -= RefreshUI;
+                requirement.Value.OnValueChanged -= RefreshUI;
             }
         }
 
         private void RefreshUI()
         {
-            for (int i = 0; i < commodityElements.Count; i++)
+            // TODO: fix later
+            /*for (int i = 0; i < commodityElements.Count; i++)
             {
-                var requirement = habitatModel.HabitationRequirements[i];
+                var requirement = habitatModel.HabitationRequirements[i]; // tutaj nie mo¿na wyci¹gn¹æ indexu z dictionary
                 var isActive = habitatModel.CurrentLevel >= requirement.RequiredLevel;
                 commodityElements[i].gameObject.SetActive(isActive);
 
                 if (isActive)
-                    commodityElements[i].RefreshUI(requirement.RequirementDefinition.ToString(), requirement.CurrentValue, requirement.MaxValue);
-            }
+                    commodityElements[i].RefreshUI(
+                        requirement.RequirementDefinition.ToString(),
+                        requirement.CurrentValue,
+                        requirement.MaxValue
+                        );
+            }*/
         }
     }
 }

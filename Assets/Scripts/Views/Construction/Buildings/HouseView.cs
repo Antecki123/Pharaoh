@@ -1,4 +1,5 @@
 using App.Signals;
+using Controllers.Work;
 using Models.Economy;
 using Models.Habitation;
 using UnityEngine;
@@ -7,7 +8,7 @@ using Zenject;
 namespace Views.Construction
 {
     [SelectionBase]
-    public class HouseView : BuildingView, IServiceReceiver
+    public class HouseView : BuildingView
     {
         private SignalBus signalBus;
         private HabitatModel habitatModel;
@@ -52,9 +53,9 @@ namespace Views.Construction
             }
         }
 
-        public float SatisfyResidentNeeds(HabitationRequirementDefinition requirementDefinition, float value)
+        public override void ReceiveService(IService service)
         {
-            return habitatModel.SatisfyResidentNeeds(requirementDefinition, value);
+            habitatModel.ReceiveService(service);
         }
     }
 }

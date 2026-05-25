@@ -2,6 +2,7 @@ using App.Configs;
 using App.Helpers;
 using App.Signals;
 using Models.Construction;
+using Models.Economy;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace Controllers.Construction
         private readonly ConstructionDataImporter constructionData;
         private readonly ConstructionConfig constructionConfig;
         private readonly ConstructionGrid constructionGrid;
+        private readonly EconomyModel economyModel;
 
         private Transform constructionsContainer;
         private Camera mainCamera;
@@ -37,13 +39,14 @@ namespace Controllers.Construction
         private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionDataImporter constructionData,
-            ConstructionConfig constructionConfig, ConstructionGrid constructionGrid)
+            ConstructionConfig constructionConfig, ConstructionGrid constructionGrid, EconomyModel economyModel)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.constructionData = constructionData;
             this.constructionConfig = constructionConfig;
             this.constructionGrid = constructionGrid;
+            this.economyModel = economyModel;
 
             mainCamera = Camera.main;
             terrain = Terrain.activeTerrain;
@@ -83,8 +86,10 @@ namespace Controllers.Construction
             UpdatePosition(position);
 
             var occupiedCells = CalculateOccupiedTiles(position);
+            var cost = constructionData.ConstructionData[buildingDefinition].Cost;
 
-            if (constructionGrid.IsValidPlacement(occupiedCells) && IsTerrainFlat(position))
+            if (constructionGrid.IsValidPlacement(occupiedCells) && IsTerrainFlat(position) 
+                && economyModel.HasEnoughCurrency(cost))
             {
                 foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
                     renderer.material.color = Color.lightGreen;
@@ -92,6 +97,7 @@ namespace Controllers.Construction
                 if (Input.GetMouseButtonUp(0) && !IsUIHit())
                 {
                     constructionGrid.AddOccupant(occupiedCells, TileType.Building, building);
+                    economyModel.RemoveCurrency(cost);
                     PlaceBuilding();
                 }
             }

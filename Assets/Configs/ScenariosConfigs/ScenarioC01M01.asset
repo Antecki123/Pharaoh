@@ -53,6 +53,8 @@ MonoBehaviour:
     isAvailable: 0
   - buildingDefinition: 18
     isAvailable: 0
+  - buildingDefinition: 19
+    isAvailable: 1
   Objectives:
   - rid: 4604107804892201043
   - rid: 4604107804892201044

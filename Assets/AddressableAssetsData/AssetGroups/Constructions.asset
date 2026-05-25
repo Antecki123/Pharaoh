@@ -35,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b487e7d444382e4583fde5fb5751e41
+    m_Address: TaxCollector
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c318cd87192d274cb4f0fa69f241d9b
     m_Address: Well
     m_ReadOnly: 0

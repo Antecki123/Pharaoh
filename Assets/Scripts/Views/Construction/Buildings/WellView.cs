@@ -57,14 +57,19 @@ namespace Views.Construction
             }
         }
 
+        public override void ReceiveService(IService service)
+        {
+            workplace.ReceiveService(service);
+        }
+
         private void SetupWorkplace()
         {
             var buildingDefinition = BuildingDefinition.Well;
             var economyData = economyImporter.EconomyData[buildingDefinition];
             var storageModel = new StorageModel(new List<CommodityModel>());
+            var service = new HabitationRequirementService(HabitatRequirementDefinition.Water, 1.0f);
+            var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, service);
 
-            var requirementDefinition = HabitationRequirementDefinition.Water;
-            var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, requirementDefinition);
             workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, constructionGrid, this,
                 economyData.InfluenceRange);
         }

@@ -21,6 +21,11 @@ namespace Models.Economy
             OnValueChanged?.Invoke();
         }
 
+        public bool HasEnoughCurrency(int value)
+        {
+            return Currency >= value;
+        }
+
         public void AddSettlers(int value)
         {
             Settlers += value;

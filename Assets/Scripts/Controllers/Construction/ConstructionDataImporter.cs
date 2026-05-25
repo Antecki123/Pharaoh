@@ -34,7 +34,8 @@ namespace Controllers.Construction
                 var data = new ConstructionData()
                 {
                     Width = int.TryParse(text[1], out int width) ? width : default,
-                    Height = int.TryParse(text[2], out int height) ? height : default
+                    Height = int.TryParse(text[2], out int height) ? height : default,
+                    Cost = int.TryParse(text[3], out int cost) ? cost : default
                 };
 
                 constructionData.Add(definition, data);
@@ -47,5 +48,6 @@ namespace Controllers.Construction
     {
         public int Width { get; set; }
         public int Height { get; set; }
+        public int Cost { get; set; }
     }
 }

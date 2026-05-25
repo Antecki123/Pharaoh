@@ -9,19 +9,19 @@ namespace Models.Habitation
         public float ValuePercent => (CurrentValue / MaxValue) * 100f;
         public float CurrentValue => currentValue;
 
-        public HabitationRequirementDefinition RequirementDefinition => requirementDefinition;
+        public HabitatRequirementDefinition RequirementDefinition => requirementDefinition;
         public int RequiredLevel => requiredLevel;
         public float MaxValue => maxValue;
 
-        private readonly HabitationRequirementDefinition requirementDefinition;
+        private readonly HabitatRequirementDefinition requirementDefinition;
         private readonly int requiredLevel;
         private readonly float maxValue;
         private readonly float decayTime;
 
         private float currentValue;
 
-        public HabitationRequirement(HabitationRequirementDefinition requirementDefinition, int requiredLevel, float maxValue = 100,
-            float decayTime = 0.1f)
+        public HabitationRequirement(HabitatRequirementDefinition requirementDefinition, int requiredLevel,
+            float maxValue = 100f, float decayTime = 0.1f)
         {
             this.requirementDefinition = requirementDefinition;
             this.requiredLevel = requiredLevel;
@@ -44,35 +44,13 @@ namespace Models.Habitation
             }
         }
 
-        public float AddWithResidual(float value)
+        public void SatisfyNeed()
         {
-            var residual = 0f;
-
-            currentValue += value;
-            if (currentValue > maxValue)
-            {
-                residual = currentValue - maxValue;
-                currentValue = maxValue;
-            }
-
-            OnValueChanged?.Invoke();
-
-            return residual;
+            currentValue = maxValue;
         }
     }
 
-    public interface IServiceReceiver
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="habitationRequirementDefinition"></param>
-        /// <param name="value"></param>
-        /// <returns>The method returns the change if the value delivered to the recipient exceeds the maximum value.</returns>
-        public float SatisfyResidentNeeds(HabitationRequirementDefinition requirementDefinition, float value);
-    }
-
-    public enum HabitationRequirementDefinition
+    public enum HabitatRequirementDefinition
     {
         Water,
         Food,
@@ -80,10 +58,9 @@ namespace Models.Habitation
         Clothes,
         Pottery,
         Tool,
-        Entertainment_1,
+        Entertainment,
         Papyrus,
         Arts,
-        Entertainment_2,
         Jewellery,
         Incense,
         Weapon

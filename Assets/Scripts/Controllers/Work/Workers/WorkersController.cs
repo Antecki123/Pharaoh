@@ -92,7 +92,7 @@ namespace Controllers.Work
         private void SpawnServiceAgent(WorkplaceSignals.SpawnServiceAgent signal)
         {
             serviceAgentObjectPool.WorkersPool.Get(out ServiceAgentView agent);
-            agent.Init(signal.ServiceAgentPayload);
+            agent.Init(signal.ServiceAgentPayload, signal.ServiceAgentPayload.Service);
             agent.OnAgentReturn += signal.OnAgentReturn;
 
             serviceAgents.Add(agent);
@@ -244,7 +244,7 @@ namespace Controllers.Work
                     var distanceToTarget = (agent.transform.position - agent.MovementHandler.NextPosition).sqrMagnitude;
                     if (distanceToTarget <= 0.25f)
                     {
-                        if (agent.RemainingCapacity < 0)
+                        if (agent.RemainingSteps <= 0)
                             agent.ReturnToOrigin();
                         else
                             agent.CalculateNextPosition();

@@ -47,6 +47,7 @@ namespace App.Registrators
             Container.Bind(typeof(HabitationController), typeof(IInitializable), typeof(ITickable)).To<HabitationController>().AsSingle().NonLazy();
             Container.Bind(typeof(InteractionController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<InteractionController>().AsSingle().NonLazy();
             Container.Bind(typeof(ConstructionController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<ConstructionController>().AsSingle().NonLazy();
+            Container.Bind(typeof(EconomyController), typeof(IInitializable), typeof(IDisposable)).To<EconomyController>().AsSingle().NonLazy();
             Container.Bind(typeof(CameraController), typeof(IInitializable), typeof(ILateTickable)).To<CameraController>().AsSingle().NonLazy();
             Container.Bind(typeof(EnvironmentController), typeof(ITickable)).To<EnvironmentController>().AsSingle().NonLazy();
             Container.Bind(typeof(BuildingsTooltipController), typeof(IInitializable), typeof(ITickable)).To<BuildingsTooltipController>().AsSingle().NonLazy();

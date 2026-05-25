@@ -75,6 +75,7 @@ namespace Controllers.Construction
                 { BuildingDefinition.Brewery, Build<BreweryView>(BuildingDefinition.Brewery) },
                 { BuildingDefinition.WeavingMill, Build<WeavingMillView>(BuildingDefinition.WeavingMill) },
                 { BuildingDefinition.Tavern, Build<TavernView>(BuildingDefinition.Tavern) },
+                { BuildingDefinition.TaxCollector, Build<TavernView>(BuildingDefinition.TaxCollector) },
             };
 
             signalBus.Subscribe<ConstructionSignals.ConstructionMode>(SetConstruction);

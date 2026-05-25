@@ -30,7 +30,7 @@ namespace Controllers.Environment
 
         public void Initialize()
         {
-            //signalBus.Fire(new EnvironmentSignals.DateChanged(currentMonth, currentYear));
+            signalBus.Fire(new EnvironmentSignals.DateChanged(dateModel.CurrentMonth, dateModel.CurrentYear));
         }
 
         public void Tick()
@@ -54,7 +54,7 @@ namespace Controllers.Environment
                         dateModel.CurrentYear = 1;
                 }
 
-                //signalBus.Fire(new EnvironmentSignals.DateChanged(currentMonth, currentYear));
+                signalBus.Fire(new EnvironmentSignals.DateChanged(dateModel.CurrentMonth, dateModel.CurrentYear));
                 CalculateRiverHeight();
             }
         }

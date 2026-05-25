@@ -20,6 +20,7 @@ namespace Controllers.Construction
         Well,
         Brewery,
         WeavingMill,
-        Tavern
+        Tavern,
+        TaxCollector
     }
 }

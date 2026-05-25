@@ -3,15 +3,15 @@ using Controllers.Construction;
 using Controllers.Work;
 using Models.Construction;
 using Models.Economy;
-using Models.Habitation;
 using Models.Work;
+using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
 namespace Views.Construction
 {
     [SelectionBase]
-    public class BazaarView : BuildingView
+    public class TaxCollectorView : BuildingView
     {
         private SignalBus signalBus;
         private SupplyModel supplyModel;
@@ -21,7 +21,8 @@ namespace Views.Construction
         private DistributionPointWorkplace workplace;
 
         [Inject]
-        public void Constructor(SignalBus signalBus, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter, ConstructionGrid constructionGrid)
+        public void Constructor(SignalBus signalBus, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter,
+            ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
             this.supplyModel = supplyModel;
@@ -35,7 +36,7 @@ namespace Views.Construction
             SetupWorkplace();
 
             signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(workplace, this));
-            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.DistributionPoint));
+            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.Workplace));
         }
 
         public override void DestroyBuilding()
@@ -58,10 +59,10 @@ namespace Views.Construction
 
         private void SetupWorkplace()
         {
-            var buildingDefinition = BuildingDefinition.Bazaar;
+            var buildingDefinition = BuildingDefinition.TaxCollector;
             var economyData = economyImporter.EconomyData[buildingDefinition];
-            var storageModel = new StorageModel(economyImporter.StorageData[buildingDefinition]);
-            var service = new HabitationRequirementService(HabitatRequirementDefinition.Food, 1.0f);
+            var storageModel = new StorageModel(new List<CommodityModel>());
+            var service = new TaxCollectionService(1.0f);
             var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, service);
 
             workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, constructionGrid, this,

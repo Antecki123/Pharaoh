@@ -3,6 +3,7 @@ using Models.Construction;
 using Models.Economy;
 using Models.Helpers;
 using Models.Work;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Views.Construction;
@@ -22,12 +23,15 @@ namespace Controllers.Work
         private readonly ConstructionGrid constructionGrid;
         private readonly BuildingView buildingView;
 
+        private readonly Dictionary<Type, float> municipalServices;
+
         private Timer resourceRefreshTimer;
 
         private HashSet<Vector2Int> influencedTiles = new HashSet<Vector2Int>();
         private int influenceDistance;
 
-        public DistributionPointWorkplace(SignalBus signalBus, SupplyModel supplyModel, DistributionPointModel distributionModel, ConstructionGrid constructionGrid,
+        public DistributionPointWorkplace(SignalBus signalBus, SupplyModel supplyModel,
+            DistributionPointModel distributionModel, ConstructionGrid constructionGrid,
             BuildingView buildingView, int influenceDistance)
         {
             this.signalBus = signalBus;
@@ -38,6 +42,11 @@ namespace Controllers.Work
             this.influenceDistance = influenceDistance;
 
             resourceRefreshTimer = new Timer(5f);
+
+            municipalServices = new()
+            {
+                { typeof(FireProtectionService), 1f }
+            };
 
             constructionGrid.OnValueChanged += CalculateInfluenceRange;
             CalculateInfluenceRange();
@@ -126,6 +135,16 @@ namespace Controllers.Work
             }
         }
 
+        public void ReceiveService(IService service)
+        {
+            switch (service)
+            {
+                case FireProtectionService fireProtection:
+                    municipalServices[fireProtection.GetType()] = fireProtection.Value;
+                    break;
+            }
+        }
+
         private void CalculateInfluenceRange()
         {
             influencedTiles.Clear();
@@ -179,7 +198,7 @@ namespace Controllers.Work
             var serviceAgentPayload = new ServiceAgentPayload()
             {
                 Origin = buildingView,
-                HabitationRequirementDefinition = distributionModel.HabitationRequirementDefinition,
+                Service = distributionModel.Service,
                 AvailableTiles = influencedTiles
             };
 

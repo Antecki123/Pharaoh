@@ -1,7 +1,6 @@
 using Controllers.Construction;
 using Controllers.Work;
 using Models.Economy;
-using Models.Habitation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,14 +25,14 @@ namespace Models.Work
 
         public CommodityModel DistributedCommodity { get; private set; }
 
-        public HabitationRequirementDefinition HabitationRequirementDefinition { get; private set; }
+        public IService Service { get; private set; }
 
         public IReadOnlyList<IEmployee> Workers => workers;
 
         private List<IEmployee> workers = new List<IEmployee>();
 
-        public DistributionPointModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData, StorageModel storageModel,
-            HabitationRequirementDefinition habitationRequirementDefinition)
+        public DistributionPointModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData,
+            StorageModel storageModel, IService service)
         {
             Name = buildingDefinition.ToString();
             MinimumWorkersCount = economyData.MinimumWorkersCount;
@@ -42,7 +41,7 @@ namespace Models.Work
             DistributedCommodity = economyData.RequiredCommodity == null
                 ? null
                 : StorageModel.Storage.FirstOrDefault(c => c.Name == economyData.RequiredCommodity.Value);
-            HabitationRequirementDefinition = habitationRequirementDefinition;
+            Service = service;
 
             StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();
         }

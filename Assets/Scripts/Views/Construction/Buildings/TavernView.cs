@@ -61,9 +61,9 @@ namespace Views.Construction
             var buildingDefinition = BuildingDefinition.Tavern;
             var economyData = economyImporter.EconomyData[buildingDefinition];
             var storageModel = new StorageModel(economyImporter.StorageData[buildingDefinition]);
+            var service = new HabitationRequirementService(HabitatRequirementDefinition.Tavern, 1.0f);
+            var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, service);
 
-            var requirementDefinition = HabitationRequirementDefinition.Tavern;
-            var distributionModel = new DistributionPointModel(buildingDefinition, economyData, storageModel, requirementDefinition);
             workplace = new DistributionPointWorkplace(signalBus, supplyModel, distributionModel, constructionGrid, this,
                 economyData.InfluenceRange);
         }
