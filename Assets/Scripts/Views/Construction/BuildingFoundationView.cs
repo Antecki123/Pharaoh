@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 namespace Views.Construction
@@ -13,7 +14,7 @@ namespace Views.Construction
             var groundTransform = groundMesh.transform;
             var vertices = groundMesh.mesh.vertices;
 
-            var terrain = Terrain.activeTerrain;
+            var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
             var terrainY = terrain.transform.position.y;
 
             for (int i = 0; i < vertices.Length; i++)

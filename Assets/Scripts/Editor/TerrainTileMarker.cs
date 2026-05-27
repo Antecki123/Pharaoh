@@ -1,6 +1,7 @@
 using Models.Construction;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -287,7 +288,7 @@ public class TerrainTileMarker : EditorWindow
 
     private void OnSceneGUI(SceneView sv)
     {
-        var terrain = Terrain.activeTerrain;
+        var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
 
         if (terrain == null)
             return;
@@ -326,7 +327,7 @@ public class TerrainTileMarker : EditorWindow
         if (!showGrid)
             return;
 
-        var terrain = Terrain.activeTerrain;
+        var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
 
         if (terrain == null)
             return;
@@ -446,7 +447,7 @@ public class TerrainTileMarker : EditorWindow
 
     private void RebuildTilesMesh()
     {
-        var terrain = Terrain.activeTerrain;
+        var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
 
         if (terrain == null)
             return;
@@ -693,7 +694,7 @@ public class TerrainTileMarker : EditorWindow
 
     private Vector2Int WorldToCell(Vector3 pos)
     {
-        var origin = Terrain.activeTerrain.transform.position;
+        var origin = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain")).transform.position;
 
         return new Vector2Int(
             Mathf.FloorToInt((pos.x - origin.x) / cellSize),

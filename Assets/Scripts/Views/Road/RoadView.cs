@@ -2,6 +2,7 @@ using Models.Ai;
 using Models.Ai.Pathfinding;
 using Models.Construction;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.U2D;
 using Views.Construction;
@@ -23,12 +24,15 @@ namespace Views.Road
         private Vector2Int position;
 
         private List<Vector3> navigationNodes = new List<Vector3>();
+        private Terrain terrain;
 
         [Inject]
         public void Constructor(NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
         {
             this.navigationGraph = navigationGraph;
             this.constructionGrid = constructionGrid;
+
+            terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain")); ;
 
             meshRenderer = GetComponent<MeshRenderer>();
             constructionGrid.OnRoadChanged += UpdateTileVisual;
@@ -80,9 +84,7 @@ namespace Views.Road
         {
             const int resolution = 10;
 
-            var terrain = Terrain.activeTerrain;
             var terrainY = terrain != null ? terrain.transform.position.y : 0f;
-
             var vertPerLine = resolution + 1;
 
             var vertices = new Vector3[vertPerLine * vertPerLine];
@@ -292,7 +294,7 @@ namespace Views.Road
                 {
                     float xPos = transform.position.x - startOffset + x * step;
                     float zPos = transform.position.z - startOffset + z * step;
-                    float height = Terrain.activeTerrain.SampleHeight(new Vector3(xPos, 0, zPos)) + zFightOffset;
+                    float height = terrain.SampleHeight(new Vector3(xPos, 0, zPos)) + zFightOffset;
 
                     nodesPositions.Add(new Vector3(xPos, height, zPos));
                 }

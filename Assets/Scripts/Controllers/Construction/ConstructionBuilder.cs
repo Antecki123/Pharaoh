@@ -49,7 +49,7 @@ namespace Controllers.Construction
             this.economyModel = economyModel;
 
             mainCamera = Camera.main;
-            terrain = Terrain.activeTerrain;
+            terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
             pointerEventData = new PointerEventData(EventSystem.current);
         }
 

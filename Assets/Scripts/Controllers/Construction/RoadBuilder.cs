@@ -3,6 +3,7 @@ using App.Signals;
 using Models.Construction;
 using Models.Economy;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Views.Road;
@@ -52,7 +53,7 @@ namespace Controllers.Construction
             this.economyModel = economyModel;
 
             mainCamera = Camera.main;
-            terrain = Terrain.activeTerrain;
+            terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
             roadPathfinder = new RoadPathfinder(constructionGrid.OccupiedTilesWithoutRoads);
             pointerEventData = new PointerEventData(EventSystem.current);
         }
