@@ -1,3 +1,4 @@
+using App.Debug;
 using App.Helpers;
 using App.Signals;
 using Models.Construction;
@@ -7,6 +8,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Views.Road;
+using Views.Visuals;
 using Zenject;
 
 namespace Controllers.Construction
@@ -33,6 +35,7 @@ namespace Controllers.Construction
         private readonly ConstructionGrid constructionGrid;
         private readonly ConstructionDataImporter constructionData;
         private readonly EconomyModel economyModel;
+        private readonly GridRenderer gridRenderer;
 
         private readonly PointerEventData pointerEventData;
         private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
@@ -44,13 +47,14 @@ namespace Controllers.Construction
         private const float cellOffset = 0.5f;
 
         public RoadBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionGrid constructionGrid,
-            ConstructionDataImporter constructionData, EconomyModel economyModel)
+            ConstructionDataImporter constructionData, EconomyModel economyModel, GridRenderer gridRenderer)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
             this.constructionGrid = constructionGrid;
             this.constructionData = constructionData;
             this.economyModel = economyModel;
+            this.gridRenderer = gridRenderer;
 
             mainCamera = Camera.main;
             terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
@@ -66,6 +70,7 @@ namespace Controllers.Construction
         public void Initialize()
         {
             lastCell = null;
+            gridRenderer.ShowGrid(true);
         }
 
         public void Tick()
@@ -113,6 +118,15 @@ namespace Controllers.Construction
             }
         }
 
+        public void Dispose()
+        {
+            gridRenderer.ShowGrid(false);
+
+            startPosition = null;
+            endPosition = null;
+            currentRoadPath.Clear();
+        }
+
         private void UpdateRoadPreview(Vector2Int currentCell)
         {
             constructionGrid.ClearRoadPreview();
@@ -141,13 +155,6 @@ namespace Controllers.Construction
                 activePositions.Add(roadPosition);
                 constructionGrid.AddRoadPreview(roadPosition);
             }
-        }
-
-        public void Dispose()
-        {
-            startPosition = null;
-            endPosition = null;
-            currentRoadPath.Clear();
         }
 
         private void ConfirmRoadConstruction()

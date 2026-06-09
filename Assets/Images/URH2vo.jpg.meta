@@ -93,6 +93,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -100,8 +113,8 @@ TextureImporter:
       name: URH2vo_0
       rect:
         serializedVersion: 2
-        x: 89
-        y: 788
+        x: 87
+        y: 789
         width: 138
         height: 135
       alignment: 0
@@ -122,12 +135,12 @@ TextureImporter:
       name: URH2vo_1
       rect:
         serializedVersion: 2
-        x: 250
-        y: 788
+        x: 248
+        y: 789
         width: 138
-        height: 136
-      alignment: 9
-      pivot: {x: 0.51239985, y: 0.41760707}
+        height: 135
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,8 +157,8 @@ TextureImporter:
       name: URH2vo_2
       rect:
         serializedVersion: 2
-        x: 410
-        y: 790
+        x: 409
+        y: 789
         width: 138
         height: 135
       alignment: 0
@@ -166,8 +179,8 @@ TextureImporter:
       name: URH2vo_3
       rect:
         serializedVersion: 2
-        x: 571
-        y: 790
+        x: 570
+        y: 789
         width: 138
         height: 135
       alignment: 0
@@ -188,7 +201,7 @@ TextureImporter:
       name: URH2vo_4
       rect:
         serializedVersion: 2
-        x: 733
+        x: 731
         y: 789
         width: 138
         height: 135
@@ -210,8 +223,8 @@ TextureImporter:
       name: URH2vo_5
       rect:
         serializedVersion: 2
-        x: 894
-        y: 790
+        x: 892
+        y: 789
         width: 138
         height: 135
       alignment: 0
@@ -232,7 +245,7 @@ TextureImporter:
       name: URH2vo_6
       rect:
         serializedVersion: 2
-        x: 1054
+        x: 1053
         y: 789
         width: 138
         height: 135
@@ -254,8 +267,8 @@ TextureImporter:
       name: URH2vo_7
       rect:
         serializedVersion: 2
-        x: 1217
-        y: 791
+        x: 1214
+        y: 789
         width: 138
         height: 135
       alignment: 0
@@ -276,8 +289,8 @@ TextureImporter:
       name: URH2vo_8
       rect:
         serializedVersion: 2
-        x: 89
-        y: 642
+        x: 87
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -298,8 +311,8 @@ TextureImporter:
       name: URH2vo_9
       rect:
         serializedVersion: 2
-        x: 250
-        y: 642
+        x: 248
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -320,8 +333,8 @@ TextureImporter:
       name: URH2vo_10
       rect:
         serializedVersion: 2
-        x: 411
-        y: 642
+        x: 409
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -342,8 +355,8 @@ TextureImporter:
       name: URH2vo_11
       rect:
         serializedVersion: 2
-        x: 572
-        y: 642
+        x: 570
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -364,8 +377,8 @@ TextureImporter:
       name: URH2vo_12
       rect:
         serializedVersion: 2
-        x: 733
-        y: 642
+        x: 731
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -386,8 +399,8 @@ TextureImporter:
       name: URH2vo_13
       rect:
         serializedVersion: 2
-        x: 894
-        y: 642
+        x: 892
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -408,8 +421,8 @@ TextureImporter:
       name: URH2vo_14
       rect:
         serializedVersion: 2
-        x: 1055
-        y: 642
+        x: 1053
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -430,8 +443,8 @@ TextureImporter:
       name: URH2vo_15
       rect:
         serializedVersion: 2
-        x: 1216
-        y: 642
+        x: 1214
+        y: 639
         width: 138
         height: 135
       alignment: 0
@@ -452,8 +465,8 @@ TextureImporter:
       name: URH2vo_16
       rect:
         serializedVersion: 2
-        x: 89
-        y: 491
+        x: 87
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -474,8 +487,8 @@ TextureImporter:
       name: URH2vo_17
       rect:
         serializedVersion: 2
-        x: 250
-        y: 491
+        x: 248
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -496,8 +509,8 @@ TextureImporter:
       name: URH2vo_18
       rect:
         serializedVersion: 2
-        x: 411
-        y: 491
+        x: 409
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -518,8 +531,8 @@ TextureImporter:
       name: URH2vo_19
       rect:
         serializedVersion: 2
-        x: 572
-        y: 491
+        x: 570
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -540,8 +553,8 @@ TextureImporter:
       name: URH2vo_20
       rect:
         serializedVersion: 2
-        x: 733
-        y: 491
+        x: 731
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -562,8 +575,8 @@ TextureImporter:
       name: URH2vo_21
       rect:
         serializedVersion: 2
-        x: 894
-        y: 491
+        x: 892
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -584,8 +597,8 @@ TextureImporter:
       name: URH2vo_22
       rect:
         serializedVersion: 2
-        x: 1055
-        y: 491
+        x: 1053
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -606,8 +619,8 @@ TextureImporter:
       name: URH2vo_23
       rect:
         serializedVersion: 2
-        x: 1216
-        y: 491
+        x: 1214
+        y: 489
         width: 138
         height: 135
       alignment: 0
@@ -628,8 +641,8 @@ TextureImporter:
       name: URH2vo_24
       rect:
         serializedVersion: 2
-        x: 89
-        y: 340
+        x: 87
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -650,8 +663,8 @@ TextureImporter:
       name: URH2vo_25
       rect:
         serializedVersion: 2
-        x: 250
-        y: 340
+        x: 248
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -672,8 +685,8 @@ TextureImporter:
       name: URH2vo_26
       rect:
         serializedVersion: 2
-        x: 411
-        y: 340
+        x: 409
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -694,8 +707,8 @@ TextureImporter:
       name: URH2vo_27
       rect:
         serializedVersion: 2
-        x: 572
-        y: 340
+        x: 570
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -716,8 +729,8 @@ TextureImporter:
       name: URH2vo_28
       rect:
         serializedVersion: 2
-        x: 733
-        y: 340
+        x: 731
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -738,8 +751,8 @@ TextureImporter:
       name: URH2vo_29
       rect:
         serializedVersion: 2
-        x: 894
-        y: 340
+        x: 892
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -760,8 +773,8 @@ TextureImporter:
       name: URH2vo_30
       rect:
         serializedVersion: 2
-        x: 1055
-        y: 340
+        x: 1053
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -782,8 +795,8 @@ TextureImporter:
       name: URH2vo_31
       rect:
         serializedVersion: 2
-        x: 1216
-        y: 340
+        x: 1214
+        y: 339
         width: 138
         height: 135
       alignment: 0
@@ -804,7 +817,7 @@ TextureImporter:
       name: URH2vo_32
       rect:
         serializedVersion: 2
-        x: 89
+        x: 87
         y: 189
         width: 138
         height: 135
@@ -826,7 +839,7 @@ TextureImporter:
       name: URH2vo_33
       rect:
         serializedVersion: 2
-        x: 250
+        x: 248
         y: 189
         width: 138
         height: 135
@@ -848,7 +861,7 @@ TextureImporter:
       name: URH2vo_34
       rect:
         serializedVersion: 2
-        x: 411
+        x: 409
         y: 189
         width: 138
         height: 135
@@ -870,7 +883,7 @@ TextureImporter:
       name: URH2vo_35
       rect:
         serializedVersion: 2
-        x: 572
+        x: 570
         y: 189
         width: 138
         height: 135
@@ -892,7 +905,7 @@ TextureImporter:
       name: URH2vo_36
       rect:
         serializedVersion: 2
-        x: 733
+        x: 731
         y: 189
         width: 138
         height: 135
@@ -914,7 +927,7 @@ TextureImporter:
       name: URH2vo_37
       rect:
         serializedVersion: 2
-        x: 894
+        x: 892
         y: 189
         width: 138
         height: 135
@@ -936,7 +949,7 @@ TextureImporter:
       name: URH2vo_38
       rect:
         serializedVersion: 2
-        x: 1055
+        x: 1053
         y: 189
         width: 138
         height: 135
@@ -958,7 +971,7 @@ TextureImporter:
       name: URH2vo_39
       rect:
         serializedVersion: 2
-        x: 1216
+        x: 1214
         y: 189
         width: 138
         height: 135
@@ -980,8 +993,8 @@ TextureImporter:
       name: URH2vo_40
       rect:
         serializedVersion: 2
-        x: 89
-        y: 38
+        x: 87
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1002,8 +1015,8 @@ TextureImporter:
       name: URH2vo_41
       rect:
         serializedVersion: 2
-        x: 250
-        y: 38
+        x: 248
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1024,8 +1037,8 @@ TextureImporter:
       name: URH2vo_42
       rect:
         serializedVersion: 2
-        x: 411
-        y: 38
+        x: 409
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1046,8 +1059,8 @@ TextureImporter:
       name: URH2vo_43
       rect:
         serializedVersion: 2
-        x: 572
-        y: 38
+        x: 570
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1068,8 +1081,8 @@ TextureImporter:
       name: URH2vo_44
       rect:
         serializedVersion: 2
-        x: 733
-        y: 38
+        x: 731
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1090,8 +1103,8 @@ TextureImporter:
       name: URH2vo_45
       rect:
         serializedVersion: 2
-        x: 894
-        y: 38
+        x: 892
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1112,8 +1125,8 @@ TextureImporter:
       name: URH2vo_46
       rect:
         serializedVersion: 2
-        x: 1055
-        y: 38
+        x: 1053
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1134,8 +1147,8 @@ TextureImporter:
       name: URH2vo_47
       rect:
         serializedVersion: 2
-        x: 1216
-        y: 38
+        x: 1214
+        y: 39
         width: 138
         height: 135
       alignment: 0
@@ -1164,7 +1177,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":138.0,"y":135.0},"gridSpriteOffset":{"x":87.0,"y":36.0},"gridSpritePadding":{"x":23.0,"y":15.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       URH2vo_0: 1461520038
       URH2vo_1: -2133084989

@@ -58,6 +58,7 @@ namespace App.Registrators
             // CONTROLLERS
             Container.Bind<PrefabManager>().AsSingle();
             Container.Bind(typeof(SceneHandler), typeof(IInitializable), typeof(IDisposable)).To<SceneHandler>().AsSingle().NonLazy();
+            Container.Bind(typeof(CursorController), typeof(IInitializable), typeof(IDisposable)).To<CursorController>().AsSingle().NonLazy();
             Container.Bind(typeof(GameSettingsController), typeof(IInitializable), typeof(IDisposable)).To<GameSettingsController>().AsSingle().NonLazy();
 
             Container.Bind(typeof(ApplicationInitializer), typeof(IInitializable)).To<ApplicationInitializer>().AsSingle().NonLazy();

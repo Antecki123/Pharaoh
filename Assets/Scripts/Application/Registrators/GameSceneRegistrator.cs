@@ -15,8 +15,10 @@ using Models.Gameplay;
 using Models.Habitation;
 using Models.Work;
 using System;
+using UnityEngine;
 using Views.Construction;
 using Views.Settler;
+using Views.Visuals;
 using Zenject;
 
 namespace App.Registrators
@@ -24,6 +26,9 @@ namespace App.Registrators
     public class GameSceneRegistrator : MonoInstaller
     {
         [Inject] private ApplicationRegistrator.SceneContextHolder contextHolder;
+
+        [SerializeField] private GridRenderer gridRenderer;
+        [SerializeField] private InfluenceOverlay influenceOverlay;
 
         public override void InstallBindings()
         {
@@ -35,7 +40,7 @@ namespace App.Registrators
             Container.Bind<NavigationGraph>().AsSingle().NonLazy();
             Container.Bind<ConstructionGrid>().AsSingle();
             Container.Bind<DateModel>().AsSingle();
-            Container.Bind<IrrigationModel>().AsSingle();
+            Container.Bind<InfluenceMap>().AsSingle();
             Container.Bind<ObjectivesModel>().AsSingle();
 
             // CONTROLLERS
@@ -71,6 +76,10 @@ namespace App.Registrators
             Container.BindFactory<BuildBuildingObjectiveDefinition, BuildBuildingObjective, BuildBuildingObjective.Factory>().AsTransient();
 
             contextHolder.Container = Container;
+
+            // PREFAB BINDING
+            Container.Bind<GridRenderer>().FromComponentInNewPrefab(gridRenderer).AsSingle().NonLazy();
+            Container.Bind<InfluenceOverlay>().FromComponentInNewPrefab(influenceOverlay).AsSingle().NonLazy();
         }
     }
 }

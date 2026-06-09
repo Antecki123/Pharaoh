@@ -53,6 +53,20 @@ namespace Controllers.SceneManagment
             signalBus.TryUnsubscribe<ApplicationSignals.LoadSceneRequest>(OnLoadSceneRequest);
         }
 
+        public static string GetCurrentChapterName()
+        {
+            string currentChapter = "";
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                if (SceneManager.GetSceneAt(i).name.Contains("Chapter"))
+                {
+                    currentChapter = SceneManager.GetSceneAt(i).name;
+                }
+            }
+
+            return currentChapter;
+        }
+
         private void OnLoadSceneRequest(ApplicationSignals.LoadSceneRequest signal)
         {
             var currentScenario = scenarioRepository.Scenarios.FirstOrDefault(

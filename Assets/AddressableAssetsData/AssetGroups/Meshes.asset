@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Meshes
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Meshes
+  m_GUID: 08f3859668d827649ab0d643165e9fd3
+  m_SerializeEntries:
+  - m_GUID: 2fc017c9304053f4aaff2bfc1bf6c054
+    m_Address: Chapter01_TerrainMesh
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9199533ac7663304b9f62386ba4441cf
+    m_Address: Chapter01_TerrainGrid
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba6427eb37946324d870051e93b0cbff
+    m_Address: Chapter02_TerrainGrid
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: d5245fa0bb56a0e4b9ff1bd28a911f79, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 73f1864f35304b546ae5de3be2a4d392, type: 2}
+    - {fileID: 11400000, guid: 86c039b56c945e14ba399f673cead8f8, type: 2}

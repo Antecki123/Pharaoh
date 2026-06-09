@@ -13,19 +13,20 @@ namespace Controllers.Environment
         private readonly EnvironmentConfig environmentConfig;
         private readonly DateModel dateModel;
 
-        private readonly IrrigationModel irrigationModel;
+        private readonly InfluenceMap influenceMap;
 
         [Header("River")]
         private float riverCurrentHeight;
 
         private float realTimeAccumulator;
 
-        public EnvironmentController(SignalBus signalBus, EnvironmentConfig environmentConfig, DateModel dateModel, IrrigationModel irrigationModel)
+        public EnvironmentController(SignalBus signalBus, EnvironmentConfig environmentConfig, DateModel dateModel,
+            InfluenceMap influenceMap)
         {
             this.signalBus = signalBus;
             this.environmentConfig = environmentConfig;
             this.dateModel = dateModel;
-            this.irrigationModel = irrigationModel;
+            this.influenceMap = influenceMap;
         }
 
         public void Initialize()

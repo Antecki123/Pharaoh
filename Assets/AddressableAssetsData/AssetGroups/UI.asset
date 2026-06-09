@@ -15,6 +15,31 @@ MonoBehaviour:
   m_GroupName: UI
   m_GUID: f25cccef2e03dd64484126220149597c
   m_SerializeEntries:
+  - m_GUID: 0d7d9dc7a3718fa4987655b8d7075506
+    m_Address: MiniCannot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0e9157a2c02957b4ea06590ba211ae54
+    m_Address: TargetMoveA
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ecd18f865913ea45854b9bef5513b9c
+    m_Address: DefaultEnemy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45c2d04f8cb9b104d9d70db7a57b6fea
+    m_Address: DefaultFriends
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67848dba17054a1478116436d9be00c7
+    m_Address: TargetMoveB
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6dc2ec872e7704a40a7773ef887f070e
     m_Address: FarmTooltipUI
     m_ReadOnly: 0
@@ -35,8 +60,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd07717737a119b4290c4f1278960527
+    m_Address: Impossible
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cc25bedf3ee3a9c4895476dfd867ca41
     m_Address: DistributionPointTooltipUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d07886f10eb1de84ca635e7569705595
+    m_Address: Default
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

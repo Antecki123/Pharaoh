@@ -37,6 +37,8 @@ public class TerrainTileMarker : EditorWindow
     private static readonly Color ColorHover = new(1.00f, 1.00f, 0.20f, 0.35f);
     private static readonly Color ColorEraseHover = new(1.00f, 0.20f, 0.20f, 0.45f);
 
+    private const string ChapterPrefix = "Chapter";
+
     [MenuItem("Tools/Terrain Tile Marker")]
     public static void ShowWindow()
     {
@@ -44,23 +46,25 @@ public class TerrainTileMarker : EditorWindow
         w.minSize = new Vector2(260, 300);
     }
 
+    /// <summary>
+    /// Returns true when the currently active scene is a scenario scene.
+    /// </summary>
+    /// <returns></returns>
+    private static bool IsScenarioScene() => SceneManager.GetActiveScene().name.StartsWith(ChapterPrefix);
+
+
     private void OnEnable()
     {
         SceneView.duringSceneGui += OnSceneGUI;
-
         EditorSceneManager.activeSceneChangedInEditMode += OnSceneChanged;
 
-        LoadFromJson();
-
         CreateOrUpdateGrid();
-
         tilesDirty = true;
     }
 
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
-
         EditorSceneManager.activeSceneChangedInEditMode -= OnSceneChanged;
 
         DestroyGrid();
@@ -69,10 +73,13 @@ public class TerrainTileMarker : EditorWindow
 
     private void OnSceneChanged(Scene oldScene, Scene newScene)
     {
+        tiles.Clear();
+
+        picking = false;
+        erasing = false;
+
         DestroyGrid();
         DestroyTilesMesh();
-
-        LoadFromJson();
 
         CreateOrUpdateGrid();
 
@@ -108,7 +115,25 @@ public class TerrainTileMarker : EditorWindow
 
         EditorGUILayout.LabelField("Terrain Tile Marker", header);
 
-        EditorGUILayout.Space(6);
+        if (!IsScenarioScene())
+        {
+            EditorGUILayout.Space(6);
+
+            var warningStyle = new GUIStyle(EditorStyles.helpBox)
+            {
+                fontSize = 11,
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            EditorGUILayout.LabelField(
+                $"⚠ This scene is not a chapter (name must start with \"{ChapterPrefix}\").\n" +
+                "Saving and loading tiles is disabled.",
+                warningStyle,
+                GUILayout.Height(42));
+
+            DrawLine();
+            return;
+        }
 
         DrawLine();
 
@@ -127,10 +152,7 @@ public class TerrainTileMarker : EditorWindow
                 GUILayout.Height(34)))
         {
             picking = !picking;
-
-            if (picking)
-                erasing = false;
-
+            if (picking) erasing = false;
             SceneView.RepaintAll();
         }
 
@@ -143,10 +165,7 @@ public class TerrainTileMarker : EditorWindow
                 GUILayout.Height(34)))
         {
             erasing = !erasing;
-
-            if (erasing)
-                picking = false;
-
+            if (erasing) picking = false;
             SceneView.RepaintAll();
         }
 
@@ -159,11 +178,9 @@ public class TerrainTileMarker : EditorWindow
         EditorGUILayout.LabelField("Tile Type", EditorStyles.boldLabel);
 
         EditorGUILayout.BeginHorizontal();
-
         DrawTypeButton(TileType.Water, "Water", ColorWater);
         DrawTypeButton(TileType.Cliff, "Cliff", ColorCliff);
         DrawTypeButton(TileType.Blocked, "Blocked", ColorBlocked);
-
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space(10);
@@ -171,15 +188,11 @@ public class TerrainTileMarker : EditorWindow
         EditorGUILayout.LabelField("Brush", EditorStyles.boldLabel);
 
         EditorGUILayout.BeginHorizontal();
-
         EditorGUILayout.LabelField("Size", GUILayout.Width(60));
-
         brushSize = EditorGUILayout.IntSlider(brushSize, 1, 10);
-
         EditorGUILayout.EndHorizontal();
 
         int diameter = brushSize * 2 - 1;
-
         EditorGUILayout.LabelField(
             $"{diameter}x{diameter} cells",
             EditorStyles.centeredGreyMiniLabel);
@@ -191,17 +204,12 @@ public class TerrainTileMarker : EditorWindow
         EditorGUI.BeginChangeCheck();
 
         showGrid = EditorGUILayout.Toggle("Show Grid", showGrid);
-
-        cellSize = Mathf.Max(
-            0.5f,
-            EditorGUILayout.FloatField("Cell Size", cellSize));
+        cellSize = Mathf.Max(0.5f, EditorGUILayout.FloatField("Cell Size", cellSize));
 
         if (EditorGUI.EndChangeCheck())
         {
             CreateOrUpdateGrid();
-
             tilesDirty = true;
-
             SceneView.RepaintAll();
         }
 
@@ -217,11 +225,8 @@ public class TerrainTileMarker : EditorWindow
         if (GUILayout.Button("📂 Load"))
         {
             LoadFromJson();
-
             tilesDirty = true;
-
             RebuildTilesMesh();
-
             SceneView.RepaintAll();
             Repaint();
         }
@@ -239,11 +244,8 @@ public class TerrainTileMarker : EditorWindow
                     "Cancel"))
             {
                 tiles.Clear();
-
                 tilesDirty = true;
-
                 RebuildTilesMesh();
-
                 SceneView.RepaintAll();
                 Repaint();
             }
@@ -252,67 +254,69 @@ public class TerrainTileMarker : EditorWindow
 
     private void SaveToJson()
     {
+        if (!IsScenarioScene())
+        {
+            Debug.LogWarning(
+                $"[TerrainTileMarker] Save skipped – scene \"{SceneManager.GetActiveScene().name}\" " +
+                $"is not a scenario (must start with \"{ChapterPrefix}\").");
+            return;
+        }
+
         string path = GetSceneJsonPath();
-
-        string json = JsonUtility.ToJson(
-            new TileDataCollection { tiles = tiles },
-            true);
-
+        string json = JsonUtility.ToJson(new TileDataCollection { tiles = tiles }, true);
         File.WriteAllText(path, json);
-
         AssetDatabase.Refresh();
-
-        Debug.Log($"Saved tiles to {path}");
+        Debug.Log($"[TerrainTileMarker] Saved tiles to {path}");
     }
 
     private void LoadFromJson()
     {
+        if (!IsScenarioScene())
+        {
+            Debug.LogWarning(
+                $"[TerrainTileMarker] Load skipped – scene \"{SceneManager.GetActiveScene().name}\" " +
+                $"is not a scenario (must start with \"{ChapterPrefix}\").");
+            tiles.Clear();
+            tilesDirty = true;
+            return;
+        }
+
         string path = GetSceneJsonPath();
 
         if (!File.Exists(path))
         {
             tiles.Clear();
             tilesDirty = true;
+            Debug.Log($"[TerrainTileMarker] No tile file found at {path}.");
             return;
         }
 
-        var wrapper = JsonUtility.FromJson<TileDataCollection>(
-            File.ReadAllText(path));
-
+        var wrapper = JsonUtility.FromJson<TileDataCollection>(File.ReadAllText(path));
         tiles = wrapper?.tiles ?? new List<TileData>();
-
         tilesDirty = true;
-
-        Debug.Log($"Loaded tiles from {path}");
+        Debug.Log($"[TerrainTileMarker] Loaded tiles from {path}");
     }
 
     private void OnSceneGUI(SceneView sv)
     {
-        var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
+        var terrain = Terrain.activeTerrains
+            .FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
 
         if (terrain == null)
             return;
 
         if (picking)
         {
-            HandleUtility.AddDefaultControl(
-                GUIUtility.GetControlID(FocusType.Passive));
-
+            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
             HandleHover(terrain, false);
-
             HandlePaint(terrain);
-
             sv.Repaint();
         }
         else if (erasing)
         {
-            HandleUtility.AddDefaultControl(
-                GUIUtility.GetControlID(FocusType.Passive));
-
+            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
             HandleHover(terrain, true);
-
             HandleErase(terrain);
-
             sv.Repaint();
         }
 
@@ -327,7 +331,8 @@ public class TerrainTileMarker : EditorWindow
         if (!showGrid)
             return;
 
-        var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
+        var terrain = Terrain.activeTerrains
+            .FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
 
         if (terrain == null)
             return;
@@ -339,11 +344,8 @@ public class TerrainTileMarker : EditorWindow
         var mr = gridObject.AddComponent<MeshRenderer>();
 
         gridMaterial = CreateEditorMaterial(ColorGrid);
-
         mr.sharedMaterial = gridMaterial;
-
         gridMesh = GenerateGridMesh(terrain);
-
         mf.sharedMesh = gridMesh;
     }
 
@@ -355,9 +357,7 @@ public class TerrainTileMarker : EditorWindow
             ?? Shader.Find("Unlit/Color");
 
         var mat = new Material(shader);
-
         mat.hideFlags = HideFlags.HideAndDontSave;
-
         mat.color = color;
 
         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -370,14 +370,9 @@ public class TerrainTileMarker : EditorWindow
 
     private void DestroyGrid()
     {
-        if (gridObject != null)
-            DestroyImmediate(gridObject);
-
-        if (gridMesh != null)
-            DestroyImmediate(gridMesh);
-
-        if (gridMaterial != null)
-            DestroyImmediate(gridMaterial);
+        if (gridObject != null) DestroyImmediate(gridObject);
+        if (gridMesh != null) DestroyImmediate(gridMesh);
+        if (gridMaterial != null) DestroyImmediate(gridMaterial);
 
         gridObject = null;
         gridMesh = null;
@@ -387,7 +382,6 @@ public class TerrainTileMarker : EditorWindow
     private Mesh GenerateGridMesh(Terrain terrain)
     {
         var mesh = new Mesh();
-
         mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 
         var td = terrain.terrainData;
@@ -407,14 +401,13 @@ public class TerrainTileMarker : EditorWindow
             {
                 float x0 = origin.x + x * cellSize;
                 float z0 = origin.z + z * cellSize;
-
                 float x1 = x0 + cellSize;
                 float z1 = z0 + cellSize;
 
-                Vector3 bl = new( x0, SampleY(terrain, x0, z0) + yOffset, z0);
-                Vector3 tl = new( x0, SampleY(terrain, x0, z1) + yOffset, z1);
-                Vector3 tr = new( x1, SampleY(terrain, x1, z1) + yOffset, z1);
-                Vector3 br = new( x1, SampleY(terrain, x1, z0) + yOffset, z0);
+                Vector3 bl = new(x0, SampleY(terrain, x0, z0) + yOffset, z0);
+                Vector3 tl = new(x0, SampleY(terrain, x0, z1) + yOffset, z1);
+                Vector3 tr = new(x1, SampleY(terrain, x1, z1) + yOffset, z1);
+                Vector3 br = new(x1, SampleY(terrain, x1, z0) + yOffset, z0);
 
                 int i = vertices.Count;
 
@@ -423,23 +416,15 @@ public class TerrainTileMarker : EditorWindow
                 vertices.Add(tr);
                 vertices.Add(br);
 
-                indices.Add(i);
-                indices.Add(i + 1);
-
-                indices.Add(i + 1);
-                indices.Add(i + 2);
-
-                indices.Add(i + 2);
-                indices.Add(i + 3);
-
-                indices.Add(i + 3);
-                indices.Add(i);
+                indices.Add(i); indices.Add(i + 1);
+                indices.Add(i + 1); indices.Add(i + 2);
+                indices.Add(i + 2); indices.Add(i + 3);
+                indices.Add(i + 3); indices.Add(i);
             }
         }
 
         mesh.SetVertices(vertices);
         mesh.SetIndices(indices, MeshTopology.Lines, 0);
-
         mesh.RecalculateBounds();
 
         return mesh;
@@ -447,7 +432,8 @@ public class TerrainTileMarker : EditorWindow
 
     private void RebuildTilesMesh()
     {
-        var terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
+        var terrain = Terrain.activeTerrains
+            .FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
 
         if (terrain == null)
             return;
@@ -460,21 +446,15 @@ public class TerrainTileMarker : EditorWindow
             tilesObject.AddComponent<MeshFilter>();
 
             var mr = tilesObject.AddComponent<MeshRenderer>();
-
             tilesMaterial = CreateEditorMaterial(Color.white);
-
             mr.sharedMaterial = tilesMaterial;
         }
 
         if (tilesMesh == null)
         {
             tilesMesh = new Mesh();
-
-            tilesMesh.indexFormat =
-                UnityEngine.Rendering.IndexFormat.UInt32;
-
-            tilesObject.GetComponent<MeshFilter>().sharedMesh =
-                tilesMesh;
+            tilesMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            tilesObject.GetComponent<MeshFilter>().sharedMesh = tilesMesh;
         }
 
         var vertices = new List<Vector3>(tiles.Count * 4);
@@ -482,7 +462,6 @@ public class TerrainTileMarker : EditorWindow
         var indices = new List<int>(tiles.Count * 6);
 
         var origin = terrain.transform.position;
-
         const float yOff = 0.8f;
 
         for (int t = 0; t < tiles.Count; t++)
@@ -492,52 +471,27 @@ public class TerrainTileMarker : EditorWindow
 
             float x0 = origin.x + cell.x * cellSize;
             float z0 = origin.z + cell.y * cellSize;
-
             float x1 = x0 + cellSize;
             float z1 = z0 + cellSize;
 
             int i = vertices.Count;
 
-            vertices.Add(new Vector3(
-                x0,
-                SampleY(terrain, x0, z0) + yOff,
-                z0));
+            vertices.Add(new Vector3(x0, SampleY(terrain, x0, z0) + yOff, z0));
+            vertices.Add(new Vector3(x1, SampleY(terrain, x1, z0) + yOff, z0));
+            vertices.Add(new Vector3(x1, SampleY(terrain, x1, z1) + yOff, z1));
+            vertices.Add(new Vector3(x0, SampleY(terrain, x0, z1) + yOff, z1));
 
-            vertices.Add(new Vector3(
-                x1,
-                SampleY(terrain, x1, z0) + yOff,
-                z0));
+            colors.Add(color); colors.Add(color);
+            colors.Add(color); colors.Add(color);
 
-            vertices.Add(new Vector3(
-                x1,
-                SampleY(terrain, x1, z1) + yOff,
-                z1));
-
-            vertices.Add(new Vector3(
-                x0,
-                SampleY(terrain, x0, z1) + yOff,
-                z1));
-
-            colors.Add(color);
-            colors.Add(color);
-            colors.Add(color);
-            colors.Add(color);
-
-            indices.Add(i);
-            indices.Add(i + 2);
-            indices.Add(i + 1);
-
-            indices.Add(i);
-            indices.Add(i + 3);
-            indices.Add(i + 2);
+            indices.Add(i); indices.Add(i + 2); indices.Add(i + 1);
+            indices.Add(i); indices.Add(i + 3); indices.Add(i + 2);
         }
 
         tilesMesh.Clear();
-
         tilesMesh.SetVertices(vertices);
         tilesMesh.SetColors(colors);
         tilesMesh.SetIndices(indices, MeshTopology.Triangles, 0);
-
         tilesMesh.RecalculateBounds();
 
         tilesDirty = false;
@@ -545,14 +499,9 @@ public class TerrainTileMarker : EditorWindow
 
     private void DestroyTilesMesh()
     {
-        if (tilesObject != null)
-            DestroyImmediate(tilesObject);
-
-        if (tilesMesh != null)
-            DestroyImmediate(tilesMesh);
-
-        if (tilesMaterial != null)
-            DestroyImmediate(tilesMaterial);
+        if (tilesObject != null) DestroyImmediate(tilesObject);
+        if (tilesMesh != null) DestroyImmediate(tilesMesh);
+        if (tilesMaterial != null) DestroyImmediate(tilesMaterial);
 
         tilesObject = null;
         tilesMesh = null;
@@ -564,29 +513,20 @@ public class TerrainTileMarker : EditorWindow
         int r = brushSize - 1;
 
         for (int dz = -r; dz <= r; dz++)
-        {
             for (int dx = -r; dx <= r; dx++)
-            {
-                yield return new Vector2Int(
-                    center.x + dx,
-                    center.y + dz);
-            }
-        }
+                yield return new Vector2Int(center.x + dx, center.y + dz);
     }
 
     private void HandleHover(Terrain terrain, bool isErasing)
     {
-        Ray ray = HandleUtility.GUIPointToWorldRay(
-            Event.current.mousePosition);
+        Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 
         if (!RaycastTerrain(terrain, ray, out var hit))
             return;
 
         hoveredCell = WorldToCell(hit);
 
-        Color hoverColor = isErasing
-            ? ColorEraseHover
-            : ColorHover;
+        Color hoverColor = isErasing ? ColorEraseHover : ColorHover;
 
         foreach (var cell in BrushCells(hoveredCell.Value))
             DrawCellQuad(terrain, cell, hoverColor);
@@ -595,9 +535,7 @@ public class TerrainTileMarker : EditorWindow
     private bool IsMouseHeld()
     {
         var e = Event.current;
-
-        return (e.type == EventType.MouseDown ||
-                e.type == EventType.MouseDrag)
+        return (e.type == EventType.MouseDown || e.type == EventType.MouseDrag)
                && e.button == 0
                && !e.alt;
     }
@@ -607,8 +545,7 @@ public class TerrainTileMarker : EditorWindow
         if (!IsMouseHeld())
             return;
 
-        Ray ray = HandleUtility.GUIPointToWorldRay(
-            Event.current.mousePosition);
+        Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 
         if (!RaycastTerrain(terrain, ray, out var hit))
             return;
@@ -624,9 +561,7 @@ public class TerrainTileMarker : EditorWindow
         }
 
         tilesDirty = true;
-
         Event.current.Use();
-
         Repaint();
     }
 
@@ -635,8 +570,7 @@ public class TerrainTileMarker : EditorWindow
         if (!IsMouseHeld())
             return;
 
-        Ray ray = HandleUtility.GUIPointToWorldRay(
-            Event.current.mousePosition);
+        Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 
         if (!RaycastTerrain(terrain, ray, out var hit))
             return;
@@ -645,9 +579,7 @@ public class TerrainTileMarker : EditorWindow
             tiles.RemoveAll(t => t.cell == cell);
 
         tilesDirty = true;
-
         Event.current.Use();
-
         Repaint();
     }
 
@@ -657,7 +589,6 @@ public class TerrainTileMarker : EditorWindow
 
         float x0 = origin.x + cell.x * cellSize;
         float z0 = origin.z + cell.y * cellSize;
-
         float x1 = x0 + cellSize;
         float z1 = z0 + cellSize;
 
@@ -669,10 +600,7 @@ public class TerrainTileMarker : EditorWindow
             new(x0, SampleY(terrain, x0, z1) + 0.05f, z1),
         };
 
-        Handles.DrawSolidRectangleWithOutline(
-            verts,
-            color,
-            Color.white);
+        Handles.DrawSolidRectangleWithOutline(verts, color, Color.white);
     }
 
     private bool RaycastTerrain(Terrain t, Ray ray, out Vector3 hit)
@@ -688,13 +616,14 @@ public class TerrainTileMarker : EditorWindow
             return false;
 
         hit = info.point;
-
         return true;
     }
 
     private Vector2Int WorldToCell(Vector3 pos)
     {
-        var origin = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain")).transform.position;
+        var origin = Terrain.activeTerrains
+            .FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"))
+            .transform.position;
 
         return new Vector2Int(
             Mathf.FloorToInt((pos.x - origin.x) / cellSize),
@@ -702,26 +631,17 @@ public class TerrainTileMarker : EditorWindow
     }
 
     private float SampleY(Terrain t, float x, float z)
-    {
-        return t.SampleHeight(new Vector3(x, 0, z))
-               + t.transform.position.y;
-    }
+        => t.SampleHeight(new Vector3(x, 0, z)) + t.transform.position.y;
 
-    private Color TileColor(TileType t)
+    private Color TileColor(TileType t) => t switch
     {
-        return t switch
-        {
-            TileType.Water => ColorWater,
-            TileType.Cliff => ColorCliff,
-            TileType.Blocked => ColorBlocked,
-            _ => Color.white
-        };
-    }
+        TileType.Water => ColorWater,
+        TileType.Cliff => ColorCliff,
+        TileType.Blocked => ColorBlocked,
+        _ => Color.white
+    };
 
-    private void DrawTypeButton(
-        TileType type,
-        string label,
-        Color col)
+    private void DrawTypeButton(TileType type, string label, Color col)
     {
         bool active = selectedType == type;
 
@@ -731,15 +651,11 @@ public class TerrainTileMarker : EditorWindow
 
         var style = new GUIStyle(GUI.skin.button)
         {
-            fontStyle = active
-                ? FontStyle.Bold
-                : FontStyle.Normal
+            fontStyle = active ? FontStyle.Bold : FontStyle.Normal
         };
 
         if (GUILayout.Button(label, style, GUILayout.Height(28)))
-        {
             selectedType = type;
-        }
 
         GUI.backgroundColor = Color.white;
     }

@@ -1,4 +1,5 @@
 using App.Configs;
+using App.Debug;
 using App.Helpers;
 using App.Signals;
 using Models.Construction;
@@ -8,6 +9,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Views.Construction;
+using Views.Visuals;
 using Zenject;
 
 namespace Controllers.Construction
@@ -25,6 +27,7 @@ namespace Controllers.Construction
         private readonly ConstructionConfig constructionConfig;
         private readonly ConstructionGrid constructionGrid;
         private readonly EconomyModel economyModel;
+        private readonly GridRenderer gridRenderer;
 
         private Transform constructionsContainer;
         private Camera mainCamera;
@@ -39,7 +42,8 @@ namespace Controllers.Construction
         private readonly List<RaycastResult> raycastResults = new List<RaycastResult>(8);
 
         public ConstructionBuilder(SignalBus signalBus, PrefabManager prefabManager, ConstructionDataImporter constructionData,
-            ConstructionConfig constructionConfig, ConstructionGrid constructionGrid, EconomyModel economyModel)
+            ConstructionConfig constructionConfig, ConstructionGrid constructionGrid, EconomyModel economyModel,
+            GridRenderer gridRenderer)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
@@ -47,6 +51,7 @@ namespace Controllers.Construction
             this.constructionConfig = constructionConfig;
             this.constructionGrid = constructionGrid;
             this.economyModel = economyModel;
+            this.gridRenderer = gridRenderer;
 
             mainCamera = Camera.main;
             terrain = Terrain.activeTerrains.FirstOrDefault(t => t.gameObject.CompareTag("MainTerrain"));
@@ -67,6 +72,8 @@ namespace Controllers.Construction
 
             float yRotation = rotationSteps * 90f;
             building.transform.rotation = Quaternion.Euler(0f, yRotation, 0f);
+
+            gridRenderer.ShowGrid(true);
         }
 
         public void Tick()
@@ -110,6 +117,8 @@ namespace Controllers.Construction
 
         public void Dispose()
         {
+            gridRenderer.ShowGrid(false);
+
             if (building != null)
                 Object.Destroy(building.gameObject);
 

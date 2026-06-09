@@ -1,3 +1,5 @@
+
+using Controllers.Application;
 using Controllers.SceneManagment;
 using Zenject;
 
@@ -10,6 +12,7 @@ namespace App.Signals
             container.DeclareSignal<GameInitialized>();
             container.DeclareSignal<LoadSceneRequest>();
             container.DeclareSignal<GameSceneLoaded>();
+            container.DeclareSignal<SetCursor>();
 
             // GraphicsOptions
             container.DeclareSignal<SetResolution>();
@@ -52,6 +55,16 @@ namespace App.Signals
             public GameSceneLoaded(SceneName sceneName)
             {
                 SceneName = sceneName;
+            }
+        }
+
+        public struct SetCursor
+        {
+            public CursorState CursorState { get; private set; }
+
+            public SetCursor(CursorState cursorState)
+            {
+                CursorState = cursorState;
             }
         }
 

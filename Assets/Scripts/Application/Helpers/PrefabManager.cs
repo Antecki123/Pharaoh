@@ -2,7 +2,9 @@ using App.Registrators;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace App.Helpers
 {
@@ -69,6 +71,20 @@ namespace App.Helpers
             contextHolder.Container.InjectGameObject(gameObject);
 
             return gameObject;
+        }
+
+        public async Task<T> LoadObjectAsync<T>(string key) where T : UnityEngine.Object
+        {
+            var handle = Addressables.LoadAssetAsync<T>(key);
+            await handle.Task;
+
+            if (handle.Status != UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+            {
+                UnityEngine.Debug.LogError($"Failed to load object: {key}");
+                return null;
+            }
+
+            return handle.Result;
         }
     }
 }

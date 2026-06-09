@@ -1,5 +1,6 @@
 using App.Helpers;
 using App.Signals;
+using Controllers.Application;
 using Models.Construction;
 using System.Collections.Generic;
 using UnityEngine;
@@ -49,6 +50,7 @@ namespace Controllers.Construction
         public void Initialize()
         {
             signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(true));
+            signalBus.Fire(new ApplicationSignals.SetCursor(CursorState.Impossible));
             selectionMaskView = prefabManager.Instantiate<SelectionMaskView>("SelectionMaskView");
         }
 
@@ -166,6 +168,7 @@ namespace Controllers.Construction
         public void Dispose()
         {
             signalBus.Fire(new ConstructionSignals.ActivateConstructionMode(false));
+            signalBus.Fire(new ApplicationSignals.SetCursor(CursorState.Default));
             Object.Destroy(selectionMaskView.gameObject);
 
             startPoint = default;
