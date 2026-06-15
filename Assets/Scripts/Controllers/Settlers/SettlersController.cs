@@ -1,7 +1,6 @@
 using App.Helpers;
 using App.Signals;
 using Controllers.Ai;
-using Controllers.Work;
 using Models.Economy;
 using Models.Habitation;
 using Models.Helpers;
@@ -21,28 +20,30 @@ namespace Controllers.Settler
 {
     public class SettlersController : IInitializable, ITickable, IDisposable
     {
-        private List<SettlerPresenter> settlers = new List<SettlerPresenter>();
+        private readonly List<SettlerPresenter> settlers = new();
 
         private readonly SignalBus signalBus;
         private readonly HabitationModel habitationModel;
-        private readonly EmploymentModel employmentModel;
+        private readonly EmploymentRepository employmentModel;
         private readonly EconomyModel economyModel;
+        private readonly WorkplaceRepository workplaceRepository;
 
         private readonly SettlerSpawner settlerSpawner;
-        private readonly Timer settlerSpawnTimer = new Timer(10f);
+        private readonly Timer settlerSpawnTimer = new(1f);
 
         private NativeArray<SettlerNeedsData> settlerNeedsArray;
         private NeedsUpdateJob needsUpdateJob;
 
         private TransformAccessArray settlerMovementArray;
 
-        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentModel employmentModel, EconomyModel economyModel,
-            SettlersNamesImporter settlersNames)
+        public SettlersController(SignalBus signalBus, PrefabManager prefabManager, HabitationModel habitationModel, EmploymentRepository employmentModel,
+            EconomyModel economyModel, SettlersNamesImporter settlersNames, WorkplaceRepository workplaceRepository)
         {
             this.signalBus = signalBus;
             this.habitationModel = habitationModel;
             this.employmentModel = employmentModel;
             this.economyModel = economyModel;
+            this.workplaceRepository = workplaceRepository;
 
             settlerSpawner = new SettlerSpawner(prefabManager, settlersNames);
         }
@@ -80,7 +81,7 @@ namespace Controllers.Settler
             economyModel.AddSettlers(1);
 
             var availableHabitat = habitationModel.GetAvailableHabitat();
-            var availableEmployment = employmentModel.GetAvailableWorkplace();
+            var availableEmployment = employmentModel.GetAvailableEmployeeSlots();
 
             if (availableHabitat != null)
             {
@@ -92,9 +93,12 @@ namespace Controllers.Settler
 
             if (availableEmployment != null)
             {
-                availableEmployment.GetEmployer().AddWorker(newSettler.Model);
-                newSettler.Model.Workplace = availableEmployment ?? null;
+                availableEmployment.AddEmployee(newSettler.Model);
+                newSettler.Model.Emplyer = availableEmployment ?? null;
+
+                workplaceRepository.GetWorkplace(availableEmployment.BuildingView).AddWorker();
             }
+
             newSettler.View.transform.position = habitationModel.Habitations[newSettler.Model.Habitation].transform.position;
             newSettler.View.InitAiStrategy();
         }
@@ -103,9 +107,10 @@ namespace Controllers.Settler
         {
             var settlerToDespawn = settlers.FirstOrDefault(x => x.View == signal.SettlerView);
 
-            if (settlerToDespawn != default)
+            if (settlerToDespawn != null)
                 settlers.Remove(settlerToDespawn);
 
+            workplaceRepository.GetWorkplace(settlerToDespawn.Model.Emplyer.BuildingView).RemoveWorker();
             settlerToDespawn.Model.Habitation.RemoveResident(settlerToDespawn.Model);
 
             economyModel.RemoveSettlers(1);
@@ -133,25 +138,24 @@ namespace Controllers.Settler
             }
         }
 
-        private void OnEmploymentModelChanged(CollectionChangeType changeType, IWorkplace workplace)
+        private void OnEmploymentModelChanged(EmplyerModel emplyer, CollectionChangeType changeType)
         {
             if (changeType == CollectionChangeType.Added)
             {
                 foreach (var settler in settlers)
                 {
-                    if (settler.Model.Workplace == null && workplace.GetEmployer().HasAvailableSpot())
+                    if (settler.Model.Emplyer == null && emplyer.GetAvailableEmployeeSlotsCount() > 0)
                     {
-                        settler.Model.Workplace = workplace;
-                        workplace.GetEmployer().AddWorker(settler.Model);
+                        settler.Model.Emplyer = emplyer;
+                        emplyer.AddEmployee(settler.Model);
                     }
                 }
             }
             else if (changeType == CollectionChangeType.Removed)
             {
-                foreach (var worker in workplace.GetEmployer().GetWorkers())
+                foreach (var employee in emplyer.CurrentEmployees)
                 {
-                    if (worker is SettlerModel settler)
-                        settler.Workplace = null;
+                    employee.Emplyer = null;
                 }
             }
         }

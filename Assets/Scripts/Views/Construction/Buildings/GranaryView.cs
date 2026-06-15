@@ -1,8 +1,5 @@
 using App.Signals;
 using Controllers.Work;
-using Models.Economy;
-using Models.Work;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -23,14 +20,13 @@ namespace Views.Construction
         public override void PlaceBuilding()
         {
             base.PlaceBuilding();
-            SetupStorage();
 
-            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.Storage));
+            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(this));
         }
 
         public override void DestroyBuilding()
         {
-            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(workplace));
+            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(this));
 
             base.DestroyBuilding();
         }
@@ -43,17 +39,6 @@ namespace Views.Construction
             {
                 signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(transform, workplace.StorageModel));
             }
-        }
-
-        private void SetupStorage()
-        {
-            var storageModel = new StorageModel(new List<CommodityModel>()
-            {
-                new CommodityModel() { Name = CommodityName.Bread, Quantity = 300, MaxQuantity = 500 },
-                new CommodityModel() { Name = CommodityName.Meat, Quantity = 300, MaxQuantity = 500 },
-            });
-
-            workplace = new StorageWorkplace(storageModel, this);
         }
     }
 }

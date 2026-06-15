@@ -105,5 +105,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::App.Debug.GridRenderer
   meshRenderer: {fileID: 7260953956523971662}
   meshFilter: {fileID: 78456374188617631}
-  radius: 15
-  edgeSoftness: 1
+  radius: 10
+  edgeSoftness: 6

@@ -1,17 +1,16 @@
-using Controllers.Work;
 using Models.Economy;
 using Models.Habitation;
 using Views.Construction;
 
 namespace Models.Settler
 {
-    public class SettlerModel : IEmployee
+    public class SettlerModel
     {
         public SettlerDefinition SettlerDefinition { get; set; }
 
         public HabitatModel Habitation { get; set; }
 
-        public IWorkplace Workplace { get; set; }
+        public EmplyerModel Emplyer { get; set; }
 
         public SettlerNeeds SettlerNeeds { get; set; } = new SettlerNeeds();
 

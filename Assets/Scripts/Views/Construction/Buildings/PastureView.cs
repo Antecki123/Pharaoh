@@ -1,10 +1,4 @@
-using App.Helpers;
 using App.Signals;
-using Controllers.Construction;
-using Controllers.Work;
-using Models.Economy;
-using Models.Work;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -14,35 +8,22 @@ namespace Views.Construction
     public class PastureView : BuildingView
     {
         private SignalBus signalBus;
-        private PrefabManager prefabManager;
-        private SupplyModel supplyModel;
-        private WorkplaceEconomyImporter economyImporter;
-
-        private RawResourceProducerWorkplace workplace;
 
         [Inject]
-        public void Constructor(SignalBus signalBus, PrefabManager prefabManager, SupplyModel supplyModel, WorkplaceEconomyImporter economyImporter)
+        public void Constructor(SignalBus signalBus)
         {
             this.signalBus = signalBus;
-            this.prefabManager = prefabManager;
-            this.supplyModel = supplyModel;
-            this.economyImporter = economyImporter;
         }
 
         public override void PlaceBuilding()
         {
             base.PlaceBuilding();
-            SetupWorkplace();
-
-            signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(workplace, this));
-            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.Workplace));
+            signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(this));
         }
 
         public override void DestroyBuilding()
         {
-            signalBus.Fire(new WorkplaceSignals.UnregisterWorkplace(workplace));
-            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(workplace));
-
+            signalBus.Fire(new WorkplaceSignals.UnregisterWorkplace(this));
             base.DestroyBuilding();
         }
 
@@ -52,22 +33,8 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                signalBus.Fire(new BuildingTooltipSignals.OpenProcessingWorkplaceTooltip(transform, workplace.WorkplaceModel));
+                //signalBus.Fire(new BuildingTooltipSignals.OpenProcessingWorkplaceTooltip(transform, workplace.WorkplaceModel));
             }
-        }
-
-        private void SetupWorkplace()
-        {
-            var buildingDefinition = BuildingDefinition.Pasture;
-            var economyData = economyImporter.EconomyData[buildingDefinition];
-            var storage = new StorageModel(new List<CommodityModel>()
-            {
-                new CommodityModel() { Name = CommodityName.Meat, MaxQuantity = 5 },
-            });
-
-            var workplaceModel = new WorkplaceModel(buildingDefinition, economyData, storage);
-
-            workplace = new RawResourceProducerWorkplace(signalBus, supplyModel, workplaceModel, this);
         }
     }
 }

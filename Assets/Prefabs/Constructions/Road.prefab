@@ -126,4 +126,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BuildingFoundation: {fileID: 0}
+  BuildingDefinition: 11
   roadTextures: {fileID: 100100200, guid: 6cafa89944980dc4db4ef0615fa0f4b6, type: 3}

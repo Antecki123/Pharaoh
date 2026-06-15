@@ -35,13 +35,14 @@ namespace App.Registrators
             // MODELS
             Container.Bind<EconomyModel>().AsSingle();
             Container.Bind<HabitationModel>().AsSingle();
-            Container.Bind<EmploymentModel>().AsSingle();
+            Container.Bind<EmploymentRepository>().AsSingle();
             Container.Bind<SupplyModel>().AsSingle();
             Container.Bind<NavigationGraph>().AsSingle().NonLazy();
             Container.Bind<ConstructionGrid>().AsSingle();
             Container.Bind<DateModel>().AsSingle();
             Container.Bind<InfluenceMap>().AsSingle();
             Container.Bind<ObjectivesModel>().AsSingle();
+            Container.Bind<WorkplaceRepository>().AsSingle();
 
             // CONTROLLERS
             Container.Bind(typeof(ScenarioController), typeof(IInitializable), typeof(ITickable), typeof(IDisposable)).To<ScenarioController>().AsSingle().NonLazy();
@@ -74,6 +75,11 @@ namespace App.Registrators
             Container.BindFactory<GatherGoldObjectiveDefinition, GatherGoldObjective, GatherGoldObjective.Factory>().AsTransient();
             Container.BindFactory<GatherCommodityObjectiveDefinition, GatherCommodityObjective, GatherCommodityObjective.Factory>().AsTransient();
             Container.BindFactory<BuildBuildingObjectiveDefinition, BuildBuildingObjective, BuildBuildingObjective.Factory>().AsTransient();
+
+            Container.BindFactory<RawResourceProducerWorkplace, RawResourceProducerWorkplace.Factory>().AsTransient();
+            Container.BindFactory<MaterialProcessingWorkplace, MaterialProcessingWorkplace.Factory>().AsTransient();
+            Container.BindFactory<DistributionPointWorkplace, DistributionPointWorkplace.Factory>().AsTransient();
+            Container.BindFactory<FarmWorkplace, FarmWorkplace.Factory>().AsTransient();
 
             contextHolder.Container = Container;
 

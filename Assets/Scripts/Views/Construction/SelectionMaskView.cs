@@ -5,7 +5,7 @@ namespace Controllers.Construction
     public class SelectionMaskView : MonoBehaviour
     {
         private const int samplesPerUnit = 4;
-        private const float zFightOffset = 0.1f;
+        private const float zFightOffset = 0.5f;
 
         private MeshFilter meshFilter;
 

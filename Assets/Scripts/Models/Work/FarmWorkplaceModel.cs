@@ -1,110 +1,67 @@
+using Controllers.Work;
 using Models.Economy;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace Models.Work
 {
-    public class FarmWorkplaceModel : IEmployer
+    public class FarmWorkplaceModel : IWorkplace
     {
-        public event Action OnValueChanged;
+        public event Action<FarmWorkplaceModel> OnValueChanged;
 
-        public string Name { get; private set; }
+        public FarmWorkplaceDefinition WorkplaceDefinition { get; private set; }
 
-        public CommodityModel Commodity { get; private set; }
+        public float ProcessingProgress { get; private set; } = 0;
 
-        public float ProcessingTime { get; private set; } = 3f;
+        public int CurrentWorkersCount { get; private set; } = 0;
 
-        public int MinimumWorkersCount { get; private set; } = 1;
+        public bool IsCarrierAvailable { get; set; } = true;
 
-        public int MaxWorkersCount { get; private set; }
-
-        public float ProcessingProgress { get; private set; }
-
-        public float SurfaceArea { get; private set; }
-
-        public StorageModel StorageModel { get; private set; }
-
-        public int CarriersCount { get; private set; } = 1;
-
-        public float Irrigating { get; private set; } = 1f;
-
-        public IReadOnlyList<IEmployee> Workers => workers;
-
-        private List<IEmployee> workers = new List<IEmployee>();
-
-        public FarmWorkplaceModel(CommodityName commodityName, StorageModel storageModel, float surfaceArea)
+        public FarmWorkplaceModel(FarmWorkplaceDefinition workplaceDefinition)
         {
-            Name = $"{commodityName}Farm";
-            Commodity = new CommodityModel() { Name = commodityName, Quantity = 1 };
-            MaxWorkersCount = Mathf.RoundToInt(surfaceArea / 100);
-            StorageModel = storageModel;
-            SurfaceArea = surfaceArea;
-
-            StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();
+            WorkplaceDefinition = workplaceDefinition;
         }
 
-        public bool IsAnyCommodityToTake()
+        public void AddWorker()
         {
-            foreach (var commodity in StorageModel.Storage)
-            {
-                if (commodity.Name == Commodity.Name && commodity.Quantity > 0)
-                    return true;
-            }
-
-            return false;
+            CurrentWorkersCount++;
+            OnValueChanged?.Invoke(this);
         }
 
-        public bool HasStorageRoom()
+        public void RemoveWorker()
         {
-            var availableSpace = StorageModel.GetAvailableSpace();
-            foreach (var space in availableSpace)
-            {
-                if (space.Name == Commodity.Name && space.Quantity >= Commodity.Quantity)
-                    return true;
-            }
-
-            return false;
-        }
-
-        public void AddWorker(IEmployee worker)
-        {
-            workers.Add(worker);
-            OnValueChanged?.Invoke();
-        }
-
-        public void RemoveWorker(IEmployee worker)
-        {
-            workers.Remove(worker);
-            OnValueChanged?.Invoke();
+            CurrentWorkersCount--;
+            OnValueChanged?.Invoke(this);
         }
 
         public void UseCarrier()
         {
-            CarriersCount--;
-            OnValueChanged?.Invoke();
+            IsCarrierAvailable = false;
+            OnValueChanged?.Invoke(this);
         }
 
         public void ReturnCarrier()
         {
-            CarriersCount++;
-            OnValueChanged?.Invoke();
+            IsCarrierAvailable = true;
+            OnValueChanged?.Invoke(this);
         }
 
         public void SetProcessingProgress(float value)
         {
             ProcessingProgress = value;
-            OnValueChanged?.Invoke();
+            OnValueChanged?.Invoke(this);
         }
+    }
 
-        public bool HasAvailableSpot()
-        {
-            return workers.Count < MaxWorkersCount;
-        }
+    public struct FarmWorkplaceDefinition
+    {
+        public string Name { get; set; }
 
-        public ICollection<IEmployee> GetWorkers()
-        {
-            return workers;
-        }
+        public CommodityModel CreatedCommodity { get; set; }
+
+        public float ProcessingTime { get; set; }
+
+        public int MinimumWorkersCount { get; set; }
+
+        public int MaxWorkersCount { get; set; }
     }
 }

@@ -9,9 +9,7 @@ namespace Models.Economy
     public interface IReservationable
     {
         public bool SetCommodityReservation(Guid id, CommodityModel commodity);
-
         public bool SetSpaceReservation(Guid id, CommodityModel commodity);
-
         public void RemoveReservation(Guid reservatioId);
     }
 
@@ -19,15 +17,10 @@ namespace Models.Economy
     {
         public event Action OnValueChanged;
 
-        public IReadOnlyList<CommodityModel> Storage => storage;
+        public IReadOnlyDictionary<CommodityName, CommodityEntry> Commodities => commodities;
 
-        private List<CommodityModel> storage = new List<CommodityModel>();
-        private Dictionary<Guid, List<CommodityReservation>> reservations = new Dictionary<Guid, List<CommodityReservation>>();
-
-        public StorageModel(List<CommodityModel> storage)
-        {
-            this.storage = storage;
-        }
+        private readonly Dictionary<CommodityName, CommodityEntry> commodities = new();
+        private readonly Dictionary<Guid, List<CommodityReservation>> reservations = new();
 
         public StorageModel(List<StorageEconomyData> storageData)
         {
@@ -39,37 +32,38 @@ namespace Models.Economy
                     Quantity = data.Quantity,
                     MaxQuantity = data.MaxQuantity,
                 };
-                storage.Add(commodity);
+
+                commodities.Add(commodity.Name, new CommodityEntry()
+                {
+                    Model = commodity,
+                    Visibility = data.CommodityVisibility
+                });
             }
         }
 
         public void AddCommodity(CommodityModel commodity)
         {
-            for (int i = 0; i < storage.Count; i++)
+            if (commodities.TryGetValue(commodity.Name, out var existing))
             {
-                if (storage[i].Name == commodity.Name)
-                {
-                    var existing = storage[i];
-                    existing.Quantity += commodity.Quantity;
+                existing.Model.Quantity += commodity.Quantity;
 
-                    if (existing.Quantity > existing.MaxQuantity)
-                        existing.Quantity = existing.MaxQuantity;
+                if (existing.Model.Quantity > existing.Model.MaxQuantity)
+                    existing.Model.Quantity = existing.Model.MaxQuantity;
 
-                    OnValueChanged?.Invoke();
-                    return;
-                }
+                OnValueChanged?.Invoke();
             }
-
-            Debug.LogWarning($"Cannot add commodity {commodity.Name} to storage.");
+            else
+            {
+                Debug.LogWarning($"Cannot add commodity {commodity.Name} to storage.");
+            }
         }
 
         public void RemoveCommodity(CommodityModel commodity)
         {
-            var existing = storage.FirstOrDefault(c => c.Name == commodity.Name);
-            if (existing != null)
+            if (commodities.TryGetValue(commodity.Name, out var existing))
             {
-                existing.Quantity -= commodity.Quantity;
-                existing.Quantity = existing.Quantity <= 0 ? 0 : existing.Quantity;
+                existing.Model.Quantity -= commodity.Quantity;
+                existing.Model.Quantity = existing.Model.Quantity <= 0 ? 0 : existing.Model.Quantity;
 
                 OnValueChanged?.Invoke();
             }
@@ -79,11 +73,29 @@ namespace Models.Economy
             }
         }
 
-        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
+        public bool HasCommodities(CommodityName commodityName)
+        {
+            return commodities.TryGetValue(commodityName, out var commodity) &&
+                   commodity.Model.Quantity > 0;
+        }
+
+        public bool HasCommodities(CommodityName commodityName, int quantity)
+        {
+            return commodities.TryGetValue(commodityName, out var commodity) &&
+                   commodity.Model.Quantity >= quantity;
+        }
+
+        public bool HasStorageRoom(CommodityName commodityName, int quantity)
+        {
+            return commodities.TryGetValue(commodityName, out var commodity) &&
+                   commodity.Model.MaxQuantity - quantity > 0;
+        }
+
+        public List<CommodityModel> GetAvailableCommodities()
         {
             var result = new List<CommodityModel>();
 
-            foreach (var commodity in storage)
+            foreach (var commodity in commodities.Values)
             {
                 int reservedQuantity = 0;
 
@@ -92,22 +104,22 @@ namespace Models.Economy
                     foreach (var reservation in reservationList)
                     {
                         if (reservation.ReservationType == ReservationType.Commodity &&
-                            reservation.Commodity.Name == commodity.Name)
+                            reservation.Commodity.Name == commodity.Model.Name)
                         {
                             reservedQuantity += reservation.Commodity.Quantity;
                         }
                     }
                 }
 
-                int availableQuantity = commodity.Quantity - reservedQuantity;
+                int availableQuantity = commodity.Model.Quantity - reservedQuantity;
 
                 if (availableQuantity > 0)
                 {
                     result.Add(new CommodityModel
                     {
-                        Name = commodity.Name,
+                        Name = commodity.Model.Name,
                         Quantity = availableQuantity,
-                        MaxQuantity = commodity.MaxQuantity
+                        MaxQuantity = commodity.Model.MaxQuantity
                     });
                 }
             }
@@ -115,11 +127,11 @@ namespace Models.Economy
             return result;
         }
 
-        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        public List<CommodityModel> GetAvailableSpace()
         {
             var result = new List<CommodityModel>();
 
-            foreach (var commodity in storage)
+            foreach (var commodity in commodities.Values)
             {
                 int reservedSpace = 0;
 
@@ -128,20 +140,20 @@ namespace Models.Economy
                     foreach (var reservation in reservationList)
                     {
                         if (reservation.ReservationType == ReservationType.Space &&
-                            reservation.Commodity.Name == commodity.Name)
+                            reservation.Commodity.Name == commodity.Model.Name)
                         {
                             reservedSpace += reservation.Commodity.Quantity;
                         }
                     }
                 }
 
-                int freeSpace = commodity.MaxQuantity - commodity.Quantity - reservedSpace;
+                int freeSpace = commodity.Model.MaxQuantity - commodity.Model.Quantity - reservedSpace;
 
                 if (freeSpace > 0)
                 {
                     result.Add(new CommodityModel
                     {
-                        Name = commodity.Name,
+                        Name = commodity.Model.Name,
                         Quantity = freeSpace
                     });
                 }
@@ -152,8 +164,8 @@ namespace Models.Economy
 
         public bool SetCommodityReservation(Guid id, CommodityModel commodity)
         {
-            var matchingList = storage
-                .Where(c => commodity.Name.HasFlag(c.Name) && c.Quantity > 0)
+            var matchingList = commodities.Values
+                .Where(c => commodity.Name.HasFlag(c.Model.Name) && c.Model.Quantity > 0)
                 .ToList();
 
             if (matchingList.Count == 0)
@@ -173,7 +185,7 @@ namespace Models.Economy
                 if (remaining <= 0)
                     break;
 
-                int take = Math.Min(matched.Quantity, remaining);
+                int take = Math.Min(matched.Model.Quantity, remaining);
 
                 if (take > 0)
                 {
@@ -181,7 +193,7 @@ namespace Models.Economy
                     {
                         Commodity = CommodityModel.Clone(new CommodityModel
                         {
-                            Name = matched.Name,
+                            Name = matched.Model.Name,
                             Quantity = take
                         }),
                         ReservationType = ReservationType.Commodity
@@ -197,8 +209,8 @@ namespace Models.Economy
 
         public bool SetSpaceReservation(Guid id, CommodityModel commodity)
         {
-            var matchingList = storage
-                .Where(c => commodity.Name.HasFlag(c.Name))
+            var matchingList = commodities.Values
+                .Where(c => commodity.Name.HasFlag(c.Model.Name))
                 .ToList();
 
             if (matchingList.Count == 0)
@@ -220,11 +232,10 @@ namespace Models.Economy
 
                 int alreadyReserved = reservations.Values
                     .SelectMany(r => r)
-                    .Where(r => r.ReservationType == ReservationType.Space && r.Commodity.Name == matched.Name)
+                    .Where(r => r.ReservationType == ReservationType.Space && r.Commodity.Name == matched.Model.Name)
                     .Sum(r => r.Commodity.Quantity);
 
-                int freeSpace = matched.MaxQuantity - matched.Quantity - alreadyReserved;
-
+                int freeSpace = matched.Model.MaxQuantity - matched.Model.Quantity - alreadyReserved;
                 int take = Math.Min(freeSpace, remaining);
 
                 if (take > 0)
@@ -233,7 +244,7 @@ namespace Models.Economy
                     {
                         Commodity = CommodityModel.Clone(new CommodityModel
                         {
-                            Name = matched.Name,
+                            Name = matched.Model.Name,
                             Quantity = take
                         }),
                         ReservationType = ReservationType.Space
@@ -251,14 +262,54 @@ namespace Models.Economy
         {
             reservations.Remove(reservationId);
         }
+
+        public bool TryPickCommodity(ref CommodityModel commodity)
+        {
+            var commodityName = commodity.Name;
+            var needed = commodity.Quantity;
+            var taken = 0;
+
+            var matching = Commodities.Values
+                .Where(c => commodityName.HasFlag(c.Model.Name) && c.Model.Quantity > 0)
+                .ToList();
+
+            if (!matching.Any())
+                return false;
+
+            foreach (var stored in matching)
+            {
+                if (needed <= 0)
+                    break;
+
+                var amount = Mathf.Min(stored.Model.Quantity, needed);
+                needed -= amount;
+                taken += amount;
+
+                RemoveCommodity(new CommodityModel
+                {
+                    Name = stored.Model.Name,
+                    Quantity = amount
+                });
+            }
+
+            commodity.Quantity = taken;
+            return taken > 0;
+        }
     }
 
     public class CommodityReservation
     {
         public CommodityModel Commodity { get; set; }
-
         public ReservationType ReservationType { get; set; }
     }
 
+    public class CommodityEntry
+    {
+        public CommodityModel Model { get; set; }
+        public CommodityVisibility Visibility { get; set; }
+    }
+
     public enum ReservationType { Commodity, Space }
+
+    public enum CommodityVisibility { Private, Public }
 }

@@ -21,8 +21,9 @@ namespace Views.Settler.Workers
 
         private Animator animator;
         private SignalBus signalBus;
+        private SupplyModel supplyModel;
 
-        private Queue<CarrierTask> carrierTasks = new Queue<CarrierTask>();
+        private Queue<CarrierTask> carrierTasks = new();
         private CarrierTask currentTask;
         private CommodityModel carriedCommodity;
 
@@ -30,9 +31,11 @@ namespace Views.Settler.Workers
         private readonly float baseMovementSpeed = 1.0f;
 
         [Inject]
-        public void Constructor(SignalBus signalBus, NavigationGraph navigationGraph, ConstructionGrid constructionGrid)
+        public void Constructor(SignalBus signalBus, SupplyModel supplyModel, NavigationGraph navigationGraph,
+            ConstructionGrid constructionGrid)
         {
             this.signalBus = signalBus;
+            this.supplyModel = supplyModel;
 
             movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid, baseMovementSpeed);
             animator = GetComponentInChildren<Animator>();
@@ -54,7 +57,7 @@ namespace Views.Settler.Workers
         {
             if (carriedCommodity != null && currentTask.Target != null)
             {
-                currentTask.Target.DeliverCommodity(carriedCommodity);
+                currentTask.Target.AddCommodity(carriedCommodity);
                 carriedCommodity = null;
             }
 
@@ -81,14 +84,14 @@ namespace Views.Settler.Workers
                 if (result)
                 {
                     if (currentTask.ReservationId.HasValue)
-                        currentTask.Origin.GetReservationable().RemoveReservation(currentTask.ReservationId.Value);
+                        currentTask.Origin.RemoveReservation(currentTask.ReservationId.Value);
 
                     carriedCommodity = commodity;
                 }
             }
 
-            var originView = currentTask.Origin.GetBuildingView();
-            var targetView = currentTask.Target.GetBuildingView();
+            var originView = supplyModel.GetBuildingView(currentTask.Origin);
+            var targetView = supplyModel.GetBuildingView(currentTask.Target);
 
             if (originView == null || targetView == null)
             {
@@ -96,7 +99,7 @@ namespace Views.Settler.Workers
                 return;
             }
 
-            var calculationResult = movementHandler.CalculateRoute(currentTask.Origin.GetBuildingView(), currentTask.Target.GetBuildingView());
+            var calculationResult = movementHandler.CalculateRoute(originView, targetView);
             if (calculationResult)
                 transform.position = movementHandler.Waypoints[0];
         }
@@ -107,25 +110,6 @@ namespace Views.Settler.Workers
             OnTasksFinished = null;
 
             signalBus.Fire(new WorkplaceSignals.ReturnCarrier(this));
-        }
-    }
-
-    public class CarrierTask
-    {
-        public ISupplyTarget Origin { get; }
-
-        public ISupplyTarget Target { get; }
-
-        public CommodityModel Commodity { get; }
-
-        public Guid? ReservationId { get; }
-
-        public CarrierTask(ISupplyTarget origin, ISupplyTarget target, CommodityModel commodity, Guid? reservationId = null)
-        {
-            Origin = origin;
-            Target = target;
-            Commodity = commodity;
-            ReservationId = reservationId;
         }
     }
 }

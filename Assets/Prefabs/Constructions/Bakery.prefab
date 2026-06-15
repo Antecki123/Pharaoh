@@ -357,6 +357,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BuildingFoundation: {fileID: 7172871617895598368}
+  BuildingDefinition: 1
 --- !u!1 &7742480195473489665
 GameObject:
   m_ObjectHideFlags: 0

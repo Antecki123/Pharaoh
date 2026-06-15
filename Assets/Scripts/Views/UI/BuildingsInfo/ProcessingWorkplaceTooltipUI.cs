@@ -22,18 +22,18 @@ namespace Views.Ui.Buildings
             this.buildingTransform = buildingTransform;
             this.workplace = workplace;
 
-            this.workplace.OnValueChanged += RefreshUI;
+            //this.workplace.OnValueChanged += RefreshUI;
             RefreshUI();
         }
 
         private void OnDisable()
         {
-            workplace.OnValueChanged -= RefreshUI;
+            //workplace.OnValueChanged -= RefreshUI;
         }
 
         private void RefreshUI()
         {
-            nameLabel.text = workplace.Name;
+            /*nameLabel.text = workplace.Name;
             workersLabel.text = $"Current workers: {workplace.Workers.Count}/{workplace.MaxWorkersCount}";
 
             commoditiesToShow.ForEach(x => Destroy(x.gameObject));
@@ -52,7 +52,7 @@ namespace Views.Ui.Buildings
                     workplace.StorageModel.Storage[i].MaxQuantity);
             }
 
-            progressPanel.RefreshUI(workplace.ProcessingProgress);
+            progressPanel.RefreshUI(workplace.ProcessingProgress);*/
         }
     }
 }

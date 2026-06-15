@@ -1,195 +1,191 @@
 using App.Signals;
+using Controllers.Construction;
 using Models.Economy;
-using Models.Helpers;
 using Models.Work;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Views.Construction;
-using Views.Settler.Workers;
 using Zenject;
 
 namespace Controllers.Work
 {
-    public class MaterialProcessingWorkplace : IWorkplace, ISupplyTarget
+    public class MaterialProcessingWorkplace
     {
-        public WorkplaceModel WorkplaceModel => workplaceModel;
+        public class Factory : PlaceholderFactory<MaterialProcessingWorkplace> { }
 
-        private readonly SupplyModel supplyModel;
         private readonly SignalBus signalBus;
-        private readonly WorkplaceModel workplaceModel;
-        private readonly BuildingView buildingView;
+        private readonly SupplyModel supplyModel;
+        private readonly WorkplaceEconomyImporter economyImporter;
 
-        private float progress = 0f;
-        private Timer timer;
+        private readonly List<WorkplacePresenter> workplaces = new();
 
-        public MaterialProcessingWorkplace(SupplyModel supplyModel, SignalBus signalBus,
-            WorkplaceModel workplaceModel, BuildingView buildingView)
+        private StorageModel storage;
+        private CommodityModel requiredCommodity;
+        private CommodityModel processedCommodity;
+
+        public MaterialProcessingWorkplace(SignalBus signalBus, SupplyModel supplyModel,
+            WorkplaceEconomyImporter economyImporter)
         {
-            this.supplyModel = supplyModel;
             this.signalBus = signalBus;
-            this.workplaceModel = workplaceModel;
-            this.buildingView = buildingView;
-
-            timer = new Timer(5f);
+            this.supplyModel = supplyModel;
+            this.economyImporter = economyImporter;
         }
 
-        public void Work()
+        public IWorkplace RegisterWorkplace(BuildingView buildingView)
         {
-            timer.Tick(Time.deltaTime);
+            var workplaceModel = CreateModel(buildingView.BuildingDefinition);
+            var workplace = new WorkplacePresenter(workplaceModel, buildingView);
+            workplaces.Add(workplace);
 
-            if (timer.IsFinished)
+            return workplace.Model;
+        }
+
+        public IWorkplace UnregisterWorkplace(BuildingView buildingView)
+        {
+            var workplace = workplaces.Find(x => x.View == buildingView);
+
+            if (workplace.Model == null)
+                return default;
+
+            workplaces.Remove(workplace);
+            return workplace.Model;
+        }
+
+        public void Tick()
+        {
+            foreach (var workplace in workplaces)
+                Work(workplace);
+        }
+
+        private WorkplaceModel CreateModel(BuildingDefinition buildingDefinition)
+        {
+            var economyData = economyImporter.EconomyData[buildingDefinition];
+            var definition = new WorkplaceDefinition()
             {
-                timer.Reset();
+                Name = buildingDefinition.ToString(),
 
-                if (workplaceModel.IsAnyCommodityToTake() || !workplaceModel.HasRequiredComodity())
-                    ScheduleTransport();
+                RequiredCommodity = economyData.RequiredCommodity != null
+                ? new CommodityModel(economyData.RequiredCommodity.Value, economyData.RequiredCommodityQuantity, 0)
+                : null,
+
+                ProcessedCommodity = economyData.ProcessedCommodity != null
+                ? new CommodityModel(economyData.ProcessedCommodity.Value, economyData.ProcessedCommodityQuantity, 0)
+                : null,
+
+                ProcessingTime = economyData.ProcessingTime,
+                MinimumWorkersCount = economyData.MinimumWorkersCount,
+                MaxWorkersCount = economyData.MaxWorkersCount
+            };
+
+            return new WorkplaceModel(definition);
+        }
+
+        private void Work(WorkplacePresenter workplace)
+        {
+            storage = supplyModel.SupplyTargets[workplace.View];
+            requiredCommodity = workplace.Model.WorkplaceDefinition.RequiredCommodity;
+            processedCommodity = workplace.Model.WorkplaceDefinition.ProcessedCommodity;
+
+            if (storage == null || requiredCommodity == null || processedCommodity == null)
+            {
+                Debug.LogError($"Workplace {workplace.Model.WorkplaceDefinition} is missing one or more required references: " +
+                    $"storage, required commodity, or processed commodity.");
+                return;
             }
 
-            if (workplaceModel.Workers.Count < workplaceModel.MinimumWorkersCount)
+            if (storage.HasCommodities(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name)
+                || !storage.HasCommodities(workplace.Model.WorkplaceDefinition.RequiredCommodity.Name))
+                ScheduleTransport(workplace);
+
+            if (workplace.Model.CurrentWorkersCount < workplace.Model.WorkplaceDefinition.MinimumWorkersCount)
                 return;
 
-            if (!workplaceModel.HasRequiredComodity() || !workplaceModel.HasStorageRoom())
+            if (!storage.HasCommodities(workplace.Model.WorkplaceDefinition.RequiredCommodity.Name)
+                || !storage.HasStorageRoom(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name,
+                workplace.Model.WorkplaceDefinition.ProcessedCommodity.Quantity))
                 return;
 
-            var efficiency = Mathf.Clamp01((float)workplaceModel.Workers.Count / workplaceModel.MaxWorkersCount);
-            progress += (Time.deltaTime / workplaceModel.ProcessingTime) * efficiency;
+            var efficiency = Mathf.Clamp01((float)workplace.Model.CurrentWorkersCount / workplace.Model.WorkplaceDefinition.MaxWorkersCount);
+            var progress = workplace.Model.ProcessingProgress;
+            var progressDelta = Time.deltaTime / workplace.Model.WorkplaceDefinition.ProcessingTime * efficiency;
+            workplace.Model.SetProcessingProgress(progress + progressDelta);
 
-            if (progress >= 1)
+            if (workplace.Model.ProcessingProgress >= 1)
             {
-                workplaceModel.StorageModel.RemoveCommodity(new CommodityModel
+                storage.RemoveCommodity(new CommodityModel
                 {
-                    Name = workplaceModel.RequiredCommodity.Name,
-                    Quantity = workplaceModel.RequiredCommodity.Quantity
+                    Name = workplace.Model.WorkplaceDefinition.RequiredCommodity.Name,
+                    Quantity = workplace.Model.WorkplaceDefinition.RequiredCommodity.Quantity
                 });
 
-                workplaceModel.StorageModel.AddCommodity(new CommodityModel
+                storage.AddCommodity(new CommodityModel
                 {
-                    Name = workplaceModel.ProcessedCommodity.Name,
-                    Quantity = workplaceModel.ProcessedCommodity.Quantity
+                    Name = workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name,
+                    Quantity = workplace.Model.WorkplaceDefinition.ProcessedCommodity.Quantity
                 });
 
-                progress = 0;
+                workplace.Model.SetProcessingProgress(0);
 
-                if (workplaceModel.IsAnyCommodityToTake() || !workplaceModel.HasRequiredComodity())
-                    ScheduleTransport();
+                if (storage.HasCommodities(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name)
+                    || !storage.HasCommodities(workplace.Model.WorkplaceDefinition.RequiredCommodity.Name))
+                    ScheduleTransport(workplace);
             }
-
-            workplaceModel.SetProcessingProgress(progress);
         }
 
-        public bool TryPickCommodity(ref CommodityModel commodity)
+        private void ScheduleTransport(WorkplacePresenter workplace)
         {
-            var commodityName = commodity.Name;
-            var existing = workplaceModel.StorageModel.Storage.FirstOrDefault(c => c.Name == commodityName);
-
-            if (existing != null && existing.Quantity > 0)
-            {
-                int amountToTake = Mathf.Min(existing.Quantity, commodity.Quantity);
-                commodity.Quantity = amountToTake;
-
-                workplaceModel.StorageModel.RemoveCommodity(commodity);
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public void DeliverCommodity(CommodityModel commodity)
-        {
-            workplaceModel.StorageModel.AddCommodity(commodity);
-        }
-
-        public BuildingView GetBuildingView()
-        {
-            return buildingView;
-        }
-
-        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
-        {
-            return workplaceModel.StorageModel.GetAvailableCommodities();
-        }
-
-        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
-        {
-            return workplaceModel.StorageModel.GetAvailableSpace();
-        }
-
-        public IReservationable GetReservationable()
-        {
-            return workplaceModel.StorageModel;
-        }
-
-        public IEmployer GetEmployer()
-        {
-            return workplaceModel;
-        }
-
-        public void DestroyWorkplace()
-        {
-            signalBus.Fire(new WorkplaceSignals.WorklplaceDestroyed(this));
-        }
-
-        private void ScheduleTransport()
-        {
-            if (workplaceModel.CarriersCount == 0)
+            if (!workplace.Model.IsCarrierAvailable)
                 return;
 
-            var result = BuildCarrierTasks(out Queue<CarrierTask> tasks);
+            var result = BuildCarrierTasks(out Queue<CarrierTask> tasks, workplace);
             if (result == false)
                 return;
 
-            workplaceModel.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplaceModel.ReturnCarrier(), this));
+            workplace.Model.UseCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplace.Model.ReturnCarrier(), workplace.Model));
         }
 
-        private bool BuildCarrierTasks(out Queue<CarrierTask> tasks)
+        private bool BuildCarrierTasks(out Queue<CarrierTask> tasks, WorkplacePresenter workplace)
         {
             tasks = default;
 
             var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
-                buildingView.transform.position,
-                workplaceModel.ProcessedCommodity.Name,
-                workplaceModel.ProcessedCommodity.Quantity);
+                workplace.View.transform.position, processedCommodity.Name, processedCommodity.Quantity);
 
             var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(
-               buildingView.transform.position,
-               workplaceModel.RequiredCommodity.Name,
-               workplaceModel.RequiredCommodity.Quantity);
+               workplace.View.transform.position, requiredCommodity.Name, requiredCommodity.Quantity);
 
             if (targetWithFreeSpace == null && targetWithCommodity == null)
                 return false;
 
             var taskBuilder = new CarrierTaskBuilder();
-
-            if (workplaceModel.IsAnyCommodityToTake() && workplaceModel.HasRequiredComodity())
+            if (storage.HasCommodities(processedCommodity.Name) && storage.HasCommodities(requiredCommodity.Name))
             {
                 if (targetWithFreeSpace != null)
                     taskBuilder
-                    .AddTaskWithReservation(this, targetWithFreeSpace, workplaceModel.ProcessedCommodity, ReservationType.Space)
-                    .AddTask(targetWithFreeSpace, this);
+                    .AddTaskWithReservation(storage, targetWithFreeSpace, processedCommodity, ReservationType.Space)
+                    .AddTask(targetWithFreeSpace, storage);
                 else
                     return false;
             }
 
-            else if (!workplaceModel.IsAnyCommodityToTake() && !workplaceModel.HasRequiredComodity())
+            else if (!storage.HasCommodities(processedCommodity.Name) && !storage.HasCommodities(requiredCommodity.Name))
             {
                 if (targetWithCommodity != null)
                     taskBuilder
-                        .AddTask(this, targetWithCommodity)
-                        .AddTaskWithReservation(targetWithCommodity, this, workplaceModel.RequiredCommodity, ReservationType.Commodity);
+                        .AddTask(storage, targetWithCommodity)
+                        .AddTaskWithReservation(targetWithCommodity, storage, requiredCommodity, ReservationType.Commodity);
                 else
                     return false;
             }
 
-            else if (workplaceModel.IsAnyCommodityToTake() && !workplaceModel.HasRequiredComodity())
+            else if (storage.HasCommodities(processedCommodity.Name) && !storage.HasCommodities(requiredCommodity.Name))
             {
                 if (targetWithFreeSpace != null && targetWithCommodity != null)
                     taskBuilder
-                    .AddTaskWithReservation(this, targetWithFreeSpace, workplaceModel.ProcessedCommodity, ReservationType.Space)
+                    .AddTaskWithReservation(storage, targetWithFreeSpace, processedCommodity, ReservationType.Space)
                     .AddTask(targetWithFreeSpace, targetWithCommodity)
-                    .AddTaskWithReservation(targetWithCommodity, this, workplaceModel.RequiredCommodity, ReservationType.Commodity);
+                    .AddTaskWithReservation(targetWithCommodity, storage, requiredCommodity, ReservationType.Commodity);
                 else
                     return false;
             }

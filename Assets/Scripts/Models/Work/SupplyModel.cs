@@ -1,114 +1,102 @@
 using Models.Economy;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Views.Construction;
 
 namespace Models.Work
 {
-    public interface ISupplyTarget
-    {
-        public BuildingView GetBuildingView();
-
-        public bool TryPickCommodity(ref CommodityModel commodity);
-
-        public void DeliverCommodity(CommodityModel commodity);
-
-        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities();
-
-        public IReadOnlyCollection<CommodityModel> GetAvailableSpace();
-
-        public IReservationable GetReservationable();
-    }
-
     public class SupplyModel
     {
         public event Action OnValueChanged;
 
-        private Dictionary<ISupplyTarget, SupplyType> supplyTargets = new Dictionary<ISupplyTarget, SupplyType>();
+        public IReadOnlyDictionary<BuildingView, StorageModel> SupplyTargets => supplyTargets;
 
-        public void AddSupplyTarget(ISupplyTarget supplyTarget, SupplyType supplyType)
+        private readonly Dictionary<BuildingView, StorageModel> supplyTargets = new();
+
+        public void RegisterSupplyTarget(BuildingView building, StorageModel storage)
         {
-            supplyTargets.Add(supplyTarget, supplyType);
+            supplyTargets.Add(building, storage);
             OnValueChanged?.Invoke();
         }
 
-        public void RemoveSupplyTarget(ISupplyTarget supplyTarget)
+        public void RemoveSupplyTarget(BuildingView building)
         {
-            supplyTargets.Remove(supplyTarget);
+            supplyTargets.Remove(building);
             OnValueChanged?.Invoke();
         }
 
-        public ISupplyTarget GetClosestStorageWithCommodity(Vector3 position, CommodityName commodity, int commodityQuantity)
+        public StorageModel GetClosestStorageWithFreeSpace(Vector3 position, CommodityName commodity, int requiredSpace,
+            CommodityVisibility visibility = CommodityVisibility.Public, float maxRange = float.MaxValue)
         {
-            var storages = supplyTargets.Keys
-            .Where(target =>
+            StorageModel closest = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (var storage in supplyTargets)
             {
-                var commodities = target.GetAvailableCommodities();
-                return commodities.Any(c => c.Name == commodity && c.Quantity >= commodityQuantity);
-            })
-            .Where(target => supplyTargets[target] == SupplyType.Storage)
-            .ToList();
+                if (!storage.Value.Commodities.TryGetValue(commodity, out var model))
+                    continue;
 
-            if (storages.Count == 0)
-                return null;
+                if (model.Visibility != visibility)
+                    continue;
 
-            var closest = storages
-               .OrderBy(storage => Vector3.Distance(position, storage.GetBuildingView().transform.position))
-               .FirstOrDefault();
+                int freeSpace = model.Model.MaxQuantity - model.Model.Quantity;
+                if (freeSpace < requiredSpace)
+                    continue;
 
+                float distance = Vector3.Distance(position, storage.Key.transform.position);
+                if (distance > maxRange)
+                    continue;
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closest = storage.Value;
+                }
+            }
             return closest;
         }
 
-        public ISupplyTarget GetClosestStorageWithCommodity(Vector3 position, CommodityName commodity)
+        public StorageModel GetClosestStorageWithCommodity(Vector3 position, CommodityName commodity, int requiredQuantity,
+            CommodityVisibility visibility = CommodityVisibility.Private, float maxRange = float.MaxValue)
         {
-            var storages = supplyTargets.Keys
-            .Where(target =>
+            StorageModel closest = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (var storage in supplyTargets)
             {
-                var commodities = target.GetAvailableCommodities();
-                return commodities.Any(c => commodity.HasFlag(c.Name) && c.Quantity > 0);
-            })
-            .Where(target => supplyTargets[target] == SupplyType.Storage)
-            .ToList();
+                if (!storage.Value.Commodities.TryGetValue(commodity, out var commodityModel))
+                    continue;
 
-            if (storages.Count == 0)
-                return null;
+                if (commodityModel.Visibility != visibility)
+                    continue;
 
-            var closest = storages
-               .OrderBy(storage => Vector3.Distance(position, storage.GetBuildingView().transform.position))
-               .FirstOrDefault();
+                if (commodityModel.Model.Quantity < requiredQuantity)
+                    continue;
 
+                float distance = Vector3.Distance(position, storage.Key.transform.position);
+                if (distance > maxRange)
+                    continue;
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closest = storage.Value;
+                }
+            }
             return closest;
         }
 
-        public ISupplyTarget GetClosestStorageWithFreeSpace(Vector3 position, CommodityName commodity, int requiredSpace)
+        public BuildingView GetBuildingView(StorageModel storage)
         {
-            var storages = supplyTargets.Keys
-            .Where(target => supplyTargets[target] == SupplyType.Storage)
-            .Where(target =>
+            foreach (var target in supplyTargets)
             {
-                var commodities = target.GetAvailableSpace();
-                return commodities.Any(c => c.Name == commodity && c.Quantity >= requiredSpace);
-            })
-            .ToList();
-
-            if (storages.Count == 0)
-                return null;
-
-            var closest = storages
-               .OrderBy(storage => Vector3.Distance(position, storage.GetBuildingView().transform.position))
-               .FirstOrDefault();
-
-            return closest;
+                if (storage == target.Value)
+                {
+                    return target.Key;
+                }
+            }
+            return null;
         }
-    }
-
-    public enum SupplyType
-    {
-        None,
-        Workplace,
-        Storage,
-        DistributionPoint
     }
 }

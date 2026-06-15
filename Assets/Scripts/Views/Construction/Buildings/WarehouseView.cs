@@ -1,10 +1,5 @@
 using App.Signals;
-using Controllers.Work;
-using Models.Economy;
-using Models.Work;
-using System.Collections.Generic;
 using UnityEngine;
-using Views.Ui.Buildings;
 using Zenject;
 
 namespace Views.Construction
@@ -13,7 +8,6 @@ namespace Views.Construction
     public class WarehouseView : BuildingView
     {
         private SignalBus signalBus;
-        private StorageWorkplace workplace;
 
         [Inject]
         public void Constructor(SignalBus signalBus)
@@ -24,14 +18,13 @@ namespace Views.Construction
         public override void PlaceBuilding()
         {
             base.PlaceBuilding();
-            SetupStorage();
 
-            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.Storage));
+            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(this));
         }
 
         public override void DestroyBuilding()
         {
-            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(workplace));
+            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(this));
 
             base.DestroyBuilding();
         }
@@ -42,22 +35,8 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(transform, workplace.StorageModel));
+                //signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(transform, workplace.StorageModel));
             }
-        }
-
-        private void SetupStorage()
-        {
-            var storageModel = new StorageModel(new List<CommodityModel>()
-            {
-                new CommodityModel() { Name = CommodityName.Wheat, Quantity = 50, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Linen, Quantity = 50, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Flour, Quantity = 50, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Beer, Quantity = 50, MaxQuantity = 100 },
-                new CommodityModel() { Name = CommodityName.Clothes, Quantity = 50, MaxQuantity = 100 }
-            });
-
-            workplace = new StorageWorkplace(storageModel, this);
         }
     }
 }

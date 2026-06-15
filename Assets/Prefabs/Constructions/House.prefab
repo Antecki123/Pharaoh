@@ -69,6 +69,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BuildingFoundation: {fileID: 4769035696477502284}
+  BuildingDefinition: 6
 --- !u!1 &5052112510156538199
 GameObject:
   m_ObjectHideFlags: 0
@@ -157,6 +158,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7667613594020770244
 GameObject:

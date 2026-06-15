@@ -63,6 +63,11 @@ namespace Views.Visuals
 
             if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, layerMask))
                 material.SetVector(CursorPos, hit.point);
+
+#if UNITY_EDITOR
+            material.SetFloat(Radius, radius);
+            material.SetFloat(EdgeSoft, edgeSoftness);
+#endif
         }
 
         public void ShowGrid(bool isOn)

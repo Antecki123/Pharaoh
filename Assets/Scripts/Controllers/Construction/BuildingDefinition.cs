@@ -3,24 +3,24 @@ namespace Controllers.Construction
     public enum BuildingDefinition
     {
         None,
-        Road,
-        Cottage,
-        House,
-        Residence,
-        Granary,
-        Windmill,
         Bakery,
         Bazaar,
-        Warehouse,
-        WheatFarm,
+        Brewery,
+        Cottage,
+        Granary,
+        House,
+        IrrigationDitch,
         LinenFarm,
         Pasture,
-        IrrigationDitch,
+        Residence,
+        Road,
         ShadufStation,
-        Well,
-        Brewery,
-        WeavingMill,
         Tavern,
-        TaxCollector
+        TaxCollector,
+        Warehouse,
+        WeavingMill,
+        Well,
+        WheatFarm,
+        Windmill
     }
 }

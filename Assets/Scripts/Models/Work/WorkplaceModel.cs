@@ -1,130 +1,69 @@
-using Controllers.Construction;
 using Controllers.Work;
 using Models.Economy;
 using System;
-using System.Collections.Generic;
 
 namespace Models.Work
 {
-    public class WorkplaceModel : IEmployer
+    public class WorkplaceModel : IWorkplace
     {
-        public event Action OnValueChanged;
+        public event Action<WorkplaceModel> OnValueChanged;
 
-        public string Name { get; private set; }
+        public WorkplaceDefinition WorkplaceDefinition { get; private set; }
 
-        public CommodityModel RequiredCommodity { get; private set; }
+        public float ProcessingProgress { get; private set; } = 0;
 
-        public CommodityModel ProcessedCommodity { get; private set; }
+        public int CurrentWorkersCount { get; private set; } = 0;
 
-        public float ProcessingTime { get; private set; }
+        public bool IsCarrierAvailable { get; set; } = true;
 
-        public int MinimumWorkersCount { get; private set; }
-
-        public int MaxWorkersCount { get; private set; }
-
-        public float ProcessingProgress { get; private set; }
-
-        public int CarriersCount { get; private set; }
-
-        public int InfluenceRange { get; private set; }
-
-        public StorageModel StorageModel { get; private set; }
-
-        public IReadOnlyList<IEmployee> Workers => workers;
-
-        private List<IEmployee> workers = new List<IEmployee>();
-
-        public WorkplaceModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData, StorageModel storageModel)
+        public WorkplaceModel(WorkplaceDefinition workplaceDefinition)
         {
-            Name = buildingDefinition.ToString();
-            RequiredCommodity = economyData.RequiredCommodity != null
-                ? new CommodityModel() { Name = economyData.RequiredCommodity.Value, Quantity = economyData.RequiredCommodityQuantity }
-                : null;
-            ProcessedCommodity = economyData.ProcessedCommodity != null
-                ? new CommodityModel() { Name = economyData.ProcessedCommodity.Value, Quantity = economyData.ProcessedCommodityQuantity }
-                : null;
-            ProcessingTime = economyData.ProcessingTime;
-            MinimumWorkersCount = economyData.MinimumWorkersCount;
-            MaxWorkersCount = economyData.MaxWorkersCount;
-            CarriersCount = economyData.CarriersCount;
-            InfluenceRange = economyData.InfluenceRange;
-            StorageModel = storageModel;
-
-            StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();
+            WorkplaceDefinition = workplaceDefinition;
         }
 
-        public bool IsAnyCommodityToTake()
+        public void AddWorker()
         {
-            foreach (var commodity in StorageModel.Storage)
-            {
-                if (commodity.Name == ProcessedCommodity.Name && commodity.Quantity > 0)
-                    return true;
-            }
-
-            return false;
+            CurrentWorkersCount++;
+            OnValueChanged?.Invoke(this);
         }
 
-        public bool HasRequiredComodity()
+        public void RemoveWorker()
         {
-            foreach (var commodity in StorageModel.Storage)
-            {
-                if (commodity.Name == RequiredCommodity.Name && commodity.Quantity >= RequiredCommodity.Quantity)
-                    return true;
-            }
-
-            return false;
-        }
-
-        public bool HasStorageRoom()
-        {
-            var availableSpace = StorageModel.GetAvailableSpace();
-            foreach (var space in availableSpace)
-            {
-                if (space.Name == ProcessedCommodity.Name && space.Quantity >= ProcessedCommodity.Quantity)
-                    return true;
-            }
-
-            return false;
-        }
-
-        public void AddWorker(IEmployee worker)
-        {
-            workers.Add(worker);
-            OnValueChanged?.Invoke();
-        }
-
-        public void RemoveWorker(IEmployee worker)
-        {
-            workers.Remove(worker);
-            OnValueChanged?.Invoke();
+            CurrentWorkersCount--;
+            OnValueChanged?.Invoke(this);
         }
 
         public void UseCarrier()
         {
-            CarriersCount--;
-            OnValueChanged?.Invoke();
+            IsCarrierAvailable = false;
+            OnValueChanged?.Invoke(this);
         }
 
         public void ReturnCarrier()
         {
-            CarriersCount++;
-            OnValueChanged?.Invoke();
+            IsCarrierAvailable = true;
+            OnValueChanged?.Invoke(this);
         }
 
         public void SetProcessingProgress(float value)
         {
             ProcessingProgress = value;
-            OnValueChanged?.Invoke();
+            OnValueChanged?.Invoke(this);
         }
+    }
 
-        public bool HasAvailableSpot()
-        {
-            return workers.Count < MaxWorkersCount;
-        }
+    public struct WorkplaceDefinition
+    {
+        public string Name { get; set; }
 
-        public ICollection<IEmployee> GetWorkers()
-        {
-            return workers;
-        }
+        public CommodityModel RequiredCommodity { get; set; }
+
+        public CommodityModel ProcessedCommodity { get; set; }
+
+        public float ProcessingTime { get; set; }
+
+        public int MinimumWorkersCount { get; set; }
+
+        public int MaxWorkersCount { get; set; }
     }
 }

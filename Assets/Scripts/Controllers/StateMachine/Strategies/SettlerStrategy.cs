@@ -25,7 +25,7 @@ namespace Controllers.Ai.Strategy
             healing = healingFactory.Create(settler);
 
             AddAnyTransition(resting, () => settler.SettlerModel.SettlerNeeds.Rest.Value <= 0 && settler.SettlerState == SettlerState.Idle && settler.SettlerModel.Habitation != null);
-            AddAnyTransition(working, () => settler.SettlerModel.SettlerNeeds.Work.Value <= 0 && settler.SettlerState == SettlerState.Idle && settler.SettlerModel.Workplace != null);
+            AddAnyTransition(working, () => settler.SettlerModel.SettlerNeeds.Work.Value <= 0 && settler.SettlerState == SettlerState.Idle && settler.SettlerModel.Emplyer != null);
             //AddAnyTransition(leasure, () => settler.SettlerModel.SettlerNeeds.Entertainment.Value <= 0f && settler.SettlerState == SettlerState.Idle);
             //AddAnyTransition(pray, () => settler.SettlerModel.SettlerNeeds.Pray.Value <= 0f && settler.SettlerState == SettlerState.Idle);
             //AddAnyTransition(healing, () => settler.SettlerModel.SettlerNeeds.Health.Value <= 0f && settler.SettlerState == SettlerState.Idle);

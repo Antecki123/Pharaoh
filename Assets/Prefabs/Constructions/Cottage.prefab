@@ -69,6 +69,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BuildingFoundation: {fileID: 2035248165744080307}
+  BuildingDefinition: 4
 --- !u!1 &7667613594020770244
 GameObject:
   m_ObjectHideFlags: 0

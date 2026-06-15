@@ -405,6 +405,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaxCollectorView
   BuildingFoundation: {fileID: 6443797191231707936}
+  BuildingDefinition: 14
 --- !u!1 &5831225367854586648
 GameObject:
   m_ObjectHideFlags: 0

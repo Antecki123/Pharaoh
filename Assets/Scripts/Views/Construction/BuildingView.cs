@@ -1,5 +1,7 @@
 using Controllers;
+using Controllers.Construction;
 using Controllers.Work;
+using System;
 using UnityEngine;
 
 namespace Views.Construction
@@ -7,11 +9,15 @@ namespace Views.Construction
     public class BuildingView : MonoBehaviour, IInteractable, IServiceReceiver
     {
         public BuildingFoundationView BuildingFoundation;
+        public BuildingDefinition BuildingDefinition;
+
+        public Guid BuildingId { get; private set; }
 
         protected bool isPlaced;
 
         public virtual void PlaceBuilding()
         {
+            BuildingId = Guid.NewGuid();
             isPlaced = true;
 
             if (BuildingFoundation != null)

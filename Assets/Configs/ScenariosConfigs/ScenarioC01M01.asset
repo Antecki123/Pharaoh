@@ -22,37 +22,37 @@ MonoBehaviour:
   - buildingDefinition: 2
     isAvailable: 1
   - buildingDefinition: 3
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 4
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 5
     isAvailable: 1
   - buildingDefinition: 6
     isAvailable: 1
   - buildingDefinition: 7
-    isAvailable: 1
+    isAvailable: 0
   - buildingDefinition: 8
     isAvailable: 1
   - buildingDefinition: 9
     isAvailable: 1
   - buildingDefinition: 10
-    isAvailable: 1
-  - buildingDefinition: 11
     isAvailable: 0
+  - buildingDefinition: 11
+    isAvailable: 1
   - buildingDefinition: 12
     isAvailable: 0
   - buildingDefinition: 13
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 14
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 15
     isAvailable: 1
   - buildingDefinition: 16
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 17
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 18
-    isAvailable: 0
+    isAvailable: 1
   - buildingDefinition: 19
     isAvailable: 1
   Objectives:
@@ -64,7 +64,7 @@ MonoBehaviour:
     - rid: 4604107804892201043
       type: {class: ReachPopulationObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
       data:
-        PopulationCount: 100
+        PopulationCount: 1000
     - rid: 4604107804892201044
       type: {class: GatherGoldObjectiveDefinition, ns: Models.Gameplay, asm: Assembly-CSharp}
       data:

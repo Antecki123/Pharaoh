@@ -1,95 +1,95 @@
-using Controllers.Construction;
 using Controllers.Work;
 using Models.Economy;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
 
 namespace Models.Work
 {
-    public class DistributionPointModel : IEmployer
+    public class DistributionPointModel : IWorkplace
     {
-        public event Action OnValueChanged;
+        public event Action<DistributionPointModel> OnValueChanged;
 
-        public string Name { get; private set; }
+        public DistributionWorkplaceDefinition WorkplaceDefinition { get; private set; }
 
-        public int MinimumWorkersCount { get; private set; }
-
-        public int MaxWorkersCount { get; private set; }
-
-        public int CarriersCount { get; private set; } = 1;
-
-        public int ServiceAgentsCount { get; private set; } = 1;
-
-        public StorageModel StorageModel { get; private set; }
-
-        public CommodityModel DistributedCommodity { get; private set; }
+        public InfluenceData InfluenceData { get; private set; }
 
         public IService Service { get; private set; }
 
-        public IReadOnlyList<IEmployee> Workers => workers;
+        public float ProcessingProgress { get; private set; } = 0;
 
-        private List<IEmployee> workers = new List<IEmployee>();
+        public int CurrentWorkersCount { get; private set; } = 0;
 
-        public DistributionPointModel(BuildingDefinition buildingDefinition, WorkplaceEconomyData economyData,
-            StorageModel storageModel, IService service)
+        public bool IsCarrierAvailable { get; set; } = true;
+
+        public bool IsServiceAgentAvailable { get; set; } = true;
+
+
+        public HashSet<Vector2Int> InfluencedTiles = new HashSet<Vector2Int>();
+
+        public Dictionary<Type, float> MunicipalServices = new()
+            {
+                { typeof(FireProtectionService), 1f }
+            };
+
+        public DistributionPointModel(DistributionWorkplaceDefinition workplaceDefinition)
         {
-            Name = buildingDefinition.ToString();
-            MinimumWorkersCount = economyData.MinimumWorkersCount;
-            MaxWorkersCount = economyData.MaxWorkersCount;
-            StorageModel = storageModel;
-            DistributedCommodity = economyData.RequiredCommodity == null
-                ? null
-                : StorageModel.Storage.FirstOrDefault(c => c.Name == economyData.RequiredCommodity.Value);
-            Service = service;
-
-            StorageModel.OnValueChanged += () => OnValueChanged?.Invoke();
+            WorkplaceDefinition = workplaceDefinition;
         }
 
-        public void AddWorker(IEmployee worker)
+        public void AddWorker()
         {
-            workers.Add(worker);
-            OnValueChanged?.Invoke();
+            CurrentWorkersCount++;
+            OnValueChanged?.Invoke(this);
         }
 
-        public void RemoveWorker(IEmployee worker)
+        public void RemoveWorker()
         {
-            workers.Remove(worker);
-            OnValueChanged?.Invoke();
+            CurrentWorkersCount--;
+            OnValueChanged?.Invoke(this);
         }
 
         public void UseCarrier()
         {
-            CarriersCount--;
-            OnValueChanged?.Invoke();
+            IsCarrierAvailable = false;
+            OnValueChanged?.Invoke(this);
         }
 
         public void ReturnCarrier()
         {
-            CarriersCount++;
-            OnValueChanged?.Invoke();
+            IsCarrierAvailable = true;
+            OnValueChanged?.Invoke(this);
         }
 
         public void UseServiceAgent()
         {
-            ServiceAgentsCount--;
-            OnValueChanged?.Invoke();
+            IsServiceAgentAvailable = false;
+            OnValueChanged?.Invoke(this);
         }
 
         public void ReturnServiceAgent()
         {
-            ServiceAgentsCount++;
-            OnValueChanged?.Invoke();
+            IsServiceAgentAvailable = true;
+            OnValueChanged?.Invoke(this);
         }
 
-        public bool HasAvailableSpot()
+        public void SetProcessingProgress(float value)
         {
-            return workers.Count < MaxWorkersCount;
+            ProcessingProgress = value;
+            OnValueChanged?.Invoke(this);
         }
+    }
 
-        public ICollection<IEmployee> GetWorkers()
-        {
-            return workers;
-        }
+    public struct DistributionWorkplaceDefinition
+    {
+        public string Name { get; set; }
+
+        public CommodityModel RequiredCommodity { get; set; }
+
+        public float ProcessingTime { get; set; }
+
+        public int MinimumWorkersCount { get; set; }
+
+        public int MaxWorkersCount { get; set; }
     }
 }

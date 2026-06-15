@@ -30,7 +30,7 @@ namespace Views.Ui.Buildings
 
         private void RefreshUI()
         {
-            nameLabel.text = "Storage";
+            /*nameLabel.text = "Storage";
 
             commoditiesToShow.ForEach(x => Destroy(x.gameObject));
             commoditiesToShow.Clear();
@@ -45,7 +45,7 @@ namespace Views.Ui.Buildings
                 commoditiesToShow[i].RefreshUI(storageModel.Storage[i].Name.ToString(),
                     storageModel.Storage[i].Quantity,
                     storageModel.Storage[i].MaxQuantity);
-            }
+            }*/
         }
     }
 }

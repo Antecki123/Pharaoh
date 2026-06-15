@@ -1,4 +1,3 @@
-using Models.Economy;
 using Models.Settler;
 using UnityEngine;
 using Views.Construction;
@@ -12,19 +11,17 @@ namespace Controllers.Ai.Strategy
         public class Factory : PlaceholderFactory<SettlerView, WorkState> { }
 
         private readonly SettlerView settlerView;
-        private readonly EmploymentModel employmentModel;
 
         private BuildingView locationOfNeedFulfillment;
 
-        public WorkState(SettlerView settlerView, EmploymentModel employmentModel)
+        public WorkState(SettlerView settlerView)
         {
             this.settlerView = settlerView;
-            this.employmentModel = employmentModel;
         }
 
         public void OnEnter()
         {
-            locationOfNeedFulfillment = employmentModel.Workplaces[settlerView.SettlerModel.Workplace];
+            locationOfNeedFulfillment = settlerView.SettlerModel.Emplyer.BuildingView;
 
             if (locationOfNeedFulfillment == null)
             {

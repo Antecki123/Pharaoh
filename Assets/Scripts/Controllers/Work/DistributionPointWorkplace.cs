@@ -1,9 +1,8 @@
 using App.Signals;
+using Controllers.Construction;
 using Models.Construction;
 using Models.Economy;
-using Models.Helpers;
 using Models.Work;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Views.Construction;
@@ -12,130 +11,125 @@ using Zenject;
 
 namespace Controllers.Work
 {
-    public class DistributionPointWorkplace : IWorkplace, ISupplyTarget
+    public class DistributionPointWorkplace
     {
-        public DistributionPointModel DistributionModel => distributionModel;
-        public HashSet<Vector2Int> InfluencedTiles => influencedTiles;
+        public class Factory : PlaceholderFactory<DistributionPointWorkplace> { }
 
         private readonly SignalBus signalBus;
         private readonly SupplyModel supplyModel;
-        private readonly DistributionPointModel distributionModel;
         private readonly ConstructionGrid constructionGrid;
-        private readonly BuildingView buildingView;
+        private readonly WorkplaceEconomyImporter economyImporter;
 
-        private readonly Dictionary<Type, float> municipalServices;
+        private readonly List<DistributionWorkplacePresenter> workplaces = new();
 
-        private Timer resourceRefreshTimer;
-
-        private HashSet<Vector2Int> influencedTiles = new HashSet<Vector2Int>();
-        private int influenceDistance;
+        private StorageModel storage;
+        private CommodityModel requiredCommodity;
 
         public DistributionPointWorkplace(SignalBus signalBus, SupplyModel supplyModel,
-            DistributionPointModel distributionModel, ConstructionGrid constructionGrid,
-            BuildingView buildingView, int influenceDistance)
+            ConstructionGrid constructionGrid, WorkplaceEconomyImporter economyImporter)
         {
             this.signalBus = signalBus;
             this.supplyModel = supplyModel;
-            this.distributionModel = distributionModel;
             this.constructionGrid = constructionGrid;
-            this.buildingView = buildingView;
-            this.influenceDistance = influenceDistance;
+            this.economyImporter = economyImporter;
+        }
 
-            resourceRefreshTimer = new Timer(5f);
+        public IWorkplace RegisterWorkplace(BuildingView buildingView)
+        {
+            var workplaceModel = CreateModel(buildingView.BuildingDefinition);
+            var workplace = new DistributionWorkplacePresenter(workplaceModel, buildingView);
+            workplaces.Add(workplace);
 
-            municipalServices = new()
+            constructionGrid.OnValueChanged += () => CalculateInfluenceRange(workplace);
+            CalculateInfluenceRange(workplace);
+
+            /*workplace.Model.MunicipalServices = new()
             {
                 { typeof(FireProtectionService), 1f }
+            };*/
+
+            return workplace.Model;
+        }
+
+        public void UnregisterWorkplace(BuildingView buildingView)
+        {
+            foreach (var workplace in workplaces)
+            {
+                if (workplace.View == buildingView)
+                {
+                    constructionGrid.OnValueChanged -= () => CalculateInfluenceRange(workplace);
+                    workplaces.Remove(workplace);
+                }
+            }
+        }
+
+        public void Tick()
+        {
+            foreach (var workplace in workplaces)
+                Work(workplace);
+        }
+
+        private DistributionPointModel CreateModel(BuildingDefinition buildingDefinition)
+        {
+            var economyData = economyImporter.EconomyData[buildingDefinition];
+            var definition = new DistributionWorkplaceDefinition()
+            {
+                Name = buildingDefinition.ToString(),
+
+                RequiredCommodity = economyData.RequiredCommodity != null
+                ? new CommodityModel(economyData.RequiredCommodity.Value, economyData.RequiredCommodityQuantity, 0)
+                : null,
+
+                ProcessingTime = economyData.ProcessingTime,
+                MinimumWorkersCount = economyData.MinimumWorkersCount,
+                MaxWorkersCount = economyData.MaxWorkersCount
             };
 
-            constructionGrid.OnValueChanged += CalculateInfluenceRange;
-            CalculateInfluenceRange();
+            return new DistributionPointModel(definition);
         }
 
-        public BuildingView GetBuildingView()
+        private void Work(DistributionWorkplacePresenter workplace)
         {
-            return buildingView;
-        }
+            storage = supplyModel.SupplyTargets[workplace.View];
+            requiredCommodity = workplace.Model.WorkplaceDefinition.RequiredCommodity;
 
-        public bool TryPickCommodity(ref CommodityModel commodity)
-        {
-            return false;
-        }
-
-        public void DeliverCommodity(CommodityModel commodity)
-        {
-            distributionModel.StorageModel.AddCommodity(commodity);
-        }
-
-        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
-        {
-            return distributionModel.StorageModel.GetAvailableCommodities();
-        }
-
-        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
-        {
-            return distributionModel.StorageModel.GetAvailableSpace();
-        }
-
-        public IReservationable GetReservationable()
-        {
-            return distributionModel.StorageModel;
-        }
-
-        public IEmployer GetEmployer()
-        {
-            return distributionModel;
-        }
-
-        public void DestroyWorkplace()
-        {
-            signalBus.Fire(new WorkplaceSignals.WorklplaceDestroyed(this));
-        }
-
-        public void Work()
-        {
-            if (distributionModel.Workers.Count < distributionModel.MinimumWorkersCount)
+            if (workplace.Model.CurrentWorkersCount < workplace.Model.WorkplaceDefinition.MinimumWorkersCount)
                 return;
 
-            resourceRefreshTimer.Tick(Time.deltaTime);
-
-            if (!resourceRefreshTimer.IsFinished)
-                return;
-
-            if (distributionModel.DistributedCommodity == null)
+            if (workplace.Model.WorkplaceDefinition.RequiredCommodity == null)
             {
-                DistributeResources();
-                resourceRefreshTimer.Reset();
+                DistributeResources(workplace);
             }
             else
             {
-                if (distributionModel.DistributedCommodity.Quantity > 0)
+                if (workplace.Model.WorkplaceDefinition.RequiredCommodity.Quantity > 0)
                 {
-                    if (distributionModel.ServiceAgentsCount <= 0)
+                    if (!workplace.Model.IsServiceAgentAvailable)
                         return;
 
-                    DistributeResources();
-                    distributionModel.StorageModel.RemoveCommodity(new CommodityModel()
+                    DistributeResources(workplace);
+                    storage.RemoveCommodity(new CommodityModel()
                     {
-                        Name = distributionModel.DistributedCommodity.Name,
+                        Name = workplace.Model.WorkplaceDefinition.RequiredCommodity.Name,
                         Quantity = 1
                     });
                 }
                 else
                 {
-                    if (distributionModel.CarriersCount <= 0)
+                    if (!workplace.Model.IsCarrierAvailable)
                         return;
 
                     ScheduleTransport(new CommodityModel()
                     {
-                        Name = distributionModel.DistributedCommodity.Name,
-                        Quantity = distributionModel.DistributedCommodity.MaxQuantity
-                    });
+                        Name = workplace.Model.WorkplaceDefinition.RequiredCommodity.Name,
+                        Quantity = workplace.Model.WorkplaceDefinition.RequiredCommodity.Quantity
+                    },
+                    workplace);
                 }
             }
         }
 
-        public void ReceiveService(IService service)
+        /*public void ReceiveService(IService service)
         {
             switch (service)
             {
@@ -143,17 +137,17 @@ namespace Controllers.Work
                     municipalServices[fireProtection.GetType()] = fireProtection.Value;
                     break;
             }
-        }
+        }*/
 
-        private void CalculateInfluenceRange()
+        private void CalculateInfluenceRange(DistributionWorkplacePresenter workplace)
         {
-            influencedTiles.Clear();
+            workplace.Model.InfluencedTiles.Clear();
 
             var queue = new Queue<(Vector2Int pos, int distance)>();
 
-            foreach (var tile in constructionGrid.GetAllConnectedRoadTiles(buildingView))
+            foreach (var tile in constructionGrid.GetAllConnectedRoadTiles(workplace.View))
             {
-                influencedTiles.Add(tile);
+                workplace.Model.InfluencedTiles.Add(tile);
                 queue.Enqueue((tile, 0));
             }
 
@@ -161,7 +155,7 @@ namespace Controllers.Work
             {
                 var (current, dist) = queue.Dequeue();
 
-                if (dist >= influenceDistance)
+                if (dist >= workplace.Model.InfluenceData.InfluenceRange)
                     continue;
 
                 Vector2Int[] neighbours =
@@ -179,54 +173,51 @@ namespace Controllers.Work
                     if (neighbor == null || neighbor.TileType != TileType.Road)
                         continue;
 
-                    if (influencedTiles.Contains(neighbor.Position))
+                    if (workplace.Model.InfluencedTiles.Contains(neighbor.Position))
                         continue;
 
-                    influencedTiles.Add(neighbor.Position);
+                    workplace.Model.InfluencedTiles.Add(neighbor.Position);
                     queue.Enqueue((neighbor.Position, dist + 1));
                 }
             }
         }
 
-        private void DistributeResources()
+        private void DistributeResources(DistributionWorkplacePresenter workplace)
         {
-            if (distributionModel.ServiceAgentsCount == 0)
+            if (!workplace.Model.IsServiceAgentAvailable)
                 return;
 
-            distributionModel.UseServiceAgent();
+            workplace.Model.UseServiceAgent();
 
             var serviceAgentPayload = new ServiceAgentPayload()
             {
-                Origin = buildingView,
-                Service = distributionModel.Service,
-                AvailableTiles = influencedTiles
+                Origin = workplace.View,
+                Service = workplace.Model.Service,
+                AvailableTiles = workplace.Model.InfluencedTiles
             };
 
-            void OnAgentReturn()
-            {
-                resourceRefreshTimer.Reset();
-                distributionModel.ReturnServiceAgent();
-            }
+            void OnAgentReturn() => workplace.Model.ReturnServiceAgent();
 
-            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(serviceAgentPayload, OnAgentReturn, this));
+            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(serviceAgentPayload, OnAgentReturn, null));
         }
 
-        private void ScheduleTransport(CommodityModel commodity)
+        private void ScheduleTransport(CommodityModel commodity, DistributionWorkplacePresenter workplace)
         {
-            if (distributionModel.CarriersCount == 0)
+            if (!workplace.Model.IsCarrierAvailable)
                 return;
 
-            var result = BuildCarrierTasks(commodity, out Queue<CarrierTask> tasks);
+            var result = BuildCarrierTasks(commodity, out Queue<CarrierTask> tasks, workplace);
             if (result == false)
                 return;
 
-            distributionModel.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => distributionModel.ReturnCarrier(), this));
+            workplace.Model.UseCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplace.Model.ReturnCarrier(), workplace.Model));
         }
 
-        private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks)
+        private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks, DistributionWorkplacePresenter workplace)
         {
-            var targetWithCommodity = supplyModel.GetClosestStorageWithCommodity(buildingView.transform.position, commodity.Name);
+            var targetWithCommodity = supplyModel
+                .GetClosestStorageWithCommodity(workplace.View.transform.position, commodity.Name, commodity.Quantity);
 
             if (targetWithCommodity == null)
             {
@@ -236,11 +227,24 @@ namespace Controllers.Work
 
             var taskBuilder = new CarrierTaskBuilder();
             taskBuilder
-                .AddTask(this, targetWithCommodity)
-                .AddTaskWithReservation(targetWithCommodity, this, commodity, ReservationType.Commodity);
+                .AddTask(null, targetWithCommodity)
+                .AddTaskWithReservation(targetWithCommodity, null, commodity, ReservationType.Commodity);
 
             tasks = new Queue<CarrierTask>(taskBuilder.Tasks);
             return true;
+        }
+    }
+
+    public struct DistributionWorkplacePresenter
+    {
+        public DistributionPointModel Model { get; private set; }
+
+        public BuildingView View { get; private set; }
+
+        public DistributionWorkplacePresenter(DistributionPointModel model, BuildingView view)
+        {
+            Model = model;
+            View = view;
         }
     }
 }

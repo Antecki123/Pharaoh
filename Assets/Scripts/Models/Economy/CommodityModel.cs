@@ -6,6 +6,15 @@ namespace Models.Economy
         public int Quantity { get; set; }
         public int MaxQuantity { get; set; } = int.MaxValue;
 
+        public CommodityModel() { }
+
+        public CommodityModel(CommodityName name, int quantity, int maxQuantity)
+        {
+            Name = name;
+            Quantity = quantity;
+            MaxQuantity = maxQuantity;
+        }
+
         public static CommodityModel Clone(CommodityModel other)
         {
             return new CommodityModel()

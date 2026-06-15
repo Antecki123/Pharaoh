@@ -27,8 +27,8 @@ namespace Views.Ui.Buildings
 
         private void RefreshUI()
         {
-            nameLabel.text = distributionModel.Name;
-            workersLabel.text = $"Current workers: {distributionModel.Workers.Count}/{distributionModel.MaxWorkersCount}";
+            //nameLabel.text = distributionModel.Name;
+            //workersLabel.text = $"Current workers: {distributionModel.Workers.Count}/{distributionModel.MaxWorkersCount}";
 
             commoditiesToShow.ForEach(x => Destroy(x));
             commoditiesToShow.Clear();

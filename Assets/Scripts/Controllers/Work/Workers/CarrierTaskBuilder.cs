@@ -1,8 +1,6 @@
 using Models.Economy;
-using Models.Work;
 using System;
 using System.Collections.Generic;
-using Views.Settler.Workers;
 
 namespace Controllers.Work
 {
@@ -12,28 +10,48 @@ namespace Controllers.Work
 
         private Queue<CarrierTask> tasks = new Queue<CarrierTask>();
 
-        public CarrierTaskBuilder AddTask(ISupplyTarget origin, ISupplyTarget target)
+        public CarrierTaskBuilder AddTask(StorageModel origin, StorageModel target)
         {
             tasks.Enqueue(new CarrierTask(origin, target, null));
             return this;
         }
 
-        public CarrierTaskBuilder AddTaskWithReservation(ISupplyTarget origin, ISupplyTarget target, CommodityModel commodity, ReservationType reservationType)
+        public CarrierTaskBuilder AddTaskWithReservation(StorageModel origin, StorageModel target, CommodityModel commodity,
+            ReservationType reservationType)
         {
             var reservationId = Guid.NewGuid();
 
             if (reservationType == ReservationType.Commodity)
             {
-                origin.GetReservationable().SetCommodityReservation(reservationId, commodity);
+                origin.SetCommodityReservation(reservationId, commodity);
                 tasks.Enqueue(new CarrierTask(origin, target, commodity, reservationId));
             }
             else if (reservationType == ReservationType.Space)
             {
-                origin.GetReservationable().SetSpaceReservation(reservationId, commodity);
+                origin.SetSpaceReservation(reservationId, commodity);
                 tasks.Enqueue(new CarrierTask(origin, target, commodity, reservationId));
             }
 
             return this;
+        }
+    }
+
+    public class CarrierTask
+    {
+        public StorageModel Origin { get; }
+
+        public StorageModel Target { get; }
+
+        public CommodityModel Commodity { get; }
+
+        public Guid? ReservationId { get; }
+
+        public CarrierTask(StorageModel origin, StorageModel target, CommodityModel commodity, Guid? reservationId = null)
+        {
+            Origin = origin;
+            Target = target;
+            Commodity = commodity;
+            ReservationId = reservationId;
         }
     }
 }

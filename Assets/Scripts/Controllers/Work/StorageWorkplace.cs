@@ -7,7 +7,7 @@ using Views.Construction;
 
 namespace Controllers.Work
 {
-    public class StorageWorkplace : ISupplyTarget
+    public class StorageWorkplace
     {
         public StorageModel StorageModel => storageModel;
 
@@ -31,8 +31,8 @@ namespace Controllers.Work
             var needed = commodity.Quantity;
             var taken = 0;
 
-            var matching = storageModel.Storage
-                .Where(c => commodityName.HasFlag(c.Name) && c.Quantity > 0)
+            var matching = storageModel.Commodities.Values
+                .Where(c => commodityName.HasFlag(c.Model.Name) && c.Model.Quantity > 0)
                 .ToList();
 
             if (!matching.Any())
@@ -43,13 +43,13 @@ namespace Controllers.Work
                 if (needed <= 0)
                     break;
 
-                var amount = Mathf.Min(stored.Quantity, needed);
+                var amount = Mathf.Min(stored.Model.Quantity, needed);
                 needed -= amount;
                 taken += amount;
 
                 storageModel.RemoveCommodity(new CommodityModel
                 {
-                    Name = stored.Name,
+                    Name = stored.Model.Name,
                     Quantity = amount
                 });
             }
