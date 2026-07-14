@@ -80,6 +80,7 @@ namespace App.Registrators
             Container.BindFactory<MaterialProcessingWorkplace, MaterialProcessingWorkplace.Factory>().AsTransient();
             Container.BindFactory<DistributionPointWorkplace, DistributionPointWorkplace.Factory>().AsTransient();
             Container.BindFactory<FarmWorkplace, FarmWorkplace.Factory>().AsTransient();
+            Container.BindFactory<StorageWorkplace, StorageWorkplace.Factory>().AsTransient();
 
             contextHolder.Container = Container;
 

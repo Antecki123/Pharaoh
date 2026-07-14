@@ -1,4 +1,4 @@
-BuildingDefinition;SizeX;SizeYp;Cost
+BuildingDefinition;SizeX;SizeY;Cost
 Road;1;1;2
 Cottage;2;2;15
 House;2;2;25

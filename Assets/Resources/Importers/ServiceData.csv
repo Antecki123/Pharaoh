@@ -1,0 +1,7 @@
+BuildingDefinition;ServiceType;Value;Requirement
+Well;HabitationRequirementService;1;Water
+Tavern;HabitationRequirementService;1;Tavern
+Bazaar;HabitationRequirementService;1;Food
+Bazaar;HabitationRequirementService;1;Clothes
+Bazaar;HabitationRequirementService;1;Pottery
+TaxCollector;TaxCollectionService1;1;

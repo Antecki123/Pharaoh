@@ -1,7 +1,5 @@
 using App.Signals;
-using Controllers.Construction;
 using Controllers.Work;
-using Models.Work;
 using UnityEngine;
 using Zenject;
 
@@ -11,17 +9,11 @@ namespace Views.Construction
     public class BazaarView : BuildingView
     {
         private SignalBus signalBus;
-        private SupplyModel supplyModel;
-
-        private readonly BuildingDefinition buildingDefinition = BuildingDefinition.Bazaar;
 
         [Inject]
-        public void Constructor(SignalBus signalBus, SupplyModel supplyModel)
+        public void Constructor(SignalBus signalBus)
         {
             this.signalBus = signalBus;
-            this.supplyModel = supplyModel;
-
-            BuildingDefinition = BuildingDefinition.Bazaar;
         }
 
         public override void PlaceBuilding()
@@ -29,13 +21,13 @@ namespace Views.Construction
             base.PlaceBuilding();
 
             signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(this));
-            //signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(workplace, SupplyType.DistributionPoint));
+            signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(this));
         }
 
         public override void DestroyBuilding()
         {
             signalBus.Fire(new WorkplaceSignals.UnregisterWorkplace(this));
-            //signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(workplace));
+            signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(this));
 
             base.DestroyBuilding();
         }

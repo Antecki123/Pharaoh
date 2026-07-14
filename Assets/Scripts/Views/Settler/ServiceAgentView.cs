@@ -31,7 +31,7 @@ namespace Views.Settler.Workers
         private float remainingSteps;
         private bool isReturning;
 
-        private IService service;
+        private List<IService> services;
 
         private NpcMovementHandler movementHandler;
         private Dictionary<Node<Vector3>, int> visitCounts = new Dictionary<Node<Vector3>, int>();
@@ -56,11 +56,11 @@ namespace Views.Settler.Workers
             movementHandler = new NpcMovementHandler(navigationGraph, constructionGrid, baseMovementSpeed);
         }
 
-        public void Init(ServiceAgentPayload agentPayload, IService service)
+        public void Init(ServiceAgentPayload agentPayload, List<IService> services)
         {
             assignedBuilding = agentPayload.Origin;
             availableTiles = agentPayload.AvailableTiles;
-            this.service = service;
+            this.services = services;
 
             visitCounts.Clear();
             remainingSteps = 20;
@@ -217,8 +217,11 @@ namespace Views.Settler.Workers
                 if (buildingView == null)
                     continue;
 
-                if (buildingView.TryGetComponent(out IServiceReceiver serviceReceiver))
-                    serviceReceiver.ReceiveService(service);
+                foreach (var service in services)
+                {
+                    if (buildingView.TryGetComponent(out IServiceReceiver serviceReceiver))
+                        serviceReceiver.ReceiveService(service);
+                }
             }
         }
     }
@@ -227,7 +230,7 @@ namespace Views.Settler.Workers
     {
         public BuildingView Origin { get; set; }
 
-        public IService Service { get; set; }
+        public List<IService> Services { get; set; }
 
         public HashSet<Vector2Int> AvailableTiles { get; set; }
     }

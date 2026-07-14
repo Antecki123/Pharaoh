@@ -93,16 +93,14 @@ namespace Controllers.Work
                 return;
             }
 
-            if (storage.HasCommodities(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name)
-                || !storage.HasCommodities(workplace.Model.WorkplaceDefinition.RequiredCommodity.Name))
+            if (storage.HasCommodities(processedCommodity.Name) || !storage.HasCommodities(requiredCommodity.Name))
                 ScheduleTransport(workplace);
 
             if (workplace.Model.CurrentWorkersCount < workplace.Model.WorkplaceDefinition.MinimumWorkersCount)
                 return;
 
-            if (!storage.HasCommodities(workplace.Model.WorkplaceDefinition.RequiredCommodity.Name)
-                || !storage.HasStorageRoom(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name,
-                workplace.Model.WorkplaceDefinition.ProcessedCommodity.Quantity))
+            if (!storage.HasCommodities(requiredCommodity.Name) 
+                || !storage.HasStorageRoom(processedCommodity.Name, processedCommodity.Quantity))
                 return;
 
             var efficiency = Mathf.Clamp01((float)workplace.Model.CurrentWorkersCount / workplace.Model.WorkplaceDefinition.MaxWorkersCount);
@@ -114,20 +112,20 @@ namespace Controllers.Work
             {
                 storage.RemoveCommodity(new CommodityModel
                 {
-                    Name = workplace.Model.WorkplaceDefinition.RequiredCommodity.Name,
-                    Quantity = workplace.Model.WorkplaceDefinition.RequiredCommodity.Quantity
+                    Name = requiredCommodity.Name,
+                    Quantity = requiredCommodity.Quantity
                 });
 
                 storage.AddCommodity(new CommodityModel
                 {
-                    Name = workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name,
-                    Quantity = workplace.Model.WorkplaceDefinition.ProcessedCommodity.Quantity
+                    Name = processedCommodity.Name,
+                    Quantity = processedCommodity.Quantity
                 });
 
                 workplace.Model.SetProcessingProgress(0);
 
-                if (storage.HasCommodities(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name)
-                    || !storage.HasCommodities(workplace.Model.WorkplaceDefinition.RequiredCommodity.Name))
+                if (storage.HasCommodities(processedCommodity.Name)
+                    || !storage.HasCommodities(requiredCommodity.Name))
                     ScheduleTransport(workplace);
             }
         }
@@ -142,7 +140,9 @@ namespace Controllers.Work
                 return;
 
             workplace.Model.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplace.Model.ReturnCarrier(), workplace.Model));
+
+            void OnCarrierReturn() => workplace.Model.ReturnCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, OnCarrierReturn, workplace.Model));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks, WorkplacePresenter workplace)

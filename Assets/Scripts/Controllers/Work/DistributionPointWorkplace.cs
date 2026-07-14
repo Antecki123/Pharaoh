@@ -3,6 +3,7 @@ using Controllers.Construction;
 using Models.Construction;
 using Models.Economy;
 using Models.Work;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Views.Construction;
@@ -43,11 +44,6 @@ namespace Controllers.Work
             constructionGrid.OnValueChanged += () => CalculateInfluenceRange(workplace);
             CalculateInfluenceRange(workplace);
 
-            /*workplace.Model.MunicipalServices = new()
-            {
-                { typeof(FireProtectionService), 1f }
-            };*/
-
             return workplace.Model;
         }
 
@@ -72,6 +68,7 @@ namespace Controllers.Work
         private DistributionPointModel CreateModel(BuildingDefinition buildingDefinition)
         {
             var economyData = economyImporter.EconomyData[buildingDefinition];
+            var serviceData = economyImporter.ServiceData[buildingDefinition];
             var definition = new DistributionWorkplaceDefinition()
             {
                 Name = buildingDefinition.ToString(),
@@ -80,64 +77,66 @@ namespace Controllers.Work
                 ? new CommodityModel(economyData.RequiredCommodity.Value, economyData.RequiredCommodityQuantity, 0)
                 : null,
 
+                Services = CreateService(serviceData),
                 ProcessingTime = economyData.ProcessingTime,
                 MinimumWorkersCount = economyData.MinimumWorkersCount,
-                MaxWorkersCount = economyData.MaxWorkersCount
+                MaxWorkersCount = economyData.MaxWorkersCount,
+                Range = economyData.Range
             };
 
             return new DistributionPointModel(definition);
         }
 
+        private List<IService> CreateService(List<ServiceData> serviceDataList)
+        {
+            var result = new List<IService>(serviceDataList.Count);
+
+            foreach (var serviceData in serviceDataList)
+            {
+                result.Add(serviceData.ServiceType switch
+                {
+                    ServiceType.TaxCollectionService => new TaxCollectionService(serviceData.Value),
+                    ServiceType.ReligionService => new ReligionService(serviceData.Value),
+                    ServiceType.HabitationRequirementService => new HabitationRequirementService(
+                        serviceData.HabitatRequirementDefinition
+                        ?? throw new InvalidOperationException("HabitatRequirementDefinition is required for HabitationRequirementService."),
+                        serviceData.Value),
+                    ServiceType.FireProtectionService => new FireProtectionService(serviceData.Value),
+                    _ => throw new NotSupportedException($"Unsupported service type: {serviceData.ServiceType}")
+                });
+            }
+
+            return result;
+        }
+
         private void Work(DistributionWorkplacePresenter workplace)
         {
-            storage = supplyModel.SupplyTargets[workplace.View];
+            supplyModel.SupplyTargets.TryGetValue(workplace.View, out storage);
             requiredCommodity = workplace.Model.WorkplaceDefinition.RequiredCommodity;
 
             if (workplace.Model.CurrentWorkersCount < workplace.Model.WorkplaceDefinition.MinimumWorkersCount)
                 return;
 
-            if (workplace.Model.WorkplaceDefinition.RequiredCommodity == null)
+            if (requiredCommodity != null && requiredCommodity.Quantity == 0)
             {
-                DistributeResources(workplace);
+                ScheduleTransport(workplace);
+                return;
             }
-            else
+
+            if (workplace.Model.IsServiceAgentAvailable)
             {
-                if (workplace.Model.WorkplaceDefinition.RequiredCommodity.Quantity > 0)
-                {
-                    if (!workplace.Model.IsServiceAgentAvailable)
-                        return;
+                var progress = workplace.Model.ProcessingProgress;
+                var progressDelta = Time.deltaTime / workplace.Model.WorkplaceDefinition.ProcessingTime;
+                workplace.Model.SetProcessingProgress(progress + progressDelta);
 
+                if (workplace.Model.ProcessingProgress >= 1)
+                {
+                    storage?.RemoveCommodity(requiredCommodity);
+                    workplace.Model.SetProcessingProgress(0);
                     DistributeResources(workplace);
-                    storage.RemoveCommodity(new CommodityModel()
-                    {
-                        Name = workplace.Model.WorkplaceDefinition.RequiredCommodity.Name,
-                        Quantity = 1
-                    });
-                }
-                else
-                {
-                    if (!workplace.Model.IsCarrierAvailable)
-                        return;
-
-                    ScheduleTransport(new CommodityModel()
-                    {
-                        Name = workplace.Model.WorkplaceDefinition.RequiredCommodity.Name,
-                        Quantity = workplace.Model.WorkplaceDefinition.RequiredCommodity.Quantity
-                    },
-                    workplace);
                 }
             }
         }
-
-        /*public void ReceiveService(IService service)
-        {
-            switch (service)
-            {
-                case FireProtectionService fireProtection:
-                    municipalServices[fireProtection.GetType()] = fireProtection.Value;
-                    break;
-            }
-        }*/
 
         private void CalculateInfluenceRange(DistributionWorkplacePresenter workplace)
         {
@@ -155,7 +154,7 @@ namespace Controllers.Work
             {
                 var (current, dist) = queue.Dequeue();
 
-                if (dist >= workplace.Model.InfluenceData.InfluenceRange)
+                if (dist >= workplace.Model.WorkplaceDefinition.Range)
                     continue;
 
                 Vector2Int[] neighbours =
@@ -192,43 +191,47 @@ namespace Controllers.Work
             var serviceAgentPayload = new ServiceAgentPayload()
             {
                 Origin = workplace.View,
-                Service = workplace.Model.Service,
+                Services = workplace.Model.WorkplaceDefinition.Services,
                 AvailableTiles = workplace.Model.InfluencedTiles
             };
 
             void OnAgentReturn() => workplace.Model.ReturnServiceAgent();
-
-            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(serviceAgentPayload, OnAgentReturn, null));
+            signalBus.Fire(new WorkplaceSignals.SpawnServiceAgent(serviceAgentPayload, OnAgentReturn, workplace.Model));
         }
 
-        private void ScheduleTransport(CommodityModel commodity, DistributionWorkplacePresenter workplace)
+        private void ScheduleTransport(DistributionWorkplacePresenter workplace)
         {
             if (!workplace.Model.IsCarrierAvailable)
                 return;
 
-            var result = BuildCarrierTasks(commodity, out Queue<CarrierTask> tasks, workplace);
+            var result = BuildCarrierTasks(out Queue<CarrierTask> tasks, workplace);
             if (result == false)
                 return;
 
             workplace.Model.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplace.Model.ReturnCarrier(), workplace.Model));
+
+            void OnCarrierReturn() => workplace.Model.ReturnCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, OnCarrierReturn, workplace.Model));
         }
 
-        private bool BuildCarrierTasks(CommodityModel commodity, out Queue<CarrierTask> tasks, DistributionWorkplacePresenter workplace)
+        private bool BuildCarrierTasks(out Queue<CarrierTask> tasks, DistributionWorkplacePresenter workplace)
         {
-            var targetWithCommodity = supplyModel
-                .GetClosestStorageWithCommodity(workplace.View.transform.position, commodity.Name, commodity.Quantity);
+            tasks = default;
 
-            if (targetWithCommodity == null)
-            {
-                tasks = default;
+            var targetWithFreeSpace = supplyModel.GetClosestStorageWithFreeSpace(
+                workplace.View.transform.position, requiredCommodity.Name, requiredCommodity.Quantity);
+
+            if (targetWithFreeSpace == null)
                 return false;
-            }
 
-            var taskBuilder = new CarrierTaskBuilder();
-            taskBuilder
-                .AddTask(null, targetWithCommodity)
-                .AddTaskWithReservation(targetWithCommodity, null, commodity, ReservationType.Commodity);
+            var taskBuilder = new CarrierTaskBuilder()
+                .AddTaskWithReservation(storage, targetWithFreeSpace, new CommodityModel()
+                {
+                    Name = requiredCommodity.Name,
+                    Quantity = requiredCommodity.Quantity
+                },
+                ReservationType.Space)
+                .AddTask(targetWithFreeSpace, storage);
 
             tasks = new Queue<CarrierTask>(taskBuilder.Tasks);
             return true;

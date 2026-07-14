@@ -1,11 +1,4 @@
-using App.Signals;
-using Models.Economy;
 using Models.Work;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using Views.Construction;
-using Views.Settler.Workers;
 using Zenject;
 
 namespace Controllers.Work
@@ -17,10 +10,6 @@ namespace Controllers.Work
         private SignalBus signalBus;
         private SupplyModel supplyModel;
         private FarmWorkplaceModel workplaceModel;
-
-        private float progress = 0f;
-        private float checkTimer;
-        private float checkSpanInSec = 5f;
 
         public FarmWorkplace(SignalBus signalBus, SupplyModel supplyModel)
         {

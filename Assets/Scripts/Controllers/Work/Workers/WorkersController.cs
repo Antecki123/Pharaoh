@@ -92,7 +92,7 @@ namespace Controllers.Work
         private void SpawnServiceAgent(WorkplaceSignals.SpawnServiceAgent signal)
         {
             serviceAgentObjectPool.WorkersPool.Get(out ServiceAgentView agent);
-            agent.Init(signal.ServiceAgentPayload, signal.ServiceAgentPayload.Service);
+            agent.Init(signal.ServiceAgentPayload, signal.ServiceAgentPayload.Services);
             agent.OnAgentReturn += signal.OnAgentReturn;
 
             serviceAgents.Add(agent);

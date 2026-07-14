@@ -49,4 +49,23 @@ namespace Controllers.Work
             Value = value;
         }
     }
+
+    public enum ServiceType
+    {
+        TaxCollectionService,
+        ReligionService,
+        HabitationRequirementService,
+        FireProtectionService
+    }
 }
+
+
+/*public void ReceiveService(IService service)
+{
+    switch (service)
+    {
+        case FireProtectionService fireProtection:
+            municipalServices[fireProtection.GetType()] = fireProtection.Value;
+            break;
+    }
+}*/

@@ -10,11 +10,9 @@ namespace Models.Work
     {
         public event Action<DistributionPointModel> OnValueChanged;
 
+        public bool IsRunning => CurrentWorkersCount > WorkplaceDefinition.MinimumWorkersCount;
+
         public DistributionWorkplaceDefinition WorkplaceDefinition { get; private set; }
-
-        public InfluenceData InfluenceData { get; private set; }
-
-        public IService Service { get; private set; }
 
         public float ProcessingProgress { get; private set; } = 0;
 
@@ -24,13 +22,7 @@ namespace Models.Work
 
         public bool IsServiceAgentAvailable { get; set; } = true;
 
-
-        public HashSet<Vector2Int> InfluencedTiles = new HashSet<Vector2Int>();
-
-        public Dictionary<Type, float> MunicipalServices = new()
-            {
-                { typeof(FireProtectionService), 1f }
-            };
+        public HashSet<Vector2Int> InfluencedTiles = new();
 
         public DistributionPointModel(DistributionWorkplaceDefinition workplaceDefinition)
         {
@@ -86,10 +78,14 @@ namespace Models.Work
 
         public CommodityModel RequiredCommodity { get; set; }
 
+        public List<IService> Services { get; set; }
+
         public float ProcessingTime { get; set; }
 
         public int MinimumWorkersCount { get; set; }
 
         public int MaxWorkersCount { get; set; }
+
+        public float Range { get; set; }
     }
 }

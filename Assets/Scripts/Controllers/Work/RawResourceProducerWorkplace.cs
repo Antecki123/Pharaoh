@@ -105,7 +105,7 @@ namespace Controllers.Work
 
                 workplace.Model.SetProcessingProgress(0);
 
-                if (storage.HasCommodities(workplace.Model.WorkplaceDefinition.ProcessedCommodity.Name))
+                if (storage.HasCommodities(processedCommodity.Name))
                     ScheduleTransport(workplace);
             }
         }
@@ -120,7 +120,9 @@ namespace Controllers.Work
                 return;
 
             workplace.Model.UseCarrier();
-            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, () => workplace.Model.ReturnCarrier(), workplace.Model));
+
+            void OnCarrierReturn() => workplace.Model.ReturnCarrier();
+            signalBus.Fire(new WorkplaceSignals.SpawnCarrier(tasks, OnCarrierReturn, workplace.Model));
         }
 
         private bool BuildCarrierTasks(out Queue<CarrierTask> tasks, WorkplacePresenter workplace)

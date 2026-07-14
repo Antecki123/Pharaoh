@@ -17,7 +17,8 @@ namespace Controllers.UI
 
         private bool interactionBlocked;
 
-        public BuildingsTooltipController(SignalBus signalBus, PrefabManager prefabManager, [Inject(Id = "MainCanvas")] Canvas mainCanvas)
+        public BuildingsTooltipController(SignalBus signalBus, PrefabManager prefabManager,
+            [Inject(Id = "MainCanvas")] Canvas mainCanvas)
         {
             this.signalBus = signalBus;
             this.prefabManager = prefabManager;
@@ -67,7 +68,7 @@ namespace Controllers.UI
 
             CloseTooltips();
 
-            var tooltip = prefabManager.Instantiate("HabitationTooltipUI").GetComponent<HabitationTooltipUI>();
+            var tooltip = prefabManager.Instantiate<HabitationTooltipUI>("HabitationTooltipUI");
             tooltip.Init(signal.Transform, signal.Model);
             tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
@@ -82,7 +83,7 @@ namespace Controllers.UI
 
             CloseTooltips();
 
-            var tooltip = prefabManager.Instantiate("ProcessingWorkplaceTooltipUI").GetComponent<ProcessingWorkplaceTooltipUI>();
+            var tooltip = prefabManager.Instantiate<ProcessingWorkplaceTooltipUI>("ProcessingWorkplaceTooltipUI");
             tooltip.Init(signal.Transform, signal.Model);
             tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
@@ -97,7 +98,7 @@ namespace Controllers.UI
 
             CloseTooltips();
 
-            var tooltip = prefabManager.Instantiate("StorageTooltipUI").GetComponent<StorageTooltipUI>();
+            var tooltip = prefabManager.Instantiate<StorageTooltipUI>("StorageTooltipUI");
             tooltip.Init(signal.Transform, signal.Model);
             tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
@@ -112,8 +113,7 @@ namespace Controllers.UI
 
             CloseTooltips();
 
-            var tooltip = prefabManager.Instantiate("DistributionPointTooltipUI").GetComponent<DistributionPointTooltipUI>();
-            tooltip.Init(signal.Transform, signal.Model);
+            var tooltip = prefabManager.Instantiate<DistributionPointTooltipUI>("DistributionPointTooltipUI");
             tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
 
@@ -127,7 +127,7 @@ namespace Controllers.UI
 
             CloseTooltips();
 
-            var tooltip = prefabManager.Instantiate("FarmTooltipUI").GetComponent<FarmTooltipUI>();
+            var tooltip = prefabManager.Instantiate<FarmTooltipUI>("FarmTooltipUI");
             tooltip.Init(signal.Transform, signal.Model);
             tooltip.gameObject.SetActive(true);
             currentTooltip = tooltip;
@@ -137,6 +137,5 @@ namespace Controllers.UI
 
         private void OnConstructionModeChanged(ConstructionSignals.ActivateConstructionMode signal) =>
             interactionBlocked = signal.State;
-
     }
 }

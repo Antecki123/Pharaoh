@@ -1,5 +1,4 @@
 using App.Signals;
-using Controllers.Work;
 using UnityEngine;
 using Zenject;
 
@@ -9,7 +8,6 @@ namespace Views.Construction
     public class GranaryView : BuildingView
     {
         private SignalBus signalBus;
-        private StorageWorkplace workplace;
 
         [Inject]
         public void Constructor(SignalBus signalBus)
@@ -21,11 +19,13 @@ namespace Views.Construction
         {
             base.PlaceBuilding();
 
+            signalBus.Fire(new WorkplaceSignals.RegisterWorkplace(this));
             signalBus.Fire(new WorkplaceSignals.RegisterSupplyTarget(this));
         }
 
         public override void DestroyBuilding()
         {
+            signalBus.Fire(new WorkplaceSignals.UnregisterWorkplace(this));
             signalBus.Fire(new WorkplaceSignals.UnregisterSupplyTarget(this));
 
             base.DestroyBuilding();
@@ -37,7 +37,8 @@ namespace Views.Construction
 
             if (isPlaced)
             {
-                signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(transform, workplace.StorageModel));
+                /*signalBus.Fire(new BuildingTooltipSignals.OpenStorageTooltipUI(
+                    transform, workplace.StorageModel));*/
             }
         }
     }

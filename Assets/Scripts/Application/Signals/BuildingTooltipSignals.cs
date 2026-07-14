@@ -2,6 +2,7 @@ using Models.Economy;
 using Models.Habitation;
 using Models.Work;
 using UnityEngine;
+using Views.Construction;
 using Zenject;
 
 namespace App.Signals
@@ -79,6 +80,16 @@ namespace App.Signals
             {
                 Transform = transform;
                 Model = model;
+            }
+        }
+
+        public class OpenBuildingInfoUI
+        {
+            public BuildingView BuildingView { get; private set; }
+
+            public OpenBuildingInfoUI(BuildingView buildingView)
+            {
+                BuildingView = buildingView;
             }
         }
     }

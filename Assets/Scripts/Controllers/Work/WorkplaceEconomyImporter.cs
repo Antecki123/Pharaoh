@@ -2,6 +2,7 @@ using App.Helpers;
 using Controllers.Construction;
 using Models.Economy;
 using Models.Environment;
+using Models.Habitation;
 using System;
 using System.Collections.Generic;
 
@@ -11,16 +12,16 @@ namespace Controllers.Work
     {
         public IReadOnlyDictionary<BuildingDefinition, WorkplaceEconomyData> EconomyData => economyData;
         public IReadOnlyDictionary<BuildingDefinition, List<StorageEconomyData>> StorageData => storageData;
-        public IReadOnlyDictionary<BuildingDefinition, InfluenceData> InfluenceData => influenceData;
+        public IReadOnlyDictionary<BuildingDefinition, List<ServiceData>> ServiceData => serviceData;
 
         private readonly Dictionary<BuildingDefinition, WorkplaceEconomyData> economyData = new();
         private readonly Dictionary<BuildingDefinition, List<StorageEconomyData>> storageData = new();
-        private readonly Dictionary<BuildingDefinition, InfluenceData> influenceData = new();
+        private readonly Dictionary<BuildingDefinition, List<ServiceData>> serviceData = new();
 
         private readonly CSVReader reader;
         private readonly string WORKPLACE_ECONOMY_PATH = "Importers/WorkplaceEconomy";
         private readonly string STORAGE_DATA_PATH = "Importers/StorageData";
-        private readonly string INFLUENCE_DATA_PATH = "Importers/InfluenceData";
+        private readonly string SERVICE_DATA_PATH = "Importers/ServiceData";
 
         public WorkplaceEconomyImporter()
         {
@@ -32,8 +33,8 @@ namespace Controllers.Work
             reader.ReadFile(STORAGE_DATA_PATH);
             LoadStorageData();
 
-            //reader.ReadFile(INFLUENCE_DATA_PATH);
-            //LoadInfluenceData();
+            reader.ReadFile(SERVICE_DATA_PATH);
+            LoadServiceData();
         }
 
         private void LoadEconomyData()
@@ -56,7 +57,8 @@ namespace Controllers.Work
                     ProcessingTime = float.TryParse(text[6], out float processingTime) ? processingTime : default,
                     MinimumWorkersCount = int.TryParse(text[7], out int minimumWorkersCount) ? minimumWorkersCount : default,
                     MaxWorkersCount = int.TryParse(text[8], out int maxWorkersCount) ? maxWorkersCount : default,
-                    CarriersCount = int.TryParse(text[9], out int carriersCount) ? carriersCount : default
+                    CarriersCount = int.TryParse(text[9], out int carriersCount) ? carriersCount : default,
+                    Range = float.TryParse(text[10], out float range) ? range : default
                 };
 
                 economyData.Add(definition, data);
@@ -94,7 +96,7 @@ namespace Controllers.Work
             }
         }
 
-        private void LoadInfluenceData()
+        private void LoadServiceData()
         {
             var index = 1;
             while (true)
@@ -104,14 +106,20 @@ namespace Controllers.Work
                     break;
 
                 var definition = Enum.TryParse(text[0], out BuildingDefinition buildingDefinition) ? buildingDefinition : default;
-                var data = new InfluenceData()
+                var data = new ServiceData()
                 {
-                    InfluenceType = Enum.TryParse(text[1], out InfluenceType influenceType) ? influenceType : default,
-                    InfluenceRange = float.TryParse(text[2], out float range) ? range : default,
-                    InfluenceValue = float.TryParse(text[3], out float value) ? value : default
+                    ServiceType = Enum.TryParse(text[1], out ServiceType service) ? service : default,
+                    Value = float.TryParse(text[2], out float value) ? value : default,
+                    HabitatRequirementDefinition = Enum.TryParse(text[3], out HabitatRequirementDefinition habitatRequirement)
+                    ? habitatRequirement : null,
                 };
 
-                influenceData.Add(definition, data);
+                if (!serviceData.TryGetValue(definition, out var services))
+                {
+                    services = new List<ServiceData>();
+                    serviceData.Add(definition, services);
+                }
+                services.Add(data);
                 index++;
             }
         }
@@ -136,6 +144,8 @@ namespace Controllers.Work
         public int MaxWorkersCount { get; set; }
 
         public int CarriersCount { get; set; }
+
+        public float Range { get; set; }
     }
 
     public class StorageEconomyData
@@ -156,5 +166,14 @@ namespace Controllers.Work
         public float InfluenceRange { get; set; }
 
         public float InfluenceValue { get; set; }
+    }
+
+    public class ServiceData
+    {
+        public ServiceType ServiceType { get; set; }
+
+        public float Value { get; set; }
+
+        public HabitatRequirementDefinition? HabitatRequirementDefinition { get; set; }
     }
 }

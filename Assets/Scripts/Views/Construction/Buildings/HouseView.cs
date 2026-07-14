@@ -50,6 +50,7 @@ namespace Views.Construction
             if (isPlaced)
             {
                 signalBus.Fire(new BuildingTooltipSignals.OpenHabitationTooltip(transform, habitatModel));
+                signalBus.Fire(new BuildingTooltipSignals.OpenBuildingInfoUI(this));
             }
         }
 

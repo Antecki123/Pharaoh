@@ -1,81 +1,63 @@
+using Controllers.Construction;
 using Models.Economy;
-using Models.Work;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 using Views.Construction;
+using Zenject;
 
 namespace Controllers.Work
 {
     public class StorageWorkplace
     {
-        public StorageModel StorageModel => storageModel;
+        public class Factory : PlaceholderFactory<StorageWorkplace> { }
 
-        private StorageModel storageModel;
-        private BuildingView buildingView;
+        private readonly WorkplaceEconomyImporter economyImporter;
 
-        public StorageWorkplace(StorageModel storageModel, BuildingView buildingView)
+        private readonly List<StorageWorkplacePresenter> workplaces = new();
+
+        public StorageWorkplace(WorkplaceEconomyImporter economyImporter)
         {
-            this.storageModel = storageModel;
-            this.buildingView = buildingView;
+            this.economyImporter = economyImporter;
         }
 
-        public BuildingView GetBuildingView()
+        public IWorkplace RegisterWorkplace(BuildingView buildingView)
         {
-            return buildingView;
+            var workplaceModel = CreateModel(buildingView.BuildingDefinition);
+            var workplace = new StorageWorkplacePresenter(workplaceModel, buildingView);
+            workplaces.Add(workplace);
+
+            return workplace.Model;
         }
 
-        public bool TryPickCommodity(ref CommodityModel commodity)
+        public void UnregisterWorkplace(BuildingView buildingView)
         {
-            var commodityName = commodity.Name;
-            var needed = commodity.Quantity;
-            var taken = 0;
+            var workplace = workplaces.Find(x => x.View == buildingView);
+            workplaces.Remove(workplace);
+        }
 
-            var matching = storageModel.Commodities.Values
-                .Where(c => commodityName.HasFlag(c.Model.Name) && c.Model.Quantity > 0)
-                .ToList();
-
-            if (!matching.Any())
-                return false;
-
-            foreach (var stored in matching)
+        private StorageWorkplaceModel CreateModel(BuildingDefinition buildingDefinition)
+        {
+            var economyData = economyImporter.EconomyData[buildingDefinition];
+            var definition = new StorageWorkplaceDefinition()
             {
-                if (needed <= 0)
-                    break;
+                Name = buildingDefinition.ToString(),
+                MinimumWorkersCount = economyData.MinimumWorkersCount,
+                MaxWorkersCount = economyData.MaxWorkersCount
+            };
 
-                var amount = Mathf.Min(stored.Model.Quantity, needed);
-                needed -= amount;
-                taken += amount;
-
-                storageModel.RemoveCommodity(new CommodityModel
-                {
-                    Name = stored.Model.Name,
-                    Quantity = amount
-                });
-            }
-
-            commodity.Quantity = taken;
-            return taken > 0;
+            return new StorageWorkplaceModel(definition);
         }
+    }
 
-        public void DeliverCommodity(CommodityModel commodity)
-        {
-            storageModel.AddCommodity(commodity);
-        }
+    public struct StorageWorkplacePresenter
+    {
+        public StorageWorkplaceModel Model { get; private set; }
 
-        public IReadOnlyCollection<CommodityModel> GetAvailableCommodities()
-        {
-            return storageModel.GetAvailableCommodities();
-        }
+        public BuildingView View { get; private set; }
 
-        public IReadOnlyCollection<CommodityModel> GetAvailableSpace()
+        public StorageWorkplacePresenter(StorageWorkplaceModel model, BuildingView view)
         {
-            return storageModel.GetAvailableSpace();
-        }
-
-        public IReservationable GetReservationable()
-        {
-            return storageModel;
+            Model = model;
+            View = view;
         }
     }
 }

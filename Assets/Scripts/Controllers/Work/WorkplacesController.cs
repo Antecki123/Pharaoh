@@ -19,24 +19,27 @@ namespace Controllers.Work
         private readonly MaterialProcessingWorkplace materialProcessing;
         private readonly DistributionPointWorkplace distributionPoint;
         private readonly FarmWorkplace farmWorkplace;
+        private readonly StorageWorkplace storageWorkplace;
 
         public WorkplacesController(SignalBus signalBus, SupplyModel supplyModel, EmploymentRepository employmentRepository,
             WorkplaceRepository workplaceRepository, WorkplaceEconomyImporter economyImporter,
             RawResourceProducerWorkplace.Factory rawResourceProducerFactory,
             MaterialProcessingWorkplace.Factory materialProcessingFactory,
             DistributionPointWorkplace.Factory distributionPointFactory,
-            FarmWorkplace.Factory farmWorkplaceFactory)
+            FarmWorkplace.Factory farmWorkplaceFactory,
+            StorageWorkplace.Factory storageWorkplaceFactory)
         {
             this.signalBus = signalBus;
             this.supplyModel = supplyModel;
             this.employmentRepository = employmentRepository;
             this.economyImporter = economyImporter;
+            this.workplaceRepository = workplaceRepository;
 
             rawResourceProducer = rawResourceProducerFactory.Create();
             materialProcessing = materialProcessingFactory.Create();
             distributionPoint = distributionPointFactory.Create();
             farmWorkplace = farmWorkplaceFactory.Create();
-            this.workplaceRepository = workplaceRepository;
+            storageWorkplace = storageWorkplaceFactory.Create();
         }
 
         public void Initialize()
@@ -52,7 +55,7 @@ namespace Controllers.Work
             rawResourceProducer.Tick();
             materialProcessing.Tick();
             distributionPoint.Tick();
-            farmWorkplace.Tick();
+            //farmWorkplace.Tick();
         }
 
         public void Dispose()
@@ -73,7 +76,7 @@ namespace Controllers.Work
                 WorkplaceType.MaterialProcessing => materialProcessing.RegisterWorkplace(signal.BuildingView),
                 WorkplaceType.DistributionPoint => distributionPoint.RegisterWorkplace(signal.BuildingView),
                 //WorkplaceType.FarmWorkplace => farmWorkplace.RegisterWorkplace(signal.BuildingView),
-                //WorkplaceType.Storage => storageWorkplace.RegisterWorkplace(signal.BuildingView),
+                WorkplaceType.Storage => storageWorkplace.RegisterWorkplace(signal.BuildingView),
                 _ => throw new ArgumentOutOfRangeException(nameof(workplaceData.WorkplaceType), workplaceData.WorkplaceType, null)
             };
 
@@ -101,7 +104,7 @@ namespace Controllers.Work
                     //farmWorkplace.UnregisterWorkplace(signal.BuildingView);
                     break;
                 case WorkplaceType.Storage:
-                    //storageWorkplace.UnregisterWorkplace(signal.BuildingView);
+                    storageWorkplace.UnregisterWorkplace(signal.BuildingView);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(workplaceType), workplaceType, null);
@@ -134,6 +137,8 @@ namespace Controllers.Work
         public void AddWorker();
 
         public void RemoveWorker();
+
+        public bool IsRunning { get; }
     }
 
     public enum WorkplaceType

@@ -8,6 +8,8 @@ namespace Models.Work
     {
         public event Action<FarmWorkplaceModel> OnValueChanged;
 
+        public bool IsRunning => CurrentWorkersCount > WorkplaceDefinition.MinimumWorkersCount;
+
         public FarmWorkplaceDefinition WorkplaceDefinition { get; private set; }
 
         public float ProcessingProgress { get; private set; } = 0;
